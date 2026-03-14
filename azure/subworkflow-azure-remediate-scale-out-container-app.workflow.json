@@ -1,0 +1,96 @@
+{
+  "title": "subworkflow - azure remediate scale out container app",
+  "description": "Subworkflow: Scale out an Azure Container App to recover from under-provisioning outages.\\n\\nThis remediation subworkflow starts an Azure Automation runbook job, waits for completion, and verifies the execution result before returning.\\n\\nParameters\\nprimaryResourceId (Required): Primary Azure resource identifier targeted by remediation.\\nazuresubscriptionid (Required): Azure Subscription ID.\\nazureresourcegroup (Required): Resource group of the target Azure resource.\\nautomationresourcegroup (Required): Resource group of the Azure Automation Account.\\nautomationaccountname (Required): Azure Automation Account name.\\ndynatraceazureconnection (Required): Dynatrace Azure OIDC connection name.\\n\\nThis workflow never fire-and-forgets and always performs wait plus success verification.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-azure-runbook-job-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "primaryResourceId": "",
+    "azuresubscriptionid": "",
+    "azureresourcegroup": "",
+    "automationresourcegroup": "",
+    "automationaccountname": "",
+    "dynatraceazureconnection": "azureplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🛠️ Azure Remediation Subworkflow\\n\\nThis subworkflow remediates a common Azure outage scenario by executing an Azure Automation runbook and validating completion.\\n\\n### 🎯 Purpose\\n- Scale out an Azure Container App to recover from under-provisioning outages.\\n\\n### ⚙️ Parameters\\n- 🔑 **primaryResourceId** (Required): Primary Azure resource ID to remediate.\\n- 🔵 **azuresubscriptionid** (Required): Azure Subscription ID.\\n- 📁 **azureresourcegroup** (Required): Resource group of the target resource.\\n- 📁 **automationresourcegroup** (Required): Resource group of the Automation Account.\\n- 🤖 **automationaccountname** (Required): Azure Automation Account name.\\n- 🔌 **dynatraceazureconnection** (Required): Dynatrace Azure OIDC connection.\\n\\n### ▶️ Execution Behavior\\n- ▶️ Starts Azure Automation runbook **Invoke-AzContainerAppScaleOut**.\\n- ⏳ Waits for execution completion using dependency subworkflow.\\n- ✅ Verifies status and fails if execution is not Completed.\\n\\n### 📋 Azure Runbook\\n- **Invoke-AzContainerAppScaleOut**\\n\\n### 🔗 Dependencies\\n- 📎 Requires subworkflow **subworkflow - azure wait for automation runbook job**.",
+  "tasks": {
+    "azure_automation_start_runbook_job_1": {
+      "name": "azure_automation_start_runbook_job_1",
+      "input": {
+        "subscriptionId": "{{ input()[\"azuresubscriptionid\"] }}",
+        "resourceGroupName": "{{ input()[\"automationresourcegroup\"] }}",
+        "automationAccountName": "{{ input()[\"automationaccountname\"] }}",
+        "runbookName": "Invoke-AzContainerAppScaleOut",
+        "parameters": "{\n  \"PrimaryResourceId\": \"{{ input()[\\\"primaryResourceId\\\"] }}\",\n  \"ResourceGroup\": \"{{ input()[\\\"azureresourcegroup\\\"] }}\",\n  \"SubscriptionId\": \"{{ input()[\\\"azuresubscriptionid\\\"] }}\"\n}",
+        "connection": "{% set azureconnection = input()[\"dynatraceazureconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.azure', azureconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.azure.connector:azure-automation-start-runbook-job",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Start Azure Automation runbook job for azure remediate scale out container app.",
+      "predecessors": []
+    },
+    "wait-for-azure-runbook-job-completed": {
+      "name": "wait-for-azure-runbook-job-completed",
+      "input": {
+        "workflowId": "a0000000-0000-4000-a000-000000000000",
+        "workflowInput": "{\n\"jobId\":\"{{result(\\\"azure_automation_start_runbook_job_1\\\").jobId}}\",\n\"azuresubscriptionid\":\"{{input()[\\\"azuresubscriptionid\\\"]}}\",\n\"automationresourcegroup\":\"{{input()[\\\"automationresourcegroup\\\"]}}\",\n\"automationaccountname\":\"{{input()[\\\"automationaccountname\\\"]}}\",\n\"dynatraceazureconnection\":\"{{input()[\\\"dynatraceazureconnection\\\"]}}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "azure_automation_start_runbook_job_1": "OK"
+        }
+      },
+      "description": "Wait for Azure Automation runbook job to complete.",
+      "predecessors": [
+        "azure_automation_start_runbook_job_1"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-azure-runbook-job-completed/result`);\n  const configBody = await configGet.json();\n  const status = (configBody?.properties?.status || configBody?.status || configBody?.jobStatus || '''''''').toUpperCase();\n  console.log(status);\n\n  if (status !== 'COMPLETED') {\n    throw new Error(`Azure Automation runbook failed with status: ${status}`);\n  }\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-azure-runbook-job-completed": "OK"
+        }
+      },
+      "description": "Validate Azure Automation runbook job completion status.",
+      "predecessors": [
+        "wait-for-azure-runbook-job-completed"
+      ]
+    }
+  }
+}
