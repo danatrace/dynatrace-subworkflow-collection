@@ -1,5 +1,26 @@
 const PAGE_SIZE = 36;
 
+const DOWNLOAD_COUNTS_KEY = "coe_download_counts";
+
+function getDownloadCounts() {
+  try {
+    return JSON.parse(localStorage.getItem(DOWNLOAD_COUNTS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function incrementDownloadCount(path) {
+  const counts = getDownloadCounts();
+  counts[path] = (counts[path] || 0) + 1;
+  localStorage.setItem(DOWNLOAD_COUNTS_KEY, JSON.stringify(counts));
+  return counts[path];
+}
+
+function getDownloadCount(path) {
+  return getDownloadCounts()[path] || 0;
+}
+
 const state = {
   all: [],
   activeSection: "tested",
@@ -97,9 +118,43 @@ function drawCards(items) {
       tagsContainer.appendChild(tagElement);
     }
 
+    // Guide button → open modal
+    const guideBtn = node.querySelector(".guide-btn");
+    guideBtn.addEventListener("click", () => {
+      document.getElementById("modal-title").textContent = item.title || item.path;
+      document.getElementById("modal-content").textContent =
+        item.guideText || item.guide || item.description || "No guide available.";
+      document.getElementById("guide-modal").hidden = false;
+    });
+
+    // Download button with blob fetch + count tracking
     const downloadLink = node.querySelector(".download-link");
-    downloadLink.href = item.downloadUrl;
-    downloadLink.download = item.path.split("/").pop();
+    const countEl = node.querySelector(".download-count");
+    const fileName = item.path.split("/").pop();
+
+    const updateCountLabel = (n) => {
+      countEl.textContent = n > 0 ? `Downloaded ${n} time${n === 1 ? "" : "s"} in this browser` : "";
+    };
+    updateCountLabel(getDownloadCount(item.path));
+
+    downloadLink.addEventListener("click", async () => {
+      try {
+        const response = await fetch(item.downloadUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = blobUrl;
+        anchor.download = fileName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        window.open(item.downloadUrl, "_blank", "noopener");
+      }
+      updateCountLabel(incrementDownloadCount(item.path));
+    });
 
     const sourceLink = node.querySelector(".source-link");
     sourceLink.href = item.sourceUrl;
@@ -217,8 +272,9 @@ async function init() {
   countUntested.textContent = payload.counts?.untested ?? "0";
 
   summaryText.textContent =
-    `Browse ${payload.counts?.total ?? state.all.length} subworkflows as a marketplace catalog. ` +
-    "Top-level workflows are listed as Tested, and folder-based workflows are listed as Untested.";
+    `${payload.counts?.total ?? state.all.length} subworkflows available — ` +
+    `${payload.counts?.tested ?? 0} Tested (top-level) and ${payload.counts?.untested ?? 0} Untested (folder-based). ` +
+    "Click \"Download subworkflow\" on any card to save the JSON file directly to your computer.";  
 
   updateFolderFilter();
   setupEvents();
