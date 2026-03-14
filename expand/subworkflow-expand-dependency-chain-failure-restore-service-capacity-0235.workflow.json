@@ -1,0 +1,117 @@
+{
+  "title": "subworkflow - expand dependency chain failure restore service capacity",
+  "description": "Enterprise expansion subworkflow for fear theme `dependency-chain-failure` and pattern `restore-service-capacity`.\\n\\nDesigned to improve workflow adoption by automating reliability, security, and governance controls with explicit wait and verification.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "enterpriseConcern": "dependency-chain-failure",
+    "primaryResourceId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground",
+    "AutomationAssumeRolearn": "",
+    "runbookName": "",
+    "instanceId": "",
+    "bucketName": "",
+    "automationExecutionId": "",
+    "commandId": "",
+    "azuresubscriptionid": "",
+    "automationresourcegroup": "",
+    "automationaccountname": "",
+    "jobId": "",
+    "dynatraceazureconnection": "azureplayground",
+    "namespace": "default",
+    "jobName": "",
+    "dynatracekubernetesconnection": "kubernetesplayground",
+    "githubOwner": "",
+    "githubRepository": "",
+    "githubBranch": "main",
+    "githubConnectionId": ""
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\udde9 Enterprise Expansion Subworkflow\\n\\n### \ud83c\udfaf Enterprise Concern\\n- **dependency chain failure**\\n\\n### \ud83d\udee0\ufe0f Pattern\\n- **restore service capacity**\\n\\n### \u2699\ufe0f Primary Action\\n- **dynatrace.azure.connector:azure-automation-start-runbook-job**\\n\\n### \u25b6\ufe0f Execution Behavior\\n- \u25b6\ufe0f Execute action\\n- \u23f3 Wait for stabilization\\n- \u2705 Check terminal status and fail on unsuccessful outcome\\n\\n### \ud83e\udde0 Why This Matters\\n- Helps enterprise teams automate high-friction operational controls and reduce outage risk.",
+  "tags": [
+    "expand",
+    "enterprise",
+    "dependency-chain-failure",
+    "restore-service-capacity",
+    "execute-wait-check"
+  ],
+  "tasks": {
+    "perform-action": {
+      "name": "perform-action",
+      "input": {
+        "subscriptionId": "{{ input()[\"azuresubscriptionid\"] }}",
+        "resourceGroupName": "{{ input()[\"automationresourcegroup\"] }}",
+        "automationAccountName": "{{ input()[\"automationaccountname\"] }}",
+        "runbookName": "Invoke-AzVMRestart",
+        "parameters": "{\"PrimaryResourceId\":\"{{ input()[\"primaryResourceId\"] }}\"}",
+        "connection": "{% set azureconnection = input()['dynatraceazureconnection'] %}\n{{ connection('builtin:hyperscaler-authentication.connections.azure', azureconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.azure.connector:azure-automation-start-runbook-job",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Execute primary remediation/orchestration action.",
+      "predecessors": []
+    },
+    "wait-for-action": {
+      "name": "wait-for-action",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/perform-action/result');\n  const body = await response.json();\n\n  await new Promise((resolve) => setTimeout(resolve, 1500));\n\n  const status = (\n    body?.AutomationExecution?.AutomationExecutionStatus ||\n    body?.AutomationExecutionStatus ||\n    body?.properties?.status ||\n    body?.status ||\n    body?.state ||\n    body?.executionStatus ||\n    body?.result?.executionStatus ||\n    body?.jobStatus ||\n    ''\n  ).toString().toUpperCase();\n\n  const inProgress = ['INPROGRESS','PENDING','RUNNING','NEW','ACTIVATING','QUEUED','STARTING','DELAYED'];\n  if (inProgress.includes(status)) {\n    throw new Error('Action still running: ' + status);\n  }\n\n  return { status, body };\n}"
+      },
+      "retry": {
+        "count": 12,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "perform-action": "OK"
+        }
+      },
+      "description": "Wait for action to reach terminal state.",
+      "predecessors": [
+        "perform-action"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-action/result');\n  const payload = await response.json();\n  const status = (payload?.status || '').toString().toUpperCase();\n\n  const failed = ['FAILED','FAILURE','ERROR','TIMED_OUT','CANCELLED','STOPPED','BLOCKED'];\n  if (failed.includes(status)) {\n    throw new Error('Action reported failure status: ' + status);\n  }\n\n  if (!payload || !payload.body) {\n    throw new Error('Action result payload is empty');\n  }\n\n  return payload.body;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-action": "OK"
+        }
+      },
+      "description": "Final status verification and fail-on-error gate.",
+      "predecessors": [
+        "wait-for-action"
+      ]
+    }
+  }
+}
