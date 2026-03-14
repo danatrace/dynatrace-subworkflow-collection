@@ -385,6 +385,64 @@ select {
   color: var(--ink-soft);
 }
 
+.modal-guide-markdown {
+  margin: 0;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.modal-guide-markdown h1,
+.modal-guide-markdown h2,
+.modal-guide-markdown h3,
+.modal-guide-markdown h4,
+.modal-guide-markdown h5,
+.modal-guide-markdown h6 {
+  margin: 0.9rem 0 0.45rem;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.modal-guide-markdown p {
+  margin: 0.45rem 0;
+}
+
+.modal-guide-markdown ul,
+.modal-guide-markdown ol {
+  margin: 0.45rem 0;
+  padding-left: 1.2rem;
+}
+
+.modal-guide-markdown li {
+  margin: 0.2rem 0;
+}
+
+.modal-guide-markdown code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.82rem;
+  background: #f2f4f7;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.08rem 0.3rem;
+  color: #1f2937;
+}
+
+.modal-guide-markdown pre {
+  margin: 0.6rem 0;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8fafc;
+  overflow-x: auto;
+}
+
+.modal-guide-markdown pre code {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
 .tag-list {
   display: flex;
   flex-wrap: wrap;

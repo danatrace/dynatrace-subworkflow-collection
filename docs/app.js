@@ -262,6 +262,35 @@ function getCardSummary(item) {
   return "No summary available. Click \"View Guide\" for details.";
 }
 
+function escapeHtml(value) {
+  return (value || "")
+    .toString()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderGuideMarkdown(markdownText) {
+  const source = (markdownText || "No guide available.").toString();
+
+  if (window.marked?.parse) {
+    const rawHtml = window.marked.parse(source, {
+      gfm: true,
+      breaks: true,
+    });
+
+    if (window.DOMPurify?.sanitize) {
+      return window.DOMPurify.sanitize(rawHtml);
+    }
+
+    return rawHtml;
+  }
+
+  return `<p>${escapeHtml(source).replace(/\n/g, "<br>")}</p>`;
+}
+
 function drawCards(items) {
   const fragment = document.createDocumentFragment();
 
@@ -270,7 +299,7 @@ function drawCards(items) {
 
     node.querySelector(".card-title").textContent = item.title || item.path;
     node.querySelector(".card-path").textContent = item.path;
-  const summary = getCardSummary(item);
+    const summary = getCardSummary(item);
     node.querySelector(".card-description").textContent = summary;
 
     const sectionPill = node.querySelector(".section-pill");
@@ -302,8 +331,9 @@ function drawCards(items) {
     const guideBtn = node.querySelector(".guide-btn");
     guideBtn.addEventListener("click", () => {
       document.getElementById("modal-title").textContent = item.title || item.path;
-      document.getElementById("modal-content").textContent =
-        item.guideText || item.guide || item.description || "No guide available.";
+      document.getElementById("modal-content").innerHTML = renderGuideMarkdown(
+        item.guideText || item.guide || item.description || "No guide available.",
+      );
       document.getElementById("guide-modal").hidden = false;
     });
 
