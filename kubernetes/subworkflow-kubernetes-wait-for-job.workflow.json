@@ -1,0 +1,61 @@
+{
+  "title": "subworkflow - kubernetes wait for job",
+  "description": "Subworkflow to wait for a Kubernetes Job remediation action to finish and validate execution state.\n\nThis helper subworkflow is used by Kubernetes remediation workflows so they never fire-and-forget.\nIt polls the created Job status and fails on unsuccessful completion.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "namespace": "default",
+    "jobName": "",
+    "dynatracekubernetesconnection": "kubernetesplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u23f3 Subworkflow to Wait for Kubernetes Job Completion\n\n\ud83e\udde0 This helper subworkflow polls the Kubernetes Job created by remediation workflows and ensures the Job really succeeded before parent workflows continue.\n\n### \u2699\ufe0f Parameters\n- \ud83d\udcc1 **namespace** (Required): Namespace where the remediation Job runs.\n- \ud83e\uddfe **jobName** (Required): Kubernetes Job name returned by the create action.\n- \ud83d\udd0c **dynatracekubernetesconnection** (Required): Dynatrace Kubernetes connection name.\n\n### \ud83e\udde0 Workflow Logic\n- \ud83d\udd0d Fetches Kubernetes Job status from the cluster.\n- \u2705 Succeeds only when status.succeeded > 0.\n- \ud83d\udd01 Retries while Job is still active/pending.\n- \u274c Fails immediately when status.failed > 0.",
+  "tasks": {
+    "get-job-status": {
+      "name": "get-job-status",
+      "input": {
+        "namespace": "{{ input()[\"namespace\"] }}",
+        "name": "{{ input()[\"jobName\"] }}",
+        "connection": "{{ input()[\"dynatracekubernetesconnection\"] }}"
+      },
+      "action": "dynatrace.kubernetes.connector:kubernetes-batch-v1-read-namespaced-job-status",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Fetch the current Kubernetes Job status.",
+      "predecessors": []
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/get-job-status/result');\n  const body = await response.json();\n\n  const status = body?.status || {};\n  const succeeded = Number(status.succeeded || 0);\n  const failed = Number(status.failed || 0);\n  const active = Number(status.active || 0);\n\n  console.log('Kubernetes Job status', { succeeded, failed, active });\n\n  if (failed > 0) {\n    throw new Error('Kubernetes remediation job failed. failed=' + failed);\n  }\n\n  if (succeeded > 0) {\n    return body;\n  }\n\n  throw new Error('Kubernetes remediation job still running; retrying...');\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-job-status": "OK"
+        }
+      },
+      "description": "Validate Job completion status and retry when still running.",
+      "predecessors": [
+        "get-job-status"
+      ]
+    }
+  }
+}

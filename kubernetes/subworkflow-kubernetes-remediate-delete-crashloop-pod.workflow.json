@@ -1,0 +1,101 @@
+{
+  "title": "subworkflow - kubernetes remediate delete crashloopbackoff pod",
+  "description": "Subworkflow: Delete a crashing pod so it can be recreated cleanly.\n\nThis Kubernetes remediation subworkflow creates a remediation Job through Dynatrace Kubernetes actions, waits for completion, and verifies success before returning.\n\nParameters\nprimaryResourceId (Required): Primary Kubernetes resource identifier targeted by remediation.\nclusterName (Required): Kubernetes cluster name for context and auditing.\nnamespace (Required): Namespace where remediation should execute.\ntargetName (Required): Target workload/resource name for the remediation.\ndynatracekubernetesconnection (Required): Dynatrace Kubernetes connection name.\n\nThis workflow never fire-and-forgets and always performs wait plus success verification.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-kubernetes-job-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "primaryResourceId": "",
+    "clusterName": "",
+    "namespace": "default",
+    "targetName": "",
+    "targetLabel": "",
+    "resourceKind": "deployment",
+    "nodeName": "",
+    "manifestPath": "",
+    "desiredReplicas": "3",
+    "helmRevision": "1",
+    "registryServer": "",
+    "registryUsername": "",
+    "registryPassword": "",
+    "dynatracekubernetesconnection": "kubernetesplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udee0\ufe0f Kubernetes Remediation Subworkflow\n\nThis subworkflow remediates a common Kubernetes outage scenario by creating a short-lived remediation Job and validating successful completion.\n\n### \ud83c\udfaf Purpose\n- Delete a crashing pod so it can be recreated cleanly.\n\n### \u2699\ufe0f Parameters\n- \ud83d\udd11 **primaryResourceId** (Required): Primary resource ID for auditing and traceability.\n- \u2638\ufe0f **clusterName** (Required): Cluster where remediation executes.\n- \ud83d\udcc1 **namespace** (Required): Namespace of the target workload/resource.\n- \ud83e\uddfe **targetName** (Required): Target workload/resource name.\n- \ud83d\udd0c **dynatracekubernetesconnection** (Required): Dynatrace Kubernetes connection.\n\n### \u25b6\ufe0f Execution Behavior\n- \u25b6\ufe0f Creates Kubernetes Job **dt-remediate-delete-crashloop-pod** using Dynatrace Kubernetes action.\n- \u23f3 Waits for Job completion through dependency subworkflow.\n- \u2705 Verifies Job succeeded and fails otherwise.\n\n### \ud83d\udccb Remediation Command\n- kubectl -n {{ input()[\"namespace\"] }} delete pod/{{ input()[\"targetName\"] }} --grace-period=0 --force\n\n### \ud83d\udd17 Dependencies\n- \ud83d\udcce Requires subworkflow **subworkflow - kubernetes wait for job**.",
+  "tasks": {
+    "kubernetes_create_job_1": {
+      "name": "kubernetes_create_job_1",
+      "input": {
+        "namespace": "{{ input()[\"namespace\"] }}",
+        "body": "{\"apiVersion\": \"batch/v1\", \"kind\": \"Job\", \"metadata\": {\"name\": \"dt-remediate-delete-crashloop-pod\"}, \"spec\": {\"backoffLimit\": 0, \"template\": {\"spec\": {\"restartPolicy\": \"Never\", \"containers\": [{\"name\": \"kubectl\", \"image\": \"bitnami/kubectl:latest\", \"command\": [\"/bin/sh\", \"-c\"], \"args\": [\"kubectl -n {{ input()[\\\"namespace\\\"] }} delete pod/{{ input()[\\\"targetName\\\"] }} --grace-period=0 --force\"]}]}}}}",
+        "connection": "{{ input()[\"dynatracekubernetesconnection\"] }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.kubernetes.connector:kubernetes-batch-v1-create-namespaced-job",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Create Kubernetes remediation Job.",
+      "predecessors": []
+    },
+    "wait-for-kubernetes-job-completed": {
+      "name": "wait-for-kubernetes-job-completed",
+      "input": {
+        "workflowId": "b0000000-0000-4000-b000-000000000000",
+        "workflowInput": "{\n\"namespace\":\"{{input()[\\\"namespace\\\"]}}\",\n\"jobName\":\"{{result(\\\"kubernetes_create_job_1\\\").metadata.name}}\",\n\"dynatracekubernetesconnection\":\"{{input()[\\\"dynatracekubernetesconnection\\\"]}}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "kubernetes_create_job_1": "OK"
+        }
+      },
+      "description": "Wait for Kubernetes remediation Job completion.",
+      "predecessors": [
+        "kubernetes_create_job_1"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-kubernetes-job-completed/result');\n  const body = await response.json();\n\n  const status = body?.status || {};\n  const succeeded = Number(status.succeeded || 0);\n  const failed = Number(status.failed || 0);\n\n  if (failed > 0 || succeeded === 0) {\n    throw new Error('Kubernetes remediation did not complete successfully. succeeded=' + succeeded + ', failed=' + failed);\n  }\n\n  return body;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-kubernetes-job-completed": "OK"
+        }
+      },
+      "description": "Final verification of remediation Job success.",
+      "predecessors": [
+        "wait-for-kubernetes-job-completed"
+      ]
+    }
+  }
+}
