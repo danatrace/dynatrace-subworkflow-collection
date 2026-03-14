@@ -1,0 +1,111 @@
+{
+  "title": "subworkflow - aws remediate ebs replace unhealthy ebs volume",
+  "description": "Subworkflow: Replace failing EBS volume with a fresh restored volume.\\n\\nThis remediation subworkflow starts an AWS Systems Manager Automation runbook, waits for completion, and verifies the execution result before returning.\\n\\nParameters\\nprimaryResourceId (Required): Primary AWS resource identifier targeted by remediation.\\nawsregion (Required): AWS region where remediation should run.\\ndynatraceawsconnection (Required): Dynatrace AWS OIDC connection name.\\nAutomationAssumeRolearn (Optional): IAM role ARN for automation execution context.\\nvolumeId (Optional): EBS volume id (vol-xxxx).\\ninstanceId (Optional): EC2 instance id (i-xxxx).\\nsnapshotId (Optional): EBS snapshot id (snap-xxxx).\\ntargetRegion (Optional): Secondary region for copy/failover operations.\\ndbInstanceIdentifier (Optional): Database instance identifier for maintenance operations.\\n\\nThis workflow never fire-and-forgets and always performs wait plus success verification.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "primaryResourceId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground",
+    "AutomationAssumeRolearn": "",
+    "volumeId": "",
+    "instanceId": "",
+    "snapshotId": "",
+    "targetRegion": "",
+    "availabilityZone": "",
+    "kmsKeyId": "",
+    "volumeType": "",
+    "iops": "",
+    "throughput": "",
+    "filesystemType": "xfs",
+    "mountPoint": "/data",
+    "deviceName": "/dev/nvme1n1",
+    "dbInstanceIdentifier": "",
+    "dbClusterIdentifier": "",
+    "dbName": "",
+    "tableName": "",
+    "indexName": "",
+    "s3Bucket": ""
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udee0\ufe0f AWS EBS Remediation Subworkflow\\n\\nThis subworkflow remediates a common AWS EBS outage or maintenance scenario by executing an AWS SSM Automation runbook and validating completion.\\n\\n### \ud83c\udfaf Purpose\\n- Replace failing EBS volume with a fresh restored volume.\\n\\n### \u2699\ufe0f Parameters\\n- \ud83d\udd11 **primaryResourceId** (Required): Primary AWS resource ID to remediate.\\n- \ud83c\udf0d **awsregion** (Required): AWS region for execution.\\n- \ud83d\udd0c **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection.\\n- \ud83d\udd10 **AutomationAssumeRolearn** (Optional): IAM role ARN used by automation.\\n- \ud83d\udcbd **volumeId** (Optional): EBS volume identifier.\\n- \ud83e\udde0 **instanceId** (Optional): EC2 instance identifier.\\n- \ud83d\udcf8 **snapshotId** (Optional): Snapshot identifier for backup/restore.\\n- \ud83c\udf10 **targetRegion** (Optional): DR region for copy/failover.\\n\\n### \u25b6\ufe0f Execution Behavior\\n- \u25b6\ufe0f Starts SSM Automation runbook **AWSSupport-ReplaceUnhealthyEbsVolume**.\\n- \u23f3 Waits for execution completion using dependency subworkflow.\\n- \u2705 Verifies status and fails if execution is not SUCCESS.\\n\\n### \ud83d\udccb AWS Runbook\\n- **AWSSupport-ReplaceUnhealthyEbsVolume**\\n\\n### \ud83d\udd17 Dependencies\\n- \ud83d\udcce Requires subworkflow **subworkflow - aws wait for systems manager document execution**.",
+  "tasks": {
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"PrimaryResourceId\": [\n    \"{{ input()[\\\"primaryResourceId\\\"] }}\"\n  ],\n  \"AutomationAssumeRole\": [\n    \"{{ input()[\\\"AutomationAssumeRolearn\\\"] }}\"\n  ],\n  \"VolumeId\": [\n    \"{{ input()[\\\"volumeId\\\"] }}\"\n  ],\n  \"InstanceId\": [\n    \"{{ input()[\\\"instanceId\\\"] }}\"\n  ],\n  \"SnapshotId\": [\n    \"{{ input()[\\\"snapshotId\\\"] }}\"\n  ],\n  \"TargetRegion\": [\n    \"{{ input()[\\\"targetRegion\\\"] }}\"\n  ],\n  \"AvailabilityZone\": [\n    \"{{ input()[\\\"availabilityZone\\\"] }}\"\n  ],\n  \"KmsKeyId\": [\n    \"{{ input()[\\\"kmsKeyId\\\"] }}\"\n  ],\n  \"VolumeType\": [\n    \"{{ input()[\\\"volumeType\\\"] }}\"\n  ],\n  \"Iops\": [\n    \"{{ input()[\\\"iops\\\"] }}\"\n  ],\n  \"Throughput\": [\n    \"{{ input()[\\\"throughput\\\"] }}\"\n  ],\n  \"FilesystemType\": [\n    \"{{ input()[\\\"filesystemType\\\"] }}\"\n  ],\n  \"MountPoint\": [\n    \"{{ input()[\\\"mountPoint\\\"] }}\"\n  ],\n  \"DeviceName\": [\n    \"{{ input()[\\\"deviceName\\\"] }}\"\n  ],\n  \"DbInstanceIdentifier\": [\n    \"{{ input()[\\\"dbInstanceIdentifier\\\"] }}\"\n  ],\n  \"DbClusterIdentifier\": [\n    \"{{ input()[\\\"dbClusterIdentifier\\\"] }}\"\n  ],\n  \"DbName\": [\n    \"{{ input()[\\\"dbName\\\"] }}\"\n  ],\n  \"TableName\": [\n    \"{{ input()[\\\"tableName\\\"] }}\"\n  ],\n  \"IndexName\": [\n    \"{{ input()[\\\"indexName\\\"] }}\"\n  ],\n  \"S3Bucket\": [\n    \"{{ input()[\\\"s3Bucket\\\"] }}\"\n  ]\n}",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWSSupport-ReplaceUnhealthyEbsVolume"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Start AWS SSM remediation runbook.",
+      "predecessors": []
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "c0000000-0000-4000-c000-000000000000",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\\\"systems_manager_start_automation_execution_1\\\").AutomationExecutionId}}\",\n\"awsregion\":\"{{input()[\\\"awsregion\\\"]}}\",\n\"dynatraceawsconnection\":\"{{input()[\\\"dynatraceawsconnection\\\"]}}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Wait for SSM automation execution to complete.",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-ssm-execution-completed/result');\n  const configBody = await configGet.json();\n\n  const status = (configBody?.AutomationExecution?.AutomationExecutionStatus || configBody?.AutomationExecutionStatus || '').toUpperCase();\n\n  if (status !== 'SUCCESS') {\n    throw new Error('SSM remediation runbook failed with status: ' + status);\n  }\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Validate SSM remediation execution status.",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    }
+  }
+}

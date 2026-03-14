@@ -1,0 +1,62 @@
+{
+  "title": "subworkflow - aws wait for systems manager document execution",
+  "description": "Subworkflow to wait for AWS SSM Automation execution to finish and validate execution status.\n\nThis helper subworkflow is used by EBS remediation workflows so they never fire-and-forget. It polls execution state until terminal status and surfaces failures back to the parent workflow.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\").AutomationExecution }}",
+  "type": "STANDARD",
+  "input": {
+    "awsregion": "us-east-1",
+    "AutomationExecutionId": "",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u23f3 AWS SSM Wait Helper\n\n\ud83e\udde0 This helper subworkflow polls AWS Systems Manager Automation execution state and guarantees remediation workflows do not proceed until execution has finished.\n\n### \u2699\ufe0f Parameters\n- \ud83c\udf0d **awsregion** (Required): AWS region where automation executes.\n- \ud83e\uddfe **AutomationExecutionId** (Required): Execution id returned by start automation action.\n- \ud83d\udd0c **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection.\n\n### \ud83e\udde0 Workflow Logic\n- \ud83d\udd0d Reads current execution status.\n- \ud83d\udd01 Throws retry while status is `INPROGRESS` or `PENDING`.\n- \u2705 Returns result once execution is terminal.\n- \u274c Parent workflow performs strict SUCCESS validation in the final check task.",
+  "tasks": {
+    "get-status": {
+      "name": "get-status",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "AutomationExecutionId": "{{ input()[\"AutomationExecutionId\"] }}"
+      },
+      "action": "dynatrace.aws.connector:ssm-get-automation-execution",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Get details for an AWS SSM Automation execution.",
+      "predecessors": []
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/get-status/result');\n  const configBody = await configGet.json();\n  const status = (configBody?.AutomationExecution?.AutomationExecutionStatus || '').toUpperCase();\n\n  if (status === 'INPROGRESS' || status === 'PENDING') {\n    throw new Error('Automation still running, retrying...');\n  }\n\n  return configBody;\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-status": "OK"
+        }
+      },
+      "description": "Retry while SSM automation execution is still running.",
+      "predecessors": [
+        "get-status"
+      ]
+    }
+  }
+}
