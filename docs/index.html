@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subworkflow Marketplace Catalog</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <header class="hero">
+      <p class="eyebrow">Dynatrace Subworkflow Collection</p>
+      <h1>Marketplace Catalog</h1>
+      <p id="summary-text" class="summary">Loading catalog data...</p>
+    </header>
+
+    <main class="container">
+      <section class="controls">
+        <div class="tabs" role="tablist" aria-label="Section selector">
+          <button id="tab-tested" class="tab active" data-section="tested" role="tab" aria-selected="true">
+            Tested <span id="count-tested" class="count-chip">0</span>
+          </button>
+          <button id="tab-untested" class="tab" data-section="untested" role="tab" aria-selected="false">
+            Untested <span id="count-untested" class="count-chip">0</span>
+          </button>
+        </div>
+
+        <div class="filters">
+          <label>
+            Search
+            <input id="search-input" type="search" placeholder="Title, path, guide, tags" />
+          </label>
+          <label>
+            Folder
+            <select id="folder-filter">
+              <option value="all">All folders</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="result-meta">
+        <p id="result-count">0 workflows</p>
+        <div class="pager">
+          <button id="prev-page" class="page-button" type="button">Previous</button>
+          <span id="page-info">Page 1 / 1</span>
+          <button id="next-page" class="page-button" type="button">Next</button>
+        </div>
+      </section>
+
+      <section id="catalog" class="catalog" aria-live="polite"></section>
+    </main>
+
+    <template id="card-template">
+      <article class="card">
+        <div class="card-head">
+          <h2 class="card-title"></h2>
+          <span class="section-pill"></span>
+        </div>
+        <p class="card-path"></p>
+        <p class="card-folder"></p>
+        <p class="card-description"></p>
+        <details class="guide-details">
+          <summary>Guide details</summary>
+          <pre class="guide-text"></pre>
+        </details>
+        <div class="tag-list"></div>
+        <div class="card-actions">
+          <a class="button button-primary download-link" target="_blank" rel="noopener">Download subworkflow</a>
+          <a class="button button-secondary source-link" target="_blank" rel="noopener">View source</a>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
