@@ -273,7 +273,7 @@ function normalizeGuideLine(line) {
     .trim();
 }
 
-function getGuidePreviewMarkdown(item, maxLines = 5) {
+function getGuidePreviewMarkdown(item, maxLines = 3) {
   const normalizedSource = normalizeMarkdownSource(
     item.guide || item.guideText || item.description || "",
   );
