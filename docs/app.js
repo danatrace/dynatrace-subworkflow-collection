@@ -261,19 +261,18 @@ function renderGuideMarkdown(markdownText) {
 function normalizeGuideLine(line) {
   return (line || "")
     .toString()
-    .replace(/^#{1,6}\s*/, "")
-    .replace(/^[-*+]\s+/, "")
-    .replace(/^\d+\.\s+/, "")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/[*_`~]/g, "")
-    .replace(/^[^a-zA-Z0-9(\[]+/, "")
-    .replace(/\s{2,}/g, " ")
+    .replace(/\s+$/g, "")
     .trim();
 }
 
-function getGuidePreview(item, maxLines = 5) {
-  const source = (item.guideSummary || item.guideText || item.guide || item.description || "").toString();
-  const lines = source
+function getGuidePreviewMarkdown(item, maxLines = 5) {
+  const source = (item.guide || item.guideText || item.description || "").toString();
+  const normalizedSource = source
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n");
+
+  const lines = normalizedSource
     .split(/\r?\n/)
     .map(normalizeGuideLine)
     .filter((line) => !/^[-=]{3,}$/.test(line))
@@ -281,10 +280,27 @@ function getGuidePreview(item, maxLines = 5) {
     .slice(0, maxLines);
 
   if (lines.length === 0) {
-    return "No guide preview available. Click \"View Guide\" for full details.";
+    return "No guide preview available. Click **View Guide** for full details.";
   }
 
   return lines.join("\n");
+}
+
+function renderCardPreviewMarkdown(markdownText) {
+  if (window.marked?.parse) {
+    const rawHtml = window.marked.parse(markdownText, {
+      gfm: true,
+      breaks: true,
+    });
+
+    if (window.DOMPurify?.sanitize) {
+      return window.DOMPurify.sanitize(rawHtml);
+    }
+
+    return rawHtml;
+  }
+
+  return `<p>${escapeHtml(markdownText).replace(/\n/g, "<br>")}</p>`;
 }
 
 function drawCards(items) {
@@ -294,7 +310,9 @@ function drawCards(items) {
     const node = cardTemplate.content.firstElementChild.cloneNode(true);
 
     node.querySelector(".card-title").textContent = item.title || item.path;
-  node.querySelector(".card-description").textContent = getGuidePreview(item, 5);
+    node.querySelector(".card-description").innerHTML = renderCardPreviewMarkdown(
+      getGuidePreviewMarkdown(item, 5),
+    );
 
     const sectionPill = node.querySelector(".section-pill");
     sectionPill.textContent = item.section === "tested" ? "Tested" : "Untested";
@@ -316,7 +334,7 @@ function drawCards(items) {
     guideBtn.addEventListener("click", () => {
       document.getElementById("modal-title").textContent = item.title || item.path;
       document.getElementById("modal-content").innerHTML = renderGuideMarkdown(
-        item.guideText || item.guide || item.description || "No guide available.",
+        item.guide || item.guideText || item.description || "No guide available.",
       );
       document.getElementById("guide-modal").hidden = false;
     });

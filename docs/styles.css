@@ -281,7 +281,38 @@ select {
   color: var(--ink-soft);
   font-size: 0.88rem;
   line-height: 1.45;
-  white-space: pre-line;
+}
+
+.card-description p,
+.card-description ul,
+.card-description ol {
+  margin: 0.15rem 0;
+}
+
+.card-description h1,
+.card-description h2,
+.card-description h3,
+.card-description h4,
+.card-description h5,
+.card-description h6 {
+  margin: 0.2rem 0;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.card-description ul,
+.card-description ol {
+  padding-left: 1.1rem;
+}
+
+.card-description code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.8rem;
+  background: #f2f4f7;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.06rem 0.28rem;
 }
 
 .button-guide {
