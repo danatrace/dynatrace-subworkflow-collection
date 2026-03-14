@@ -319,7 +319,7 @@ function drawCards(items) {
 
     node.querySelector(".card-title").textContent = item.title || item.path;
     node.querySelector(".card-description").innerHTML = renderCardPreviewMarkdown(
-      getGuidePreviewMarkdown(item, 1),
+      getGuidePreviewMarkdown(item, 2),
     );
 
     const sectionPill = node.querySelector(".section-pill");

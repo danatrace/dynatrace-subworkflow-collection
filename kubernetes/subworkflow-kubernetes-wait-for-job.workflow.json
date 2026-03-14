@@ -13,7 +13,7 @@
     "dynatracekubernetesconnection": "kubernetesplayground"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \u23f3 Subworkflow to Wait for Kubernetes Job Completion\n\n\ud83e\udde0 This helper subworkflow polls the Kubernetes Job created by remediation workflows and ensures the Job really succeeded before parent workflows continue.\n\n### \u2699\ufe0f Parameters\n- \ud83d\udcc1 **namespace** (Required): Namespace where the remediation Job runs.\n- \ud83e\uddfe **jobName** (Required): Kubernetes Job name returned by the create action.\n- \ud83d\udd0c **dynatracekubernetesconnection** (Required): Dynatrace Kubernetes connection name.\n\n### \ud83e\udde0 Workflow Logic\n- \ud83d\udd0d Fetches Kubernetes Job status from the cluster.\n- \u2705 Succeeds only when status.succeeded > 0.\n- \ud83d\udd01 Retries while Job is still active/pending.\n- \u274c Fails immediately when status.failed > 0.",
+  "guide": "## Subworkflow to wait for a Kubernetes Job remediation action to finish and validate execution state.\n\n🧠 This helper subworkflow polls the Kubernetes Job created by remediation workflows and ensures the Job really succeeded before parent workflows continue.\n\n### ⚙️ Parameters\n- 📁 **namespace** (Required): Namespace where the remediation Job runs.\n- 🧾 **jobName** (Required): Kubernetes Job name returned by the create action.\n- 🔌 **dynatracekubernetesconnection** (Required): Dynatrace Kubernetes connection name.\n\n### 🧠 Workflow Logic\n- 🔍 Fetches Kubernetes Job status from the cluster.\n- ✅ Succeeds only when status.succeeded > 0.\n- 🔁 Retries while Job is still active/pending.\n- ❌ Fails immediately when status.failed > 0.",
   "tasks": {
     "get-job-status": {
       "name": "get-job-status",

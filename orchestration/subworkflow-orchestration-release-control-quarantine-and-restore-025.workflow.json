@@ -30,7 +30,7 @@
     "githubConnectionId": ""
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83c\udf9b\ufe0f Orchestration Subworkflow\\n\\n### \ud83c\udfaf Purpose\\n- Orchestrate release control with quarantine and restore and enforced post-action verification.\\n\\n### \u2699\ufe0f Execution Pattern\\n- \u25b6\ufe0f Execute a primary Dynatrace action\\n- \u23f3 Wait for completion/stabilization\\n- \u2705 Check terminal status and fail when unsuccessful\\n\\n### \ud83e\udde9 Primary Action\\n- **dynatrace.aws.connector:s3-put-public-access-block**\\n\\n### \ud83d\udd10 Safety\\n- \u274c No fire-and-forget behavior\\n- \u2705 Retries are enabled for wait stabilization checks",
+  "guide": "## Orchestration subworkflow for release-control / quarantine-and-restore.\\n\\n### 🎯 Purpose\\n- Orchestrate release control with quarantine and restore and enforced post-action verification.\\n\\n### ⚙️ Execution Pattern\\n- ▶️ Execute a primary Dynatrace action\\n- ⏳ Wait for completion/stabilization\\n- ✅ Check terminal status and fail when unsuccessful\\n\\n### 🧩 Primary Action\\n- **dynatrace.aws.connector:s3-put-public-access-block**\\n\\n### 🔐 Safety\\n- ❌ No fire-and-forget behavior\\n- ✅ Retries are enabled for wait stabilization checks",
   "tags": [
     "orchestration",
     "release-control",

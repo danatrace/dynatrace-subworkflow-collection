@@ -13,7 +13,7 @@
     "dynatraceawsconnection": "awsplayground"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \u23f3 AWS SSM Automation Wait Helper\\n\\n\ud83e\udde0 Wait helper for Bedrock-aware remediation and orchestration flows.\\n\\n### \u2699\ufe0f Parameters\\n- \ud83c\udf0d **awsregion**\\n- \ud83e\uddfe **AutomationExecutionId**\\n- \ud83d\udd0c **dynatraceawsconnection**\\n\\n### \ud83d\udd01 Behavior\\n- Polls SSM automation execution\\n- Retries while status is running\\n- Returns terminal payload for parent success validation",
+  "guide": "## Helper subworkflow that waits for AWS SSM automation executions to finish. Used by Bedrock-aware remediation workflows to enforce wait and status checks.\\n\\n🧠 Wait helper for Bedrock-aware remediation and orchestration flows.\\n\\n### ⚙️ Parameters\\n- 🌍 **awsregion**\\n- 🧾 **AutomationExecutionId**\\n- 🔌 **dynatraceawsconnection**\\n\\n### 🔁 Behavior\\n- Polls SSM automation execution\\n- Retries while status is running\\n- Returns terminal payload for parent success validation",
   "tasks": {
     "get-status": {
       "name": "get-status",

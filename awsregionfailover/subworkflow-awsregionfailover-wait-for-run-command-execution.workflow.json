@@ -13,7 +13,7 @@
     "dynatraceawsconnection": "awsplayground"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \u23f3 AWS Region Failover Helper: Wait for Run Command\\n\\n\ud83e\udde0 Polls AWS SSM Run Command status and retries while still running.\\n\\n### \u2699\ufe0f Inputs\\n- \ud83c\udf0d `awsregion`\\n- \ud83e\uddfe `CommandId`\\n- \ud83d\udd0c `dynatraceawsconnection`\\n\\n### \u2705 Behavior\\n- Calls `ssm-list-commands`\\n- Retries while status is in-progress\\n- Returns final command status payload",
+  "guide": "## Helper subworkflow to wait for AWS SSM Run Command completion during region failover orchestrations.\\n\\n🧠 Polls AWS SSM Run Command status and retries while still running.\\n\\n### ⚙️ Inputs\\n- 🌍 `awsregion`\\n- 🧾 `CommandId`\\n- 🔌 `dynatraceawsconnection`\\n\\n### ✅ Behavior\\n- Calls `ssm-list-commands`\\n- Retries while status is in-progress\\n- Returns final command status payload",
   "tasks": {
     "get-status": {
       "name": "get-status",

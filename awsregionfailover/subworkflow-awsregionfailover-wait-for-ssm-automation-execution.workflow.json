@@ -13,7 +13,7 @@
     "dynatraceawsconnection": "awsplayground"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \u23f3 AWS Region Failover Helper: Wait for SSM Automation\\n\\n\ud83e\udde0 Polls SSM Automation status and retries while still running.\\n\\n### \u2699\ufe0f Inputs\\n- \ud83c\udf0d `awsregion`\\n- \ud83e\uddfe `AutomationExecutionId`\\n- \ud83d\udd0c `dynatraceawsconnection`\\n\\n### \u2705 Behavior\\n- Calls `ssm-get-automation-execution`\\n- Retries while status is in-progress\\n- Returns final automation payload",
+  "guide": "## Helper subworkflow to wait for AWS SSM Automation completion during region failover orchestrations.\\n\\n🧠 Polls SSM Automation status and retries while still running.\\n\\n### ⚙️ Inputs\\n- 🌍 `awsregion`\\n- 🧾 `AutomationExecutionId`\\n- 🔌 `dynatraceawsconnection`\\n\\n### ✅ Behavior\\n- Calls `ssm-get-automation-execution`\\n- Retries while status is in-progress\\n- Returns final automation payload",
   "tasks": {
     "get-status": {
       "name": "get-status",

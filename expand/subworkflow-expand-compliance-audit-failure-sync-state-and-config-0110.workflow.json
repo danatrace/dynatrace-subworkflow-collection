@@ -32,7 +32,7 @@
     "githubConnectionId": ""
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83e\udde9 Enterprise Expansion Subworkflow\\n\\n### \ud83c\udfaf Enterprise Concern\\n- **compliance audit failure**\\n\\n### \ud83d\udee0\ufe0f Pattern\\n- **sync state and config**\\n\\n### \u2699\ufe0f Primary Action\\n- **dynatrace.aws.connector:s3-put-public-access-block**\\n\\n### \u25b6\ufe0f Execution Behavior\\n- \u25b6\ufe0f Execute action\\n- \u23f3 Wait for stabilization\\n- \u2705 Check terminal status and fail on unsuccessful outcome\\n\\n### \ud83e\udde0 Why This Matters\\n- Helps enterprise teams automate high-friction operational controls and reduce outage risk.",
+  "guide": "## Enterprise expansion subworkflow for fear theme `compliance-audit-failure` and pattern `sync-state-and-config`.\\n\\n### 🎯 Enterprise Concern\\n- **compliance audit failure**\\n\\n### 🛠️ Pattern\\n- **sync state and config**\\n\\n### ⚙️ Primary Action\\n- **dynatrace.aws.connector:s3-put-public-access-block**\\n\\n### ▶️ Execution Behavior\\n- ▶️ Execute action\\n- ⏳ Wait for stabilization\\n- ✅ Check terminal status and fail on unsuccessful outcome\\n\\n### 🧠 Why This Matters\\n- Helps enterprise teams automate high-friction operational controls and reduce outage risk.",
   "tags": [
     "expand",
     "enterprise",

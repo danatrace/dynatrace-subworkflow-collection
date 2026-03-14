@@ -32,7 +32,7 @@
     "githubConnectionId": ""
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83e\udde9 Enterprise Expansion Subworkflow\\n\\n### \ud83c\udfaf Enterprise Concern\\n- **change failure regression**\\n\\n### \ud83d\udee0\ufe0f Pattern\\n- **restore service capacity**\\n\\n### \u2699\ufe0f Primary Action\\n- **dynatrace.automations:http-function**\\n\\n### \u25b6\ufe0f Execution Behavior\\n- \u25b6\ufe0f Execute action\\n- \u23f3 Wait for stabilization\\n- \u2705 Check terminal status and fail on unsuccessful outcome\\n\\n### \ud83e\udde0 Why This Matters\\n- Helps enterprise teams automate high-friction operational controls and reduce outage risk.",
+  "guide": "## Enterprise expansion subworkflow for fear theme `change-failure-regression` and pattern `restore-service-capacity`.\\n\\n### 🎯 Enterprise Concern\\n- **change failure regression**\\n\\n### 🛠️ Pattern\\n- **restore service capacity**\\n\\n### ⚙️ Primary Action\\n- **dynatrace.automations:http-function**\\n\\n### ▶️ Execution Behavior\\n- ▶️ Execute action\\n- ⏳ Wait for stabilization\\n- ✅ Check terminal status and fail on unsuccessful outcome\\n\\n### 🧠 Why This Matters\\n- Helps enterprise teams automate high-friction operational controls and reduce outage risk.",
   "tags": [
     "expand",
     "enterprise",
