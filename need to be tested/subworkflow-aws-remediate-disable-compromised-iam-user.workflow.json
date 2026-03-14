@@ -1,0 +1,93 @@
+{
+  "title": "subworkflow - aws remediate disable compromised iam user",
+  "description": "Subworkflow: Disable compromised IAM user access as immediate containment.\\n\\nThis remediation subworkflow starts an AWS Systems Manager Automation runbook, waits for completion, and verifies the execution result before returning.\\n\\nParameters\\nprimaryResourceId (Required): Primary AWS resource identifier targeted by remediation.\\nawsregion (Required): AWS region where the remediation should run.\\ndynatraceawsconnection (Required): Dynatrace AWS OIDC connection name.\\nAutomationAssumeRolearn (Optional): IAM role ARN for automation execution context.\\n\\nThis workflow never fire-and-forgets and always performs wait plus success verification.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "primaryResourceId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground",
+    "AutomationAssumeRolearn": ""
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🛠️ AWS Remediation Subworkflow\\n\\nThis subworkflow remediates a common AWS outage scenario by executing an AWS SSM Automation runbook and validating completion.\\n\\n### 🎯 Purpose\\n- Disable compromised IAM user access as immediate containment.\\n\\n### ⚙️ Parameters\\n- 🔑 **primaryResourceId** (Required): Primary AWS resource ID to remediate.\\n- 🌍 **awsregion** (Required): AWS region for execution.\\n- 🔌 **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection.\\n- 🔐 **AutomationAssumeRolearn** (Optional): IAM role ARN used by automation.\\n\\n### ▶️ Execution Behavior\\n- ▶️ Starts SSM Automation runbook **AWS-DisableIAMUser**.\\n- ⏳ Waits for execution completion using dependency subworkflow.\\n- ✅ Verifies status and fails if execution is not SUCCESS.\\n\\n### 📋 AWS Runbook\\n- **AWS-DisableIAMUser**\\n\\n### 🔗 Dependencies\\n- 📎 Requires subworkflow **subworkflow - aws wait for systems manager document execution**.",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from @dynatrace-sdk/automation-utils;\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus?.toUpperCase?.() || ;\n  console.log(status);\n\n  if (status !== SUCCESS) {\n    throw new Error(`SSM remediation runbook failed with status: ${status}`);\n  }\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Validate SSM remediation execution status.",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\\\"systems_manager_start_automation_execution_1\\\").AutomationExecutionId}}\",\n\"awsregion\":\"{{input()[\\\"awsregion\\\"]}}\",\n\"dynatraceawsconnection\":\"{{input()[\\\"dynatraceawsconnection\\\"]}}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Wait for SSM automation execution to complete.",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"PrimaryResourceId\": [\"{{ input()[\\\"primaryResourceId\\\"] }}\"],\n  \"AutomationAssumeRole\": [\"{{ input()[\\\"AutomationAssumeRolearn\\\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection(builtin:hyperscaler-authentication.connections.aws, awsconnection) }}",
+        "DocumentName": "AWS-DisableIAMUser"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Start AWS SSM remediation runbook.",
+      "predecessors": []
+    }
+  }
+}
