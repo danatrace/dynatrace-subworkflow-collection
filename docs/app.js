@@ -239,8 +239,16 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function normalizeMarkdownSource(value, fallback = "") {
+  return (value || fallback)
+    .toString()
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n");
+}
+
 function renderGuideMarkdown(markdownText) {
-  const source = (markdownText || "No guide available.").toString();
+  const source = normalizeMarkdownSource(markdownText, "No guide available.");
 
   if (window.marked?.parse) {
     const rawHtml = window.marked.parse(source, {
@@ -266,11 +274,9 @@ function normalizeGuideLine(line) {
 }
 
 function getGuidePreviewMarkdown(item, maxLines = 5) {
-  const source = (item.guide || item.guideText || item.description || "").toString();
-  const normalizedSource = source
-    .replace(/\\r\\n/g, "\n")
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\n");
+  const normalizedSource = normalizeMarkdownSource(
+    item.guide || item.guideText || item.description || "",
+  );
 
   const lines = normalizedSource
     .split(/\r?\n/)
@@ -287,8 +293,10 @@ function getGuidePreviewMarkdown(item, maxLines = 5) {
 }
 
 function renderCardPreviewMarkdown(markdownText) {
+  const source = normalizeMarkdownSource(markdownText);
+
   if (window.marked?.parse) {
-    const rawHtml = window.marked.parse(markdownText, {
+    const rawHtml = window.marked.parse(source, {
       gfm: true,
       breaks: true,
     });
@@ -300,7 +308,7 @@ function renderCardPreviewMarkdown(markdownText) {
     return rawHtml;
   }
 
-  return `<p>${escapeHtml(markdownText).replace(/\n/g, "<br>")}</p>`;
+  return `<p>${escapeHtml(source).replace(/\n/g, "<br>")}</p>`;
 }
 
 function drawCards(items) {
