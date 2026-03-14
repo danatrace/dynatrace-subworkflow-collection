@@ -27,6 +27,7 @@ const state = {
   search: "",
   folder: "all",
   page: 1,
+  selectedPaths: new Set(),
 };
 
 const summaryText = document.getElementById("summary-text");
@@ -41,6 +42,67 @@ const prevPageButton = document.getElementById("prev-page");
 const nextPageButton = document.getElementById("next-page");
 const cardTemplate = document.getElementById("card-template");
 const tabButtons = [...document.querySelectorAll(".tab")];
+const selectedCount = document.getElementById("selected-count");
+const generateTerraformButton = document.getElementById("generate-terraform");
+const terraformModal = document.getElementById("terraform-modal");
+const terraformContent = document.getElementById("terraform-content");
+
+function sanitizeTfName(path) {
+  return normalize(path)
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 64) || "workflow";
+}
+
+function buildTerraformExample(items) {
+  const header = [
+    "terraform {",
+    "  required_providers {",
+    "    dynatrace = {",
+    "      source  = \"dynatrace-oss/dynatrace\"",
+    "      version = \">= 1.80.0\"",
+    "    }",
+    "  }",
+    "}",
+    "",
+    "provider \"dynatrace\" {",
+    "  dt_env_url = var.dt_env_url",
+    "  dt_api_token = var.dt_api_token",
+    "}",
+    "",
+    "variable \"dt_env_url\" { type = string }",
+    "variable \"dt_api_token\" { type = string, sensitive = true }",
+    "",
+    "# Place workflow JSON files under ./workflows/ before running terraform apply.",
+  ].join("\n");
+
+  const blocks = items
+    .map((item) => {
+      const resourceName = sanitizeTfName(item.path);
+      const fileName = item.path.split("/").pop();
+      return [
+        `resource \"dynatrace_automation_workflow\" \"${resourceName}\" {`,
+        `  workflow_json = file(\"\${path.module}/workflows/${fileName}\")`,
+        "}",
+        "",
+        "# Optional import block if this workflow already exists in your tenant.",
+        "# Replace <existing-workflow-id> with the real Dynatrace workflow ID.",
+        "# import {",
+        `#   to = dynatrace_automation_workflow.${resourceName}`,
+        "#   id = \"<existing-workflow-id>\"",
+        "# }",
+      ].join("\n");
+    })
+    .join("\n\n");
+
+  return [header, blocks].join("\n\n");
+}
+
+function updateSelectionUi() {
+  const count = state.selectedPaths.size;
+  selectedCount.textContent = `${count} selected`;
+  generateTerraformButton.disabled = count === 0;
+}
 
 function normalize(value) {
   return (value || "").toString().toLowerCase();
@@ -98,6 +160,17 @@ function drawCards(items) {
     sectionPill.textContent = item.section === "tested" ? "Tested" : "Untested";
     sectionPill.dataset.section = item.section;
 
+    const selectCheckbox = node.querySelector(".select-workflow");
+    selectCheckbox.checked = state.selectedPaths.has(item.path);
+    selectCheckbox.addEventListener("change", (event) => {
+      if (event.target.checked) {
+        state.selectedPaths.add(item.path);
+      } else {
+        state.selectedPaths.delete(item.path);
+      }
+      updateSelectionUi();
+    });
+
     const tagsContainer = node.querySelector(".tag-list");
     if (Array.isArray(item.tags) && item.tags.length > 0) {
       item.tags.slice(0, 8).forEach((tag) => {
@@ -106,7 +179,6 @@ function drawCards(items) {
         tagElement.textContent = tag;
         tagsContainer.appendChild(tagElement);
       });
-    } else {
     }
 
     // Guide button → open modal
@@ -147,12 +219,12 @@ function drawCards(items) {
       updateCountLabel(incrementDownloadCount(item.path));
     });
 
-    const sourceLink = node.querySelector(".source-link");
     fragment.appendChild(node);
   }
 
   catalog.innerHTML = "";
   catalog.appendChild(fragment);
+  updateSelectionUi();
 }
 
 function updateFolderFilter() {
@@ -245,6 +317,16 @@ function setupEvents() {
   nextPageButton.addEventListener("click", () => {
     state.page += 1;
     render();
+  });
+
+  generateTerraformButton.addEventListener("click", () => {
+    const selectedItems = state.all.filter((item) => state.selectedPaths.has(item.path));
+    if (selectedItems.length === 0) {
+      return;
+    }
+
+    terraformContent.textContent = buildTerraformExample(selectedItems);
+    terraformModal.hidden = false;
   });
 }
 

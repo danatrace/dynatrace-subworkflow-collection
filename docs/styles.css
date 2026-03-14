@@ -167,6 +167,17 @@ select {
   gap: 1rem;
 }
 
+.selection-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+#selected-count {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
 .pager {
   display: flex;
   align-items: center;
@@ -218,8 +229,25 @@ select {
 
 .card-head {
   display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.select-workflow-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  margin-right: auto;
+}
+
+.select-workflow {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
 }
 
 .card-title {
@@ -424,5 +452,10 @@ select {
   .result-meta {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .selection-tools {
+    width: 100%;
+    justify-content: space-between;
   }
 }
