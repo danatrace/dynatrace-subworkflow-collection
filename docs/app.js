@@ -96,9 +96,6 @@ function drawCards(items) {
     const summary = item.guideSummary || item.description || "No guide text available.";
     node.querySelector(".card-description").textContent = summary;
 
-    const guideText = item.guideText || item.guide || item.description || "No guide text available.";
-    node.querySelector(".guide-text").textContent = guideText;
-
     const sectionPill = node.querySelector(".section-pill");
     sectionPill.textContent = item.section === "tested" ? "Tested" : "Untested";
     sectionPill.dataset.section = item.section;
