@@ -91,8 +91,6 @@ function drawCards(items) {
 
     node.querySelector(".card-title").textContent = item.title || item.path;
     node.querySelector(".card-path").textContent = item.path;
-    node.querySelector(".card-folder").textContent = `Folder: ${item.folder}`;
-
     const summary = item.guideSummary || item.description || "No guide text available.";
     node.querySelector(".card-description").textContent = summary;
 
@@ -109,10 +107,6 @@ function drawCards(items) {
         tagsContainer.appendChild(tagElement);
       });
     } else {
-      const tagElement = document.createElement("span");
-      tagElement.className = "tag";
-      tagElement.textContent = "no-tags";
-      tagsContainer.appendChild(tagElement);
     }
 
     // Guide button → open modal
@@ -154,8 +148,6 @@ function drawCards(items) {
     });
 
     const sourceLink = node.querySelector(".source-link");
-    sourceLink.href = item.sourceUrl;
-
     fragment.appendChild(node);
   }
 
