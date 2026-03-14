@@ -273,7 +273,7 @@ function normalizeGuideLine(line) {
     .trim();
 }
 
-function getGuidePreviewMarkdown(item, maxLines = 3) {
+function getGuidePreviewMarkdown(item, maxLines = 5) {
   const normalizedSource = normalizeMarkdownSource(
     item.guide || item.guideText || item.description || "",
   );
@@ -319,7 +319,7 @@ function drawCards(items) {
 
     node.querySelector(".card-title").textContent = item.title || item.path;
     node.querySelector(".card-description").innerHTML = renderCardPreviewMarkdown(
-      getGuidePreviewMarkdown(item, 3),
+      getGuidePreviewMarkdown(item, 1),
     );
 
     const sectionPill = node.querySelector(".section-pill");
