@@ -1,0 +1,109 @@
+{
+  "title": "subworkflow - orchestration capacity guard quarantine and restore",
+  "description": "Orchestration subworkflow for capacity-guard / quarantine-and-restore.\\n\\nThis workflow coordinates remediation or control-plane actions and always enforces execute -> wait -> check so actions are never fire-and-forget.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "primaryResourceId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground",
+    "AutomationAssumeRolearn": "",
+    "instanceId": "",
+    "bucketName": "",
+    "automationExecutionId": "",
+    "commandId": "",
+    "azuresubscriptionid": "",
+    "automationresourcegroup": "",
+    "automationaccountname": "",
+    "jobId": "",
+    "dynatraceazureconnection": "azureplayground",
+    "namespace": "default",
+    "jobName": "",
+    "dynatracekubernetesconnection": "kubernetesplayground",
+    "githubOwner": "",
+    "githubRepository": "",
+    "githubBranch": "main",
+    "githubConnectionId": ""
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83c\udf9b\ufe0f Orchestration Subworkflow\\n\\n### \ud83c\udfaf Purpose\\n- Orchestrate capacity guard with quarantine and restore and enforced post-action verification.\\n\\n### \u2699\ufe0f Execution Pattern\\n- \u25b6\ufe0f Execute a primary Dynatrace action\\n- \u23f3 Wait for completion/stabilization\\n- \u2705 Check terminal status and fail when unsuccessful\\n\\n### \ud83e\udde9 Primary Action\\n- **dynatrace.automations:execute-dql-query**\\n\\n### \ud83d\udd10 Safety\\n- \u274c No fire-and-forget behavior\\n- \u2705 Retries are enabled for wait stabilization checks",
+  "tags": [
+    "orchestration",
+    "capacity-guard",
+    "quarantine-and-restore",
+    "execute-wait-check"
+  ],
+  "tasks": {
+    "perform-action": {
+      "name": "perform-action",
+      "input": {
+        "query": "fetch events | limit 20"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Execute primary orchestration action.",
+      "predecessors": []
+    },
+    "wait-for-action": {
+      "name": "wait-for-action",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/perform-action/result');\n  const body = await response.json();\n\n  await new Promise((resolve) => setTimeout(resolve, 1500));\n\n  const status = (\n    body?.AutomationExecution?.AutomationExecutionStatus ||\n    body?.AutomationExecutionStatus ||\n    body?.properties?.status ||\n    body?.status ||\n    body?.state ||\n    body?.executionStatus ||\n    body?.result?.executionStatus ||\n    body?.jobStatus ||\n    ''\n  ).toString().toUpperCase();\n\n  const inProgress = ['INPROGRESS','PENDING','RUNNING','NEW','ACTIVATING','QUEUED','STARTING'];\n  if (inProgress.includes(status)) {\n    throw new Error('Action still running: ' + status);\n  }\n\n  return { status, body };\n}"
+      },
+      "retry": {
+        "count": 12,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "perform-action": "OK"
+        }
+      },
+      "description": "Wait for action stabilization.",
+      "predecessors": [
+        "perform-action"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-action/result');\n  const payload = await response.json();\n  const status = (payload?.status || '').toString().toUpperCase();\n\n  const failed = ['FAILED','FAILURE','ERROR','TIMED_OUT','CANCELLED','STOPPED','BLOCKED'];\n  if (failed.includes(status)) {\n    throw new Error('Action reported failure status: ' + status);\n  }\n\n  if (!payload || !payload.body) {\n    throw new Error('Action result payload is empty');\n  }\n\n  return payload.body;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-action": "OK"
+        }
+      },
+      "description": "Final status validation for orchestration action.",
+      "predecessors": [
+        "wait-for-action"
+      ]
+    }
+  }
+}
