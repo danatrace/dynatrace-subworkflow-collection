@@ -266,14 +266,17 @@ function normalizeGuideLine(line) {
     .replace(/^\d+\.\s+/, "")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/[*_`~]/g, "")
+    .replace(/^[^a-zA-Z0-9(\[]+/, "")
+    .replace(/\s{2,}/g, " ")
     .trim();
 }
 
 function getGuidePreview(item, maxLines = 5) {
-  const source = (item.guideText || item.guide || item.description || "").toString();
+  const source = (item.guideSummary || item.guideText || item.guide || item.description || "").toString();
   const lines = source
     .split(/\r?\n/)
     .map(normalizeGuideLine)
+    .filter((line) => !/^[-=]{3,}$/.test(line))
     .filter((line) => line.length > 0)
     .slice(0, maxLines);
 
@@ -291,7 +294,6 @@ function drawCards(items) {
     const node = cardTemplate.content.firstElementChild.cloneNode(true);
 
     node.querySelector(".card-title").textContent = item.title || item.path;
-    node.querySelector(".card-path").textContent = item.path;
   node.querySelector(".card-description").textContent = getGuidePreview(item, 5);
 
     const sectionPill = node.querySelector(".section-pill");
