@@ -258,6 +258,32 @@ function renderGuideMarkdown(markdownText) {
   return `<p>${escapeHtml(source).replace(/\n/g, "<br>")}</p>`;
 }
 
+function normalizeGuideLine(line) {
+  return (line || "")
+    .toString()
+    .replace(/^#{1,6}\s*/, "")
+    .replace(/^[-*+]\s+/, "")
+    .replace(/^\d+\.\s+/, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[*_`~]/g, "")
+    .trim();
+}
+
+function getGuidePreview(item, maxLines = 5) {
+  const source = (item.guideText || item.guide || item.description || "").toString();
+  const lines = source
+    .split(/\r?\n/)
+    .map(normalizeGuideLine)
+    .filter((line) => line.length > 0)
+    .slice(0, maxLines);
+
+  if (lines.length === 0) {
+    return "No guide preview available. Click \"View Guide\" for full details.";
+  }
+
+  return lines.join("\n");
+}
+
 function drawCards(items) {
   const fragment = document.createDocumentFragment();
 
@@ -266,6 +292,7 @@ function drawCards(items) {
 
     node.querySelector(".card-title").textContent = item.title || item.path;
     node.querySelector(".card-path").textContent = item.path;
+  node.querySelector(".card-description").textContent = getGuidePreview(item, 5);
 
     const sectionPill = node.querySelector(".section-pill");
     sectionPill.textContent = item.section === "tested" ? "Tested" : "Untested";
