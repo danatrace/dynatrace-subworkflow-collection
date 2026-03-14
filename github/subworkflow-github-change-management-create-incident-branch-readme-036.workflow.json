@@ -1,0 +1,108 @@
+{
+  "title": "subworkflow - github change management create incident branch readme",
+  "description": "GitHub remediation/orchestration subworkflow for change-management.\\n\\nThis workflow writes or updates an operational control document in GitHub and enforces non-fire-and-forget behavior using explicit wait and verification tasks.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "githubOwner": "",
+    "githubRepository": "",
+    "githubBranch": "main",
+    "githubConnectionId": "",
+    "createNewBranch": "false",
+    "commitMessage": "chore(automation): create-incident-branch-readme for change-management",
+    "filePathOverride": "",
+    "fileContentOverride": "",
+    "primaryResourceId": "",
+    "incidentId": "",
+    "serviceName": ""
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\uddf0 GitHub Remediation & Orchestration Subworkflow\\n\\n### \ud83c\udfaf Purpose\\n- Create incident branch README with diagnostics summary.\\n\\n### \u2699\ufe0f Parameters\\n- \ud83c\udfe2 **githubOwner**: GitHub organization or user\\n- \ud83d\udce6 **githubRepository**: Target repository\\n- \ud83c\udf3f **githubBranch**: Target branch\\n- \ud83d\udd0c **githubConnectionId**: Dynatrace GitHub connection\\n- \ud83d\uddc2\ufe0f **filePathOverride**: Optional custom path override\\n- \ud83d\udcdd **fileContentOverride**: Optional custom content override\\n\\n### \u25b6\ufe0f Execution Behavior\\n- \u25b6\ufe0f Execute Dynatrace GitHub connector action to write/update file\\n- \u23f3 Wait for finalized connector result (SHA present)\\n- \u2705 Verify commit/content SHA and fail if missing\\n\\n### \ud83d\udd10 Safety\\n- \u274c Never fire-and-forget\\n- \u2705 Explicit wait and final verification tasks are mandatory",
+  "tags": [
+    "github",
+    "remediation",
+    "orchestration",
+    "change-management",
+    "create-incident-branch-readme"
+  ],
+  "tasks": {
+    "github_create_or_replace_file_1": {
+      "name": "github_create_or_replace_file_1",
+      "input": {
+        "owner": "{{ input()[\"githubOwner\"] }}",
+        "repository": "{{ input()[\"githubRepository\"] }}",
+        "branch": "{{ input()[\"githubBranch\"] }}",
+        "filePath": "{{ input()[\"filePathOverride\"] if input()[\"filePathOverride\"] else \"operations/change-management/create-incident-branch-readme-036.md\" }}",
+        "fileContent": "{{ input()[\"fileContentOverride\"] if input()[\"fileContentOverride\"] else \"# Automation Evidence\\n\\n- Context: change-management\\n- Pattern: create-incident-branch-readme\\n- Purpose: Create incident branch README with diagnostics summary.\\n- Source: Dynatrace workflow automation\\n- Status: generated\\n\" }}",
+        "commitMessage": "{{ input()[\"commitMessage\"] }}",
+        "connectionId": "{{ input()[\"githubConnectionId\"] }}",
+        "createNewBranch": "{{ input()[\"createNewBranch\"] }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.github.connector:create-or-replace-file",
+      "active": true,
+      "timeout": 120,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Create or update GitHub file for orchestration evidence.",
+      "predecessors": []
+    },
+    "wait-for-github-operation": {
+      "name": "wait-for-github-operation",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/github_create_or_replace_file_1/result');\n  const body = await response.json();\n\n  const commitSha = body?.commit?.sha || '';\n  const contentSha = body?.content?.sha || '';\n\n  if (!commitSha && !contentSha) {\n    throw new Error('GitHub connector result not finalized yet; retrying wait step.');\n  }\n\n  return { commitSha, contentSha, body };\n}"
+      },
+      "retry": {
+        "count": 10,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "github_create_or_replace_file_1": "OK"
+        }
+      },
+      "description": "Wait for GitHub operation to expose commit/content SHA.",
+      "predecessors": [
+        "github_create_or_replace_file_1"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-github-operation/result');\n  const payload = await response.json();\n\n  const commitSha = payload?.commitSha || '';\n  const contentSha = payload?.contentSha || '';\n\n  if (!commitSha && !contentSha) {\n    throw new Error('GitHub operation verification failed: missing commit/content SHA.');\n  }\n\n  return payload.body;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-github-operation": "OK"
+        }
+      },
+      "description": "Final verification of GitHub operation success.",
+      "predecessors": [
+        "wait-for-github-operation"
+      ]
+    }
+  }
+}
