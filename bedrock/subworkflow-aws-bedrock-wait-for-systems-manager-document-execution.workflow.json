@@ -1,0 +1,62 @@
+{
+  "title": "subworkflow - aws bedrock wait for systems manager document execution",
+  "description": "Helper subworkflow that waits for AWS SSM automation executions to finish. Used by Bedrock-aware remediation workflows to enforce wait and status checks.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsregion": "us-east-1",
+    "AutomationExecutionId": "",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u23f3 AWS SSM Automation Wait Helper\\n\\n\ud83e\udde0 Wait helper for Bedrock-aware remediation and orchestration flows.\\n\\n### \u2699\ufe0f Parameters\\n- \ud83c\udf0d **awsregion**\\n- \ud83e\uddfe **AutomationExecutionId**\\n- \ud83d\udd0c **dynatraceawsconnection**\\n\\n### \ud83d\udd01 Behavior\\n- Polls SSM automation execution\\n- Retries while status is running\\n- Returns terminal payload for parent success validation",
+  "tasks": {
+    "get-status": {
+      "name": "get-status",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "AutomationExecutionId": "{{ input()[\"AutomationExecutionId\"] }}",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "action": "dynatrace.aws.connector:ssm-get-automation-execution",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Fetch SSM automation execution details.",
+      "predecessors": []
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\\n  const r = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/get-status/result');\\n  const b = await r.json();\\n  const status = (b?.AutomationExecution?.AutomationExecutionStatus || '').toUpperCase();\\n  if (status === 'INPROGRESS' || status === 'PENDING') {\\n    throw new Error('Automation still running: ' + status);\\n  }\\n  return b;\\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-status": "OK"
+        }
+      },
+      "description": "Retry while automation is still running.",
+      "predecessors": [
+        "get-status"
+      ]
+    }
+  }
+}
