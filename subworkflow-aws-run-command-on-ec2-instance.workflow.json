@@ -1,0 +1,80 @@
+{
+  "id": "57fa7bc0-b0ee-406d-b231-b16fe35e4c79",
+  "title": "\ud83e\udde9subworkflow - aws run command on ec2 instance",
+  "description": "Subworkflow to run a command running on an ec2 instance\n\nThis subworkflow provides an easy way to trigger\nthe execution of a command on a aws ec2 instance\nwithout needing to know how aws ssm works.\n\nThis subworkflow uses the out of the box AWS-RunShellScript\nSSM document to run scripts on ec2 instances.\nWaits until the command execution has finished and\nchecks if the execution was succesful and fails\nif it wasnt so the parent workflow is able to\nrestart the subworkflow on error.\n\nIn order for this subworkflow to execute successfully the ec2 instance must be a systems manager managed instance:\nhttps://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-ec2.html\n\nParameters \n\ncommands: (Required) command to run on the ec2 instance\nawsregion: (Required) region in which the ec2 instance to run the command on resides\ninstanceid: (Required) instance id on which the command will run\nexecutionTimeout: (Required) execution timeout of the command\nworkingDirectory: (Required) working directory of the command\ndynatraceawsconnection: (Required) dynatrace aws connection\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for send command execution\"\n\nThis subworkflow uses the out of the box AWS SSM document AWS-RunShellScript\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-RunShellScript/description?region=us-east-1",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-result\") }}",
+  "type": "STANDARD",
+  "input": {
+    "commands": [
+      "echo test",
+      "sleep 100"
+    ],
+    "awsregion": "us-east-1",
+    "instanceid": "i-0e831c54dc3f2f0c7",
+    "executionTimeout": "3600",
+    "workingDirectory": "/home/ubuntu",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u25b6\ufe0f **Subworkflow to Run a Command on an AWS EC2 Instance**\n\n\ud83d\udda5\ufe0f This subworkflow provides an **easy and abstracted way** to execute a command on an **AWS EC2 instance** without requiring any knowledge of how AWS Systems Manager (SSM) works.\n\nIt triggers the execution of a command via AWS SSM, **waits until the command execution has completed**, and **validates whether the execution was successful**.  \n\u274c If the execution fails, the subworkflow will fail so the **parent workflow can restart on error**.\n\n---\n\n### \u2705 **Requirements**\n\n\u26a0\ufe0f In order for this subworkflow to execute successfully, the EC2 instance **must be a Systems Manager (SSM) managed instance**.\n\n\ud83d\udcd6 AWS documentation:  \nhttps://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-ec2.html\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **commands** (Required): \ud83e\uddfe The command or script to run on the EC2 instance.  \n- **awsregion** (Required): \ud83c\udf0d The AWS region where the EC2 instance resides.  \n- **instanceid** (Required): \ud83c\udd94 The EC2 instance ID on which the command will run.  \n- **executionTimeout** (Required): \u23f1\ufe0f The execution timeout for the command.  \n- **workingDirectory** (Required): \ud83d\udcc2 The working directory in which the command is executed.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document Used**\n\nThis subworkflow uses the out-of-the-box AWS Systems Manager document:\n\n\ud83d\udd17 https://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-RunShellScript/description?region=us-east-1\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow sends the command to the AWS SSM document **`AWS-RunShellScript`**\n- \u23f3 It waits for the command execution to complete\n- \u2705 The execution result is checked for success\n- \u274c If execution fails, the subworkflow fails to allow **restart-on-error** handling in the parent workflow\n\n---\n\nThis subworkflow Needs subworkflow  \n\ud83e\udde9[subworkflow - aws wait for run command execution](/ui/apps/dynatrace.automations/workflows/97218693-adf0-4c82-a295-e43d848b0b4d)\n\n---",
+  "tasks": {
+    "wait-for-result": {
+      "name": "wait-for-result",
+      "input": {
+        "workflowId": "97218693-adf0-4c82-a295-e43d848b0b4d",
+        "workflowInput": "{\n  \"CommandId\":\"{{result(\"systems_manager_send_command_1\")[\"Command\"].CommandId }}\",\n  \"awsregion\":\"{{input()[\"awsregion\"] }}\",\n  \"awsinstanceid\":\"{{input()[\"instanceid\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_send_command_1": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "systems_manager_send_command_1"
+      ]
+    },
+    "systems_manager_send_command_1": {
+      "name": "systems_manager_send_command_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"commands\": {{ input()[\"commands\"] | replace(\"'\",'\"') }}\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{ input()[\"instanceid\"] }}",
+        "DocumentName": "AWS-RunShellScript"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-send-command",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Runs commands on one or more managed nodes",
+      "predecessors": []
+    }
+  }
+}

@@ -1,0 +1,155 @@
+metadata:
+  version: '1'
+  dependencies:
+    apps:
+    - id: dynatrace.automations
+      version: ^1.2781.2
+    - id: dynatrace.aws.connector
+      version: ^2.1.5
+  inputs: []
+workflow:
+  title: 🧩subworkflow - aws extend ebs volume
+  description: "Subworkflow to extend aws volumes (can only be done once every 6 hours).\n\
+    \nThis subworkflow provides an easy way to trigger\nthe extension of aws volumes\
+    \ attached to an ec2 instance\n\nParameters:\n\nosType: (Required) the Operating\
+    \ System type of the Ec2 istance (Windows or Linux)\nSizeGib: (Required) The target\
+    \ size to increase the volume to (in GiB).\nVolumeId: (Required) The volume to\
+    \ be extended\nawsregion: region of volume to extend\nInstanceId: (Required) The\
+    \ identifier of the instance requiring increase of volume\nMountPoint: (Optional)\
+    \ The mount point (such as \"/\", \"/data\", ...) of the partition which is to\
+    \ be increased(Required for Linux).\nDriveLetter: (Optional) The drive letter\
+    \ which is to be increased(Required for windows).\nkeepSnapShot: (Optional) A\
+    \ boolean flag to determine whether to remove the created snapshot after successful\
+    \ resizing of the volume and the file system(True by default).\ndynatraceawsconnection:\
+    \ (Required) dynatrace aws oidc connection\nAutomationAssumeRolearn: (Optional)\
+    \ The ARN of the role that allows Automation to perform the actions on your behalf\n\
+    \n\nThis subworkflow only works on ssm managed aws ec2 instances:\nPlease view\
+    \ this aws manual on how to make an ec2 instances ssm managed: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-ec2.html\n\
+    \nThis subworkflow needs 2 SSM Documents:\n\n1.) Out of the Box AWS Document \"\
+    aws-extendebsvolume\" https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/aws-extendebsvolume.html\n\
+    2.) A Custom Document for which you will find the instructions to import below\n\
+    \nThe Out of the Box Document \"aws-extendebsvolume\" provides the following functionality:\n\
+    \ .) create snapshot (Optional)\n .) Resize Ebs Volume on AWS\n .) Resize partitions\
+    \ on Operating systems"
+  schemaVersion: 3
+  trigger: {}
+  result: '{{ result("wait-for-ssm-execution-completed") }}'
+  type: STANDARD
+  input:
+    osType: ''
+    SizeGib: '90'
+    VolumeId: vol-034b884f20b26576c
+    awsregion: us-east-1
+    InstanceId: i-04ea0bc508917a220
+    MountPoint: /
+    DriveLetter: ''
+    keepSnapShot: 'false'
+    dynatraceawsconnection: awssandbox
+    AutomationAssumeRolearn: ''
+  hourlyExecutionLimit: 1000
+  guide: "## \U0001F4E6 **Subworkflow to Extend AWS Volumes (Once Every 6 Hours)**\n\
+    \n\U0001F4C8 This subworkflow provides a simple and reliable way to **extend AWS\
+    \ EBS volumes** attached to an EC2 instance.  \n⏱️ Since AWS volumes can only\
+    \ be extended **once every 6 hours**, this workflow is designed to safely handle\
+    \ volume and file system resizing.\n\n---\n\n### ⚙️ **Parameters**\n\n- **osType**\
+    \ (Required): \U0001F5A5️ The operating system type of the EC2 instance  \n  *(Supported\
+    \ values: `Windows` or `Linux`)*\n\n- **SizeGib** (Required): \U0001F4CF The target\
+    \ size to extend the volume to (in **GiB**).\n\n- **VolumeId** (Required): \U0001F194\
+    \ The ID of the EBS volume to be extended.\n\n- **awsregion** (Required): \U0001F30D\
+    \ The AWS region where the volume resides.\n\n- **InstanceId** (Required): \U0001F9FE\
+    \ The EC2 instance ID that the volume is attached to.\n\n- **MountPoint** (Optional):\
+    \ \U0001F4C2 The mount point of the partition to be extended  \n  *(Required for\
+    \ Linux, e.g. `/`, `/data`)*\n\n- **DriveLetter** (Optional): \U0001F4BD The drive\
+    \ letter to be extended  \n  *(Required for Windows, e.g. `C:`)*\n\n- **keepSnapShot**\
+    \ (Optional): \U0001F4F8 Boolean flag indicating whether to retain the snapshot\
+    \ after a successful resize  \n  *(Defaults to `true`)*\n\n- **dynatraceawsconnection**\
+    \ (Required): \U0001F511 The Dynatrace AWS OIDC connection used for authentication.\n\
+    \n- **AutomationAssumeRolearn** (Optional): \U0001F3AD The ARN of the IAM role\
+    \ that allows Automation to perform actions on your behalf.\n\n---\n\n### ✅ **Requirements**\n\
+    \n⚠️ This subworkflow **only works on SSM-managed AWS EC2 instances**.\n\n\U0001F4D6\
+    \ Refer to the AWS documentation below to ensure your EC2 instances are managed\
+    \ by AWS Systems Manager:  \nhttps://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-ec2.html\n\
+    \n---\n\n### \U0001F4D8 **AWS SSM Documents Used**\n\nThis subworkflow requires\
+    \ the following **out-of-the-box AWS Systems Manager document**:\n\n- **`aws-extendebsvolume`**\
+    \  \n  \U0001F517 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/aws-extendebsvolume.html\n\
+    \n---\n\n### \U0001F9E0 **Provided Functionality**\n\nThe **`aws-extendebsvolume`**\
+    \ SSM document performs the following actions:\n\n- \U0001F4F8 **Create a snapshot**\
+    \ of the volume *(optional)*  \n- \U0001F4E6 **Resize the EBS volume** at the\
+    \ AWS level  \n- \U0001F9E9 **Resize partitions and file systems** on the operating\
+    \ system (Linux or Windows)\n\n---"
+  tasks:
+    check-status:
+      name: check-status
+      input:
+        script: "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\
+          \nexport default async function ({ execution_id }) {\n  const configGet\
+          \ = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n\
+          \  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n\
+          \  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"\
+          SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document\
+          \ Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      action: dynatrace.automations:run-javascript
+      active: true
+      position:
+        x: 0
+        y: 3
+      conditions:
+        states:
+          wait-for-ssm-execution-completed: OK
+      description: Run custom JavaScript code.
+      predecessors:
+      - wait-for-ssm-execution-completed
+    wait-for-ssm-execution-completed:
+      name: wait-for-ssm-execution-completed
+      input:
+        workflowId: 20661ec0-29d5-471f-9973-29679d5fe908
+        workflowInput: '{
+
+          "AutomationExecutionId":"{{result("systems_manager_start_automation_execution_1").AutomationExecutionId
+          }}",
+
+          "awsregion": "{{input()["awsregion"] }}",
+
+          "dynatraceawsconnection": "{{ input()["dynatraceawsconnection"] }}"
+
+          }'
+      retry:
+        count: 99
+        delay: 60
+        failedLoopIterationsOnly: true
+      action: dynatrace.automations:run-workflow
+      active: true
+      timeout: 604800
+      position:
+        x: 0
+        y: 2
+      conditions:
+        states:
+          systems_manager_start_automation_execution_1: OK
+      description: Modularize your workflows, run any existing workflow.
+      predecessors:
+      - systems_manager_start_automation_execution_1
+    systems_manager_start_automation_execution_1:
+      name: systems_manager_start_automation_execution_1
+      input:
+        region: '{{ input()["awsregion"]}}'
+        schema: builtin:hyperscaler-authentication.connections.aws
+        Parameters: "{\n  \"VolumeId\": [\"{{ input()[\"VolumeId\"] }}\"],\n  \"SizeGib\"\
+          : [\"{{ input()[\"SizeGib\"] }}\"],\n  \"MountPoint\": [\"{{ input()[\"\
+          MountPoint\"] }}\"],\n  \"DriveLetter\": [\"{{ input()[\"DriveLetter\"]\
+          \ }}\"],\n  \"keepSnapShot\": [\"{{ input()[\"keepSnapShot\"] }}\"], \n\
+          \  \"InstanceId\": [\"{{ input()[\"InstanceId\"] }}\"],\n  \"AutomationAssumeRole\"\
+          : [\"{{ input()[\"AutomationAssumeRolearn\"] }}\"]\n}"
+        connection: '{% set awsconnection = input()["dynatraceawsconnection"] %}
+
+          {{ connection(''builtin:hyperscaler-authentication.connections.aws'', awsconnection)
+          }}'
+        DocumentName: AWS-ExtendEbsVolume
+      action: dynatrace.aws.connector:ssm-start-automation-execution
+      active: true
+      timeout: 604800
+      position:
+        x: 0
+        y: 1
+      description: Initiates execution of an Automation runbook
+      predecessors: []

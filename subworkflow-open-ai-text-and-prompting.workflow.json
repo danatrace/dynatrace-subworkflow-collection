@@ -1,0 +1,46 @@
+{
+  "id": "c15fcbc9-9f7d-4d7d-a273-ed62073d19b6",
+  "title": "\ud83e\udde9subworkflow - open ai Text and Prompting",
+  "description": "This is a Subworkflow to Text and prompt open ai\n\nUse Case, write a Business Letter to a group of\nusers that where affected by problems detected\nthrough Dynatrace\n\nTo get this subworkflow running you will have to create a credential vault entry with the open-ai token\nand set it in the ask-open-ai task under authentication!\n\n\n\nParameters:\ninput: (Required) Prompt to send to open ai\nmodel: (Required) Ai model to be used for example (gpt-4.1)",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": true,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"ask-open-ai\") }}",
+  "type": "STANDARD",
+  "input": {
+    "input": "can you convert this splunk spl into dynatrace dql 'host=p*wcs* \"*Agile Parcel Express \" + serviceName + \" service is disabled.*\"' please return only the dql query",
+    "model": "gpt-4.1"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\udde0 **Subworkflow to Text and Prompt OpenAI**\n\n\u270d\ufe0f This subworkflow provides a simple and automated way to **send text prompts to OpenAI** and use the generated output directly within a workflow.\n\nIt is commonly used for **communication, content generation, and response automation** based on operational events or workflow context.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nA typical use case is to **generate a business letter or customer communication** for a group of users who were affected by detected problems.\n\nThis enables:\n- \ud83d\udce3 Automated customer or stakeholder communication  \n- \ud83e\uddfe Consistent, professional messaging  \n- \u26a1 Faster response without manual drafting  \n\n---\n\n### \ud83d\udd10 **Authentication Requirement**\n\n\u26a0\ufe0f To use this subworkflow, you must create a **Credential Vault entry** containing your **OpenAI API token**.\n\nThe credential must then be referenced in the **`ask-open-ai`** task under the **authentication** settings.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **input** (Required): \ud83e\uddfe The prompt text to send to OpenAI.  \n- **model** (Required): \ud83e\udde0 The AI model to use  \n  *(for example: `gpt-4.1`)*\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **AI-assisted automation**\n- \u2705 Enables natural-language output from workflows\n- \u2705 Useful for notifications, summaries, and business communications\n- \u2705 Can be combined with problem, event, or data-enrichment subworkflows\n\n---",
+  "tasks": {
+    "ask-open-ai": {
+      "name": "ask-open-ai",
+      "input": {
+        "url": "https://api.openai.com/v1/responses",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "Application/json"
+        },
+        "payload": "{{ input() }}",
+        "credential": {
+          "type": "token",
+          "tokenPrefix": "Bearer",
+          "credentialId": "CREDENTIALS_VAULT-3D2695F22071F6D9"
+        },
+        "failOnResponseCodes": "400-599"
+      },
+      "action": "dynatrace.automations:http-function",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Issue an HTTP request to any API.",
+      "predecessors": []
+    }
+  }
+}

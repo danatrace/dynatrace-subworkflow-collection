@@ -1,0 +1,63 @@
+{
+  "id": "97218693-adf0-4c82-a295-e43d848b0b4d",
+  "title": "\ud83e\udde9subworkflow - aws wait for run command execution",
+  "description": "Subworkflow to wait for aws ssm run command execution to finish\n\nThis subworkflow is used in the \"aws run command on ec2 instance\" subworkflow\nto wait for the execution to finish and check the status of the execution.\nIf the execution wasnt successful the subworklow will fail so that\nparent workflows can respond with rerun on error.\n\nParameters:\n\nawsregion: (Required) Region in which the SSM document runs\nawsinstanceid: (Required) Instance id on which the run command ssm document was executed\nCommandId: (Required) Command id of the run command execution (Returned by Run command actions)\ndynatraceawsconnection: (Required) Dynatrace oidc connection name",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"get-status\").Commands }}",
+  "type": "STANDARD",
+  "input": {
+    "CommandId": "2824c2b0-29aa-40b5-8924-c5169c07c2cc",
+    "awsregion": "us-east-1",
+    "awsinstanceid": "i-0e831c54dc3f2f0c7",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u23f3 **Subworkflow to Wait for AWS SSM Run Command Execution to Finish**\n\n\ud83e\udde0 This subworkflow is used by the **\u201caws run command on EC2 instance\u201d** subworkflow to **wait for an AWS SSM Run Command execution to complete** and **validate the execution status**.\n\n\u2705 If the command execution is successful, the subworkflow completes.  \n\u274c If the execution fails, the subworkflow fails as well\u2014allowing **parent workflows to react with restart-on-error or alternative handling**.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **awsregion** (Required): \ud83c\udf0d The AWS region in which the SSM Run Command is executed.  \n- **awsinstanceid** (Required): \ud83c\udd94 The EC2 instance ID on which the Run Command was executed.  \n- **CommandId** (Required): \ud83e\uddfe The command ID of the Run Command execution  \n  *(returned by the AWS Run Command action)*.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \u23f3 The subworkflow continuously checks the status of the specified Run Command execution\n- \u2705 If the execution completes successfully, the subworkflow finishes\n- \u274c If the execution fails or returns an error state, the subworkflow fails\n- \ud83d\udd01 This enables **restart-on-error** or compensating logic in the parent workflow\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed as a **helper / control-flow subworkflow**\n- \u2705 Ensures downstream workflow steps only execute after command completion\n- \u2705 Commonly paired with:\n  - Run command on EC2 instance\n  - Remediation scripts\n  - Validation and recovery workflows\n\n---",
+  "tasks": {
+    "get-status": {
+      "name": "get-status",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "CommandId": "{{ input()[\"CommandId\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "action": "dynatrace.aws.connector:ssm-list-commands",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Lists the commands requested by users of the Amazon Web Services account",
+      "predecessors": []
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { actionExecution } from \"@dynatrace-sdk/automation-utils\";\n\nexport default async function ({ execution_id, action_execution_id }) {\n  const actionEx = await actionExecution(action_execution_id);\n  console.log(actionEx.loopItem.item)\n  const status = actionEx.loopItem.item.Status.toUpperCase()\n  console.log(status)\n  \n  if (status ==\"INPROGRESS\") {\n        console.log(\"Send Command Execution is still running, restarting again!\");\n        throw new Error(\"Send Command Execution is still running, restarting again!\");\n  } \n\n  return status;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-status": "OK"
+        }
+      },
+      "withItems": "item in {{ result(\"get-status\").Commands }}",
+      "concurrency": 1,
+      "description": "Build a custom task running js Code",
+      "predecessors": [
+        "get-status"
+      ]
+    }
+  }
+}

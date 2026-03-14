@@ -1,0 +1,94 @@
+{
+  "id": "e1ef703b-88ac-496a-a4a0-38805fe6e91c",
+  "title": "\ud83e\udde9subworkflow - aws resize ec2 instance",
+  "description": "Subworkflow to resize an ec2 instance (Changes the type of instance)\n\nThis subworkflow creates an easy way to trigger\nthe resizing of an aws ec2 instance with\n\nParameters:\n\nresize_to_instance_type: (Required) instance type to resize ec2 instance (for example t3.small, t3.medium etc.)\ninstanceid: (Required) instance id of the ec2 instance to resize \nawsregion: (Required) region in which the ec2 instance to resize resides\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\n\nThis subworkflow uses the out of the box SSM Document \"AWS-ResizeInstance\" \nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-ResizeInstance/description?region=us-east-1\n\nSubworkflow will wait for ssm document execution and will fail if ssm document fails\n\nThe subworkflow sends the command to resize a ec2 stack to the\naws SSM document \"AWS-ResizeInstance\", then waits until\nthe SSM document has finished and then checks if the execution was \nsuccessful. If not, it will fail the subworkflow to provide a restart on error\nfunctionality to the Parent workflow\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for systems manager document execution\"",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsregion": "us-east-1",
+    "instanceid": "i-0e831c54dc3f2f0c7",
+    "dynatraceawsconnection": "awsplayground",
+    "resize_to_instance_type": "t3.small"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udd27 **Subworkflow to Resize an AWS EC2 Instance (Change Instance Type)**\n\n\ud83d\udcd0 This subworkflow provides a simple and controlled way to **resize an AWS EC2 instance by changing its instance type** (for example, scaling from `t3.small` to `t3.medium`).\n\nIt is commonly used for **cost optimization, performance tuning, or remediation workflows** where instance capacity needs to be adjusted dynamically.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **resize_to_instance_type** (Required): \ud83c\udff7\ufe0f The target EC2 instance type  \n  *(e.g. `t3.small`, `t3.medium`, `m5.large`)*\n\n- **instanceid** (Required): \ud83c\udd94 The ID of the EC2 instance to resize.\n\n- **awsregion** (Required): \ud83c\udf0d The AWS region where the EC2 instance resides.\n\n- **dynatraceawsconnection** (Required): \ud83d\udd11 The name of the Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document Used**\n\nThis subworkflow uses the out-of-the-box AWS Systems Manager document:\n\n\ud83d\udd17 https://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-ResizeInstance/description?region=us-east-1\n\n---\n\n### \u23f3 **Execution Behavior**\n\n\u23f1\ufe0f The subworkflow waits for the AWS Systems Manager (SSM) document execution to complete.  \n\u274c If the SSM document execution fails, this subworkflow will also fail.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow sends a resize command to the AWS SSM document  \n  **`AWS-ResizeInstance`**\n- \u23f3 It waits for the SSM document execution to finish\n- \u2705 The execution result is validated to confirm a successful resize\n- \u274c If the resize fails, the subworkflow fails to enable **restart-on-error** handling in the parent workflow\n\n---\n\n### \ud83d\udd17 **Workflow Requirement**\n\nThis subworkflow Needs subworkflow  \n[subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 9999,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"InstanceId\": [\"{{ input()[\"instanceid\"] }}\"],\n  \"InstanceType\": [\"{{input()[\"resize_to_instance_type\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-ResizeInstance"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Initiates execution of an Automation runbook",
+      "predecessors": []
+    }
+  }
+}

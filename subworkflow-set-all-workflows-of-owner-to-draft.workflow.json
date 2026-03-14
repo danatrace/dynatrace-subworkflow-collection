@@ -1,0 +1,31 @@
+{
+  "id": "5615f430-6a12-4a4e-85da-bad59967934e",
+  "title": "\ud83e\udde9subworkflow - set all workflows of owner to draft",
+  "description": "subworkflow that sets all workflows of the owner of the \"subworkflow - set all workflows of owner to draft\" workflow to draft\n\nWhen workflow is started it takes the owner of this workflow, searches for all workflows of that owner and turns them into drafts.\n\nThis workflow does not need input parameters",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": true,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": null,
+  "type": "STANDARD",
+  "input": {},
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\udde9 **Subworkflow to Set All Workflows of the Owner to Draft**\n\n\ud83d\udee0\ufe0f This subworkflow provides an automated way to **set all workflows owned by the current workflow owner to draft**.\n\nWhen the subworkflow is started, it:\n- \ud83d\udc64 Identifies the **owner of the running workflow**\n- \ud83d\udd0d Searches for **all workflows owned by that user**\n- \ud83d\udcdd Transitions each workflow into **draft state**\n\nThis is especially useful for **governance, bulk control, or emergency rollback scenarios**.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udeab Temporarily disabling all workflows owned by a specific user\n- \ud83e\uddfc Bulk workflow control during governance or audit activities\n- \ud83d\udee1\ufe0f Preventing execution of workflows during incidents or investigations\n- \ud83d\udd01 Pausing automation before making bulk changes or cleanups\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n\ud83d\udeab This subworkflow **does not require any input parameters**.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udc64 Determine the owner of the executing workflow\n- \ud83d\udd0d Locate all workflows owned by that user\n- \ud83d\udcdd Set each workflow to **draft**\n- \u2705 Complete if successful\n- \u274c Fail if an error occurs, allowing the **parent workflow to retry or take alternative action**\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **workflow governance and lifecycle control**\n- \u2705 Enables centralized bulk actions\n- \u2705 Complements workflow create, delete, and export subworkflows\n- \u2705 Supports automation-at-scale best practices\n\n---",
+  "tasks": {
+    "set-workflows-to-draft": {
+      "name": "set-workflows-to-draft",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { workflowsClient } from \"@dynatrace-sdk/client-automation\";\n\nexport default async function ({ execution_id }) {\n  // your code goes here\n  // e.g. get the current execution\n  const ex = await execution(execution_id);\n  console.log(ex.workflow)\n\n\n  const getowner = await workflowsClient.getWorkflows({\n    adminAccess: true,\n    id: ex.workflow,\n  });\n  \n\n  const data = await workflowsClient.getWorkflows({\n    limit: 1000,\n    adminAccess: true,\n    owner: getowner.results[0].owner,\n  });\n\n\n  let i = 0;\n  \n  while (i < data.results.length) {\n\n      if (data.results[i].isDeployed === true){\n         console.log(data.results[i].isDeployed);\n         console.log(data.results[i].id);\n         //console.log(data.results[i]);  \n        \n      const dataxx = await workflowsClient.updateWorkflow({\n      adminAccess: true,\n      id: \"\"+ data.results[i].id +\"\",\n      body: { isDeployed: false },  \n      });\n      console.log(data.results[i].title ) \n      }\n      i++;\n  }\n\n\n  \n  return data.results.length;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": []
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "ef7a64e0-5420-4cef-8500-893539cc9f0d",
+  "title": "\ud83e\udde9subworkflow - aws close security group",
+  "description": "Subworkflow: Close Traffic to and from an AWS Security Group\nThis subworkflow removes all ingress and egress rules from a specified AWS security group, effectively closing all traffic to and from it.\n\nParameters\nawssecuritygroupid (Required): The ID of the AWS security group to be modified.\nawsregion (Required): The AWS region where the security group resides.\ndynatraceawsconnection (Required): The name of the Dynatrace OIDC connection used to authenticate with AWS.\n\nSubworkflow will wait for ssm document execution and will fail if ssm document fails\n\nThis subworkflow uses the out of the box AWS SSM document/runbook AWS-CloseSecurityGroup\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-CloseSecurityGroup/description?region=us-east-1\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for systems manager document execution\"",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsregion": "us-east-1",
+    "awssecuritygroupid": "sg-010d8b10c89d61c2c",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udd10 **Subworkflow: Close Traffic to and from an AWS Security Group**\n\n\ud83d\udeab This subworkflow removes **all ingress and egress rules** from a specified AWS security group, effectively blocking **all inbound and outbound traffic**.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **awssecuritygroupid** (Required): \ud83c\udd94 The ID of the AWS security group to modify.  \n- **awsregion** (Required): \ud83c\udf0d The AWS region where the security group is located.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The name of the Dynatrace OIDC connection used to authenticate with AWS.\n\n---\n\n### \u23f3 **Execution Behavior**\n\n\u23f1\ufe0f The subworkflow waits for the AWS Systems Manager (SSM) document execution to complete.  \n\u274c If the SSM document execution fails, this subworkflow will also fail.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document Used**\n\nThis subworkflow uses the out-of-the-box AWS Systems Manager document/runbook:  \n\ud83d\udd17 https://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-CloseSecurityGroup/description?region=us-east-1\n\n---\n\n### \ud83d\udd17 **Dependencies**\n\nThis subworkflow depends on the following subworkflow:\n\n- \ud83e\udde9 [subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"SecurityGroupId\": [\"{{input()[\"awssecuritygroupid\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-CloseSecurityGroup"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Initiates execution of an Automation runbook",
+      "predecessors": []
+    }
+  }
+}

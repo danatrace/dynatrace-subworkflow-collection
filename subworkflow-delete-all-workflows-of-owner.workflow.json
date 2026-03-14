@@ -1,0 +1,31 @@
+{
+  "id": "c5d3e84c-4318-4194-a0f4-1d45822bfc55",
+  "title": "\ud83e\udde9subworkflow - delete all workflows of owner",
+  "description": "",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": true,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": null,
+  "type": "STANDARD",
+  "input": {},
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\uddd1\ufe0f **Subworkflow to Delete All Workflows of a Specific Owner**\n\n\u26a0\ufe0f This subworkflow provides a powerful way to **delete all workflows owned by a specific user**.\n\nWhen the subworkflow starts, it:\n- \ud83d\udc64 Determines the **owner of the running workflow**\n- \ud83d\udd0d Searches for **all workflows owned by that user**\n- \ud83d\uddd1\ufe0f **Deletes every workflow it finds**\n\n---\n\n### \ud83d\udea8 **Important Warning**\n\n\u26a0\ufe0f **This action is destructive and irreversible.**\n\nAll workflows owned by the identified user will be **permanently deleted**.\n\n\u2705 **Ensure workflows are backed up or exported before running this subworkflow.**\n\nThis subworkflow should only be used in **controlled governance, cleanup, or emergency scenarios**.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udeab Removing **unauthorized or non-compliant workflows**\n- \ud83e\uddfc Performing **bulk cleanup** during governance enforcement\n- \ud83d\udee1\ufe0f Responding to security or audit findings\n- \ud83d\udd01 Resetting environments during testing or enablement activities\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n\ud83d\udeab This subworkflow **does not require any input parameters**.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udc64 Identify the owner of the executing workflow\n- \ud83d\udd0d Locate all workflows owned by that user\n- \ud83d\uddd1\ufe0f Delete each workflow\n- \u2705 Complete if successful\n- \u274c Fail if an error occurs, allowing the **parent workflow to respond appropriately**\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **workflow governance and lifecycle enforcement**\n- \u2705 Intended for **advanced administrative automation**\n- \u2705 Complements workflow create, export, and validation subworkflows\n- \u2705 Should be protected by approvals or access controls\n\n---",
+  "tasks": {
+    "delete-workflows": {
+      "name": "delete-workflows",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { workflowsClient } from \"@dynatrace-sdk/client-automation\";\n\nexport default async function ({ execution_id }) {\n  // your code goes here\n  // e.g. get the current execution\n  const ex = await execution(execution_id);\n  console.log(ex.workflow)\n\n\n  const getowner = await workflowsClient.getWorkflows({\n    adminAccess: true,\n    id: ex.workflow,\n  });\n  \n\n  const data = await workflowsClient.getWorkflows({\n    limit: 1000,\n    owner: getowner.results[0].owner,\n  });\n\n\n  let i = 0;\n  \n  while (i < data.results.length) {\n      console.log(data.results[i].id);\n      const datax = await workflowsClient.deleteWorkflow({\n      adminAccess: true,\n      id: \"\"+ data.results[i].id +\"\",\n      });\n      console.log(data.results[i].title ) \n      i++;\n  }\n\n\n  \n  return data.results.length;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": []
+    }
+  }
+}

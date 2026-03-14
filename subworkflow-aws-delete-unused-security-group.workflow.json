@@ -1,0 +1,89 @@
+{
+  "id": "28b19bd4-d7e9-4d5d-9473-e7288c55bb2e",
+  "title": "\ud83e\udde9subworkflow - aws delete unused security group",
+  "description": "Subworkflow deletes a non-default security group that is not utilized by an elastic network interface.\n\nA non-default security group is defined as any security group whose name is not default. \nIf the security group ID passed to this automation document belongs to a default security group, \nthis document will not perform any changes.\n\nParameters:\n\nawssecuritygroupid: (Required) aws security group id to delete \nassumerolearn: (Required) aws role to assume that allows deletion of security groups\nawsregion: (Required) region in which the security group resides\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\n\nSubworkflow will wait for ssm document execution and will fail if ssm document execution fails\n\nThis subworkflow uses the out of the box AWS SSM document AWSConfigRemediation-DeleteUnusedSecurityGroup\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWSConfigRemediation-DeleteUnusedSecurityGroup/description?region=us-east-1",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsregion": "us-west-2",
+    "assumerolearn": "arn:aws:iam::589650258462:role/ssm_assume_role",
+    "awssecuritygroupid": "sg-067cafc968e87d398",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\uddf9 **Subworkflow to Delete an Unused Non-Default AWS Security Group**\n\n\ud83d\udd10 This subworkflow deletes a **non-default AWS security group** that is **not associated with any elastic network interface (ENI)**.\n\nA **non-default security group** is defined as any security group whose name is **not** `default`.  \n\u26a0\ufe0f If the security group ID passed to this subworkflow belongs to a **default security group**, **no changes will be made**.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **awssecuritygroupid** (Required): \ud83c\udd94 The AWS security group ID to delete.  \n- **assumerolearn** (Required): \ud83c\udfad The AWS IAM role ARN to assume, which must allow deletion of security groups.  \n- **awsregion** (Required): \ud83c\udf0d The AWS region where the security group resides.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The name of the Dynatrace OIDC connection used to authenticate with AWS.\n\n---\n\n### \u23f3 **Execution Behavior**\n\n\u23f1\ufe0f The subworkflow waits for the AWS Systems Manager (SSM) document execution to complete.  \n\u274c If the SSM document execution fails, this subworkflow will also fail.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document Used**\n\nThis subworkflow uses the out-of-the-box AWS Systems Manager document:\n\n\ud83d\udd17 https://us-east-1.console.aws.amazon.com/systems-manager/documents/AWSConfigRemediation-DeleteUnusedSecurityGroup/description?region=us-east-1\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udd0d The subworkflow validates that the specified security group:\n  - is **not** a default security group, and  \n  - is **not attached** to any elastic network interface (ENI)\n- \ud83d\udce4 A delete command is sent to the AWS SSM document  \n  **`AWSConfigRemediation-DeleteUnusedSecurityGroup`**\n- \u23f3 The subworkflow waits for execution to complete\n- \u2705 If the deletion is successful, the workflow completes\n- \u274c If the deletion fails, the subworkflow fails to allow **restart-on-error** handling in the parent workflow\n\n---\n``",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"GroupId\": [\"{{input()[\"awssecuritygroupid\"] }}\"],\n  \"AutomationAssumeRole\": [\"{{input()[\"assumerolearn\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWSConfigRemediation-DeleteUnusedSecurityGroup"
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Initiates execution of an Automation runbook",
+      "predecessors": []
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "938bbc7f-29dd-4874-830b-cba77abcb548",
+  "title": "\ud83e\udde9subworkflow - aws get host data of ec2 instance (gen3 aws connector)",
+  "description": "",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": true,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"dql-get-host-info\").records[0] }}",
+  "type": "STANDARD",
+  "input": {
+    "host_entity_id": "HOST-EA0E775A9C448B02"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\uddfe **Subworkflow to Get AWS EC2 Instance Data (No DQL Required)**\n\n\ud83d\udd0d This subworkflow provides an **easy and DQL\u2011free way** to retrieve additional metadata for an AWS EC2 instance from Dynatrace.\n\n\u2601\ufe0f The integration leverages the **Dynatrace AWS Gen3 connector**, ensuring secure, scalable, and modern access to AWS infrastructure metadata.\n\nIt is commonly used to collect information such as:\n- \ud83c\udd94 EC2 instance ID  \n- \ud83d\udcbd Attached volume IDs  \n- \ud83d\udce6 Other host-level metadata  \n\n\u27a1\ufe0f This data is typically required for follow-up automation steps, such as **resizing AWS EBS volumes** or performing infrastructure remediation.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **host_entity_id** (Required): \ud83d\udda5\ufe0f The Dynatrace **Host Entity ID** representing the AWS EC2 instance.\n\n---\n\n### \ud83e\udde0 **Usage Context**\n\n- \u2705 Uses the **Dynatrace AWS Gen3 connector**\n- \u2705 Eliminates the need to write **DQL queries**\n- \u2705 Simplifies downstream automation logic\n- \u2705 Designed as a **helper / data-enrichment subworkflow**\n- \u2705 Commonly paired with volume extension, remediation, or validation workflows\n\n---",
+  "tasks": {
+    "dql-get-host-info": {
+      "name": "dql-get-host-info",
+      "input": {
+        "query": "fetch dt.entity.host\n| filter matchesPhrase(id, \"{{input()[\"host_entity_id\"]}}\")\n| fieldsadd  additionalSystemInfo,belongs_to,ec2_id=runs_on[dt.entity.ec2_instance], entity.name, hostname=entity.detected_name, osArchitecture, osType, cpuCores, autoInjection, bitness, cloudType, clustered_by,  ebpfHasPublicTraffic,  state\n| lookup  [fetch dt.entity.ec2_instance\n| fieldsadd awscredentials=accessible_by[dt.entity.aws_credentials], awsInstanceId,awsInstanceType,awsNameTag, awsSecurityGroup, awsVpcName, arn, tags, id, regionName, accessible_by,amiId,balanced_by,beanstalkEnvironmentName,belongs_to,boshName,contains,publicHostName,publicIp,localIp,virtualizedDiskType,entity.name,lifetime, entity.type  ] , sourceField:ec2_id, lookupField:id, prefix:\"ec2_\"\n| lookup  [smartscapeNodes \"AWS_EC2_INSTANCE\"\n| parse aws.object,\"JSON:object\"\n| fieldsadd object\n| fieldsadd configuration=object[configuration] \n| fieldsadd instanceId=configuration[instanceId]\n| filter matchesPhrase(tags[Name],\"Dynatrace-SSM-Action-Demo_554872066791\")\n| filter matchesPhrase(configuration[state][name],\"running\")\n| fieldsadd blockDeviceMappings=configuration[blockDeviceMappings]\n| expand blockDeviceMappings\n| fieldsadd deviceName=blockDeviceMappings[deviceName], volumeid=blockDeviceMappings[ebs][volumeId], deleteOnTermination=blockDeviceMappings[ebs][deleteOnTermination] ] , sourceField:ec2_awsInstanceId, lookupField:instanceId, prefix:\"ebs_\"\n| fieldsadd volumeid=ebs_volumeid\n| lookup  [ timeseries max(dt.host.disk.used), by: { dt.entity.host, dt.entity.disk }\n| fieldsAdd disksizex = arrayLast(`max(dt.host.disk.used)`)/1000000000\n| fieldsadd disksize=round(disksizex), dt.entity.host, diskid=dt.entity.disk\n] , sourceField:id, lookupField:dt.entity.host, prefix:\"disk_\"\n| fieldsadd ebs_id=disk_diskid\n| lookup  [ timeseries max(dt.host.disk.avail), by: { dt.entity.host }\n| fieldsAdd disksizex = arrayLast(`max(dt.host.disk.avail)`)/1000000000\n| fields disksize=round(disksizex), dt.entity.host\n] , sourceField:id, lookupField:dt.entity.host, prefix:\"disk_avail_\"\n| fieldsadd total_disk_size=disk_disksize + disk_avail_disksize, disk_used=disk_disksize, disk_available=disk_avail_disksize\n| fieldsremove disk_avail_disksize,disk_disksize",
+        "failOnEmptyResult": true
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Executes DQL query",
+      "predecessors": []
+    }
+  }
+}

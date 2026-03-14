@@ -1,0 +1,95 @@
+{
+  "id": "c1d81c97-c48d-400c-b980-0947cb2dda36",
+  "title": "\ud83e\udde9subworkflow - aws update cloudformation stack",
+  "description": "Subworkflow to update an aws cloudformation stack\n\nThis subworkflow provides an easy way to trigger\nan update of an existing aws cloudformation stack with\n\nParameters:\n\ncf_stackname: (Required) stackname of the cloudformation stack you want to create\ncfyamls3url: (Required) is the cloudformation yaml to run (needs to be stored on s3 and entered using the following url syntax https://s3bucket.s3.us-east-1.amazonaws.com/cf.yaml)\nawsregion: (Required) region in which you want to create the cloudformation stack\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\nassumerolearn: (Required) arn of a role that allows the update of the cloudformation stack\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for systems manager document execution\"\n\nSubworkflow will wait for ssm document execution and will fail if ssm document fails\n\nThis subworkflow uses the out of the box AWS SSM Document: AWS-UpdateCloudFormationStack\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-UpdateCloudFormationStack/description?region=us-east-1",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsregion": "us-east-1",
+    "cfyamls3url": "https://serverlessexamples.s3.us-east-1.amazonaws.com/serverless_demo_fail_us_east_2.yaml",
+    "cf_stackname": "serverless-demo",
+    "assumerolearn": "arn:aws:iam::589650258462:role/ssm_assume_role",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udd04 **Subworkflow to Update an AWS CloudFormation Stack**\n\n\ud83d\udce6 This subworkflow provides a simple and controlled way to **trigger an update of an existing AWS CloudFormation stack** using AWS Systems Manager (SSM).\n\nIt is commonly used to apply **infrastructure changes, configuration updates, or template enhancements** in a standardized and automated way.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **cf_stackname** (Required): \ud83c\udff7\ufe0f The name of the CloudFormation stack to update.  \n- **cfyamls3url** (Required): \ud83d\udcc4 The S3 URL of the CloudFormation YAML template to apply  \n  *(must follow this format: `https://s3bucket.s3.us-east-1.amazonaws.com/cf.yaml`)*  \n- **awsregion** (Required): \ud83c\udf0d The AWS region where the CloudFormation stack resides.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The name of the Dynatrace AWS OIDC connection used to authenticate with AWS.  \n- **assumerolearn** (Required): \ud83c\udfad The ARN of an IAM role that allows updating the CloudFormation stack.\n\n---\n\n### \u23f3 **Execution Behavior**\n\n\u23f1\ufe0f The subworkflow waits for the AWS Systems Manager (SSM) document execution to complete.  \n\u274c If the SSM document execution fails, this subworkflow will also fail, enabling **restart-on-error** handling in the parent workflow.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document Used**\n\nThis subworkflow uses the out-of-the-box AWS Systems Manager document:\n\n\ud83d\udd17 https://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-UpdateCloudFormationStack/description?region=us-east-1\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow sends an update command to the AWS SSM document  \n  **`AWS-UpdateCloudFormationStack`**\n- \u23f3 It waits for the SSM document execution to complete\n- \u2705 The execution result is validated to confirm the stack update was successful\n- \u274c If the update fails, the subworkflow fails to allow **restart-on-error** behavior in the parent workflow\n\n---\n\nThis subworkflow Needs subworkflow  \n**subworkflow - aws wait for systems manager document execution**\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"StackNameOrId\": [\"{{input()[\"cf_stackname\"] }}\"],\n  \"TemplateUrl\": [\"{{input()[\"cfyamls3url\"] }}\"],\n  \"LambdaAssumeRole\": [\"{{input()[\"assumerolearn\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-UpdateCloudFormationStack"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Initiates execution of an Automation runbook",
+      "predecessors": []
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "47448866-dd9d-415c-90c7-51c74798cc79",
+  "title": "\ud83e\udde9subworkflow - aws get process data of process running on ec2 instance",
+  "description": "Subworkflow to get data of a process running on an aws ec2 instance without needing to know DQL or Javascript\n\nAn easy way to get additional data of a process running on an aws ec2 instance\nsuch as process name, ec2 region, ec2 instance id, ec2 volume id, tags etc.\nwhich is needed to for example to remediate a problem created by a process\nrunning on an ec2 instance.\n\nParameters:\n\nprocess_group_instance_id:  (Required) the dynatrace process group instance id",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"dql-get-process-info\").records[0] }}",
+  "type": "STANDARD",
+  "input": {
+    "process_group_instance_id": "PROCESS_GROUP_INSTANCE-B70759A89E81BB09"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\uddec **Subworkflow to Get Data of a Process Running on an AWS EC2 Instance (No DQL or JavaScript Required)**\n\n\ud83d\udd0d This subworkflow provides an **easy, DQL\u2011free and JavaScript\u2011free way** to retrieve detailed information about a **process running on an AWS EC2 instance** from Dynatrace.\n\n\u2601\ufe0f The integration leverages the **Dynatrace AWS Gen3 connector**, ensuring secure, scalable, and modern access to AWS and process-level metadata.\n\nIt is commonly used to collect information such as:\n- \ud83e\uddfe Process name  \n- \ud83c\udf0d AWS region  \n- \ud83c\udd94 EC2 instance ID  \n- \ud83d\udcbd Associated volume IDs  \n- \ud83c\udff7\ufe0f Tags and related metadata  \n\n\u27a1\ufe0f This data is typically required for **process-driven remediation**, root cause analysis, or automation workflows that respond to problems caused by processes running on EC2 instances.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **process_group_instance_id** (Required): \ud83e\uddec The Dynatrace **Process Group Instance ID** representing the running process.\n\n---\n\n### \ud83e\udde0 **Usage Context**\n\n- \u2705 Uses the **Dynatrace AWS Gen3 connector**\n- \u2705 Eliminates the need to write **DQL or JavaScript**\n- \u2705 Enables process-aware automation and remediation\n- \u2705 Designed as a **helper / data-enrichment subworkflow**\n- \u2705 Commonly paired with process remediation, validation, or escalation workflows\n\n---",
+  "tasks": {
+    "dql-get-process-info": {
+      "name": "dql-get-process-info",
+      "input": {
+        "query": "fetch dt.entity.process_group_instance, from:now()-120h\n| filter matchesphrase(id,\"{{input()[\"process_group_instance_id\"] }}\")\n| fieldsadd process_group_id=instance_of[dt.entity.process_group],host.id=belongs_to[dt.entity.host],  bitness, ebpfHasPublicTraffic, processType,metadata, entity.type, tags, lifetime, softwareTechnologies //process_called_by=called_by, calls\n| lookup[fetch dt.entity.host |fieldsadd  additionalSystemInfo,belongs_to,ec2_id=runs_on[dt.entity.ec2_instance], entity.name, hostname=entity.detected_name],sourceField:host.id, lookupField:id, prefix:\"hostdata_\"\n| lookup  [fetch dt.entity.ebs_volume\n| fieldsadd arn,instanceid=belongs_to[dt.entity.ec2_instance][0],deviceName,ebsType,entity.name,awsNameTag,tags,belongs_to,boshName,creationTimestamp, lifetime, ebsSnapshotId, entity.type ] , sourceField:hostdata_ec2_id, lookupField:instanceid, prefix:\"ebs_\"\n| fieldsadd volumeid=ebs_entity.name\n| lookup  [fetch dt.entity.ec2_instance\n| fieldsadd awsInstanceId,awsInstanceType,awsNameTag, awsSecurityGroup, awsVpcName, arn, tags, id, regionName, accessible_by,amiId,balanced_by,beanstalkEnvironmentName,belongs_to,boshName,contains,publicHostName,publicIp,localIp,virtualizedDiskType,entity.name,lifetime, entity.type  ] , sourceField:hostdata_ec2_id, lookupField:id, prefix:\"ec2_\"\n| lookup  [ timeseries max(dt.host.disk.used), by: { dt.entity.host }\n| fieldsAdd disksizex = arrayLast(`max(dt.host.disk.used)`)/1000000000\n| fields disksize=round(disksizex), dt.entity.host\n] , sourceField:id, lookupField:dt.entity.host, prefix:\"disk_\"",
+        "failOnEmptyResult": true
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Executes DQL query",
+      "predecessors": []
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "b9de7879-6723-43a0-92ca-5bae8294da4b",
+  "title": "\ud83e\udde9subworkflow - aws reboot ec2 instances",
+  "description": "Subworkflow to reboot an EC2 Instance\n\nThis subworkflow provides an easy way to trigger\nthe reboot of an EC2 Instance and wait unitl the instance is back up\n\nParameters:\n\ninstanceIds: (Required) instance id to reboot\nawsRegion: (Required) region in which you want to reboot the ec2 instance\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"ec2_wait_for_state_1\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceIds": "i-0565781a37710692f",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udd04 **Subworkflow to Reboot an AWS EC2 Instance**\n\n\u267b\ufe0f This subworkflow provides a simple and reliable way to **reboot an AWS EC2 instance** and **wait until the instance is back online** before continuing.\n\nIt is commonly used as a remediation or recovery step in automation workflows where a controlled restart is required.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **instanceIds** (Required): \ud83c\udd94 The EC2 instance ID to reboot.  \n- **awsRegion** (Required): \ud83c\udf0d The AWS region in which the EC2 instance resides.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The name of the Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### \u23f3 **Execution Behavior**\n\n\u23f1\ufe0f The subworkflow triggers the EC2 reboot operation and **waits until the instance is fully back up and reachable**.  \n\u274c If the reboot operation fails, the subworkflow will fail to allow **restart-on-error** handling in the parent workflow.\n\n---\n\n### \ud83e\udde0 **Usage Context**\n\n- \u2705 Commonly used for **self-healing and remediation workflows**\n- \u2705 Ensures downstream steps only execute once the instance is available again\n- \u2705 Suitable for automation triggered by problems, events, or maintenance workflows\n- \u2705 Integrates securely using the **Dynatrace AWS OIDC connection**\n\n---",
+  "tasks": {
+    "ec2_wait_for_state_1": {
+      "name": "ec2_wait_for_state_1",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceIds\"]}}",
+        "InstanceState": "running"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-wait-state",
+      "timeout": 9000,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "ec2_reboot_instances_1": "OK"
+        }
+      },
+      "description": "Wait for EC2 instances in a specific region to be in a specific state",
+      "waitBefore": 30,
+      "predecessors": [
+        "ec2_reboot_instances_1"
+      ]
+    },
+    "ec2_reboot_instances_1": {
+      "name": "ec2_reboot_instances_1",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceIds\"]}}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-reboot-instances",
+      "timeout": 9000,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Requests a reboot of the specified instances",
+      "predecessors": []
+    }
+  }
+}

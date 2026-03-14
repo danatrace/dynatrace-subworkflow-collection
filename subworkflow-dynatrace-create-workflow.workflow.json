@@ -1,0 +1,66 @@
+{
+  "id": "79d6c870-e7e9-4c16-9830-195b6c7b12e1",
+  "title": "\ud83e\udde9subworkflow - dynatrace create workflow",
+  "description": "Subworkflow to create a workflow.\n\nThis Subworkflow is used to create a workflow.\nCan be used to store workflows and one button\nworkflow import through a workflow, in addition\nto complex subworkflow dependencies. \n\nParameters:\n\n(Required) The entire workflow json",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"create-workflow\") }}",
+  "type": "STANDARD",
+  "input": {
+    "type": "STANDARD",
+    "input": {},
+    "tasks": {
+      "test": {
+        "name": "test",
+        "input": {
+          "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function () {\n  // your code goes here\n  // e.g. get the current execution\n  const ex = await execution();\n  console.log('Automated script execution on behalf of', ex.trigger);\n\n  return { triggeredBy: ex.trigger };\n}"
+        },
+        "action": "dynatrace.automations:run-javascript",
+        "position": {
+          "x": 0,
+          "y": 1
+        },
+        "description": "Run custom JavaScript code.",
+        "predecessors": []
+      }
+    },
+    "title": "test_xc",
+    "result": null,
+    "trigger": {},
+    "isPrivate": true,
+    "ownerType": "USER",
+    "description": "",
+    "schemaVersion": 3,
+    "hourlyExecutionLimit": 1000
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\udde9 **Subworkflow to Create a Workflow**\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to **create a workflow from a JSON definition**.\n\nIt is commonly used to **store workflows as code** and enable **one\u2011button workflow imports** through automation\u2014making it easier to manage workflows with **complex subworkflow dependencies**.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udce6 Storing workflows in version control and importing them on demand  \n- \u25b6\ufe0f Enabling **one\u2011click workflow deployment** through another workflow  \n- \ud83e\uddf1 Managing **complex workflow and subworkflow dependency chains**  \n- \ud83d\udd01 Promoting workflows across environments in a standardized way  \n\nThis approach supports **workflow\u2011as\u2011code** and helps teams scale automation safely and consistently.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **workflowjson** (Required): \ud83e\uddfe The **complete JSON definition** of the workflow to be created.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow submits the provided workflow JSON definition\n- \ud83d\udee0\ufe0f A new workflow is created based on the supplied configuration\n- \u2705 If creation is successful, the subworkflow completes\n- \u274c If creation fails, the subworkflow fails\u2014allowing the **parent workflow to retry or take alternative action**\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **workflow lifecycle automation**\n- \u2705 Enables repeatable and controlled workflow creation\n- \u2705 Ideal for enablement, templates, and automation catalogs\n- \u2705 Works well with Git\u2011based workflow storage and CI/CD patterns\n\n---",
+  "tasks": {
+    "create-workflow": {
+      "name": "create-workflow",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { workflowsClient } from \"@dynatrace-sdk/client-automation\";\n\nexport default async function ({ executionId , action_execution_id }) {\n  // your code goes here\n  // e.g. get the current execution\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  const data = await workflowsClient.createWorkflow({\n    body: input,\n  });\n  return data;\n}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 9000,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": []
+    }
+  }
+}

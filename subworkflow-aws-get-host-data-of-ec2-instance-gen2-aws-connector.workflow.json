@@ -1,0 +1,38 @@
+{
+  "id": "3e5454a4-50ad-4dab-914c-638b6df5b283",
+  "title": "\ud83e\udde9subworkflow - aws get host data of ec2 instance (gen2 aws connector)",
+  "description": "Subworkflow to get data of an aws ec2 instance without needing to know dql\n\nAn easy way to get additional data of an aws host\nsuch as instance id, volume id etc. which is needed\nto for example resize an aws volume.\n\nParameters:\n\nhost_entity_id: (Required) Dynatrace Host Entity Id",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"dql-get-host-info\").records[0] }}",
+  "type": "STANDARD",
+  "input": {
+    "host_entity_id": "HOST-EA0E775A9C448B02"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\uddfe **Subworkflow to Get AWS EC2 Instance Data (No DQL Required)**\n\n\ud83d\udd0d This subworkflow provides an **easy and DQL\u2011free way** to retrieve additional metadata for an AWS EC2 instance from Dynatrace.\n\n\u2601\ufe0f The integration leverages the **Dynatrace AWS Gen2 connector**, ensuring secure, scalable, and modern access to AWS infrastructure metadata.\n\nIt is commonly used to collect information such as:\n- \ud83c\udd94 EC2 instance ID  \n- \ud83d\udcbd Attached volume IDs  \n- \ud83d\udce6 Other host-level metadata  \n\n\u27a1\ufe0f This data is typically required for follow-up automation steps, such as **resizing AWS EBS volumes** or performing infrastructure remediation.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **host_entity_id** (Required): \ud83d\udda5\ufe0f The Dynatrace **Host Entity ID** representing the AWS EC2 instance.\n\n---\n\n### \ud83e\udde0 **Usage Context**\n\n- \u2705 Uses the **Dynatrace AWS Gen2 connector**\n- \u2705 Eliminates the need to write **DQL queries**\n- \u2705 Simplifies downstream automation logic\n- \u2705 Designed as a **helper / data-enrichment subworkflow**\n- \u2705 Commonly paired with volume extension, remediation, or validation workflows\n\n---",
+  "tasks": {
+    "dql-get-host-info": {
+      "name": "dql-get-host-info",
+      "input": {
+        "query": "fetch dt.entity.host\n| filter matchesPhrase(id, \"{{input()[\"host_entity_id\"]}}\")\n| fieldsadd  additionalSystemInfo,belongs_to,ec2_id=runs_on[dt.entity.ec2_instance], entity.name, hostname=entity.detected_name, osArchitecture, osType, cpuCores, autoInjection, bitness, cloudType, clustered_by,  ebpfHasPublicTraffic,  state\n| lookup  [fetch dt.entity.ebs_volume\n| fieldsadd arn,instanceid=belongs_to[dt.entity.ec2_instance][0],deviceName,ebsType,entity.name,awsNameTag,tags,belongs_to,boshName,creationTimestamp, lifetime, ebsSnapshotId, entity.type, iops  ] , sourceField:ec2_id, lookupField:instanceid, prefix:\"ebs_\"\n| fieldsadd volumeid=ebs_entity.name\n| lookup  [fetch dt.entity.ec2_instance\n| fieldsadd awscredentials=accessible_by[dt.entity.aws_credentials], awsInstanceId,awsInstanceType,awsNameTag, awsSecurityGroup, awsVpcName, arn, tags, id, regionName, accessible_by,amiId,balanced_by,beanstalkEnvironmentName,belongs_to,boshName,contains,publicHostName,publicIp,localIp,virtualizedDiskType,entity.name,lifetime, entity.type  ] , sourceField:ec2_id, lookupField:id, prefix:\"ec2_\"\n| lookup  [ timeseries max(dt.host.disk.used), by: { dt.entity.host }\n| fieldsAdd disksizex = arrayLast(`max(dt.host.disk.used)`)/1000000000\n| fields disksize=round(disksizex), dt.entity.host\n] , sourceField:id, lookupField:dt.entity.host, prefix:\"disk_\"\n| lookup  [ timeseries max(dt.host.disk.avail), by: { dt.entity.host }\n| fieldsAdd disksizex = arrayLast(`max(dt.host.disk.avail)`)/1000000000\n| fields disksize=round(disksizex), dt.entity.host\n] , sourceField:id, lookupField:dt.entity.host, prefix:\"disk_avail_\"\n| fieldsadd total_disk_size=disk_disksize + disk_avail_disksize, disk_used=disk_disksize, disk_available=disk_avail_disksize\n| lookup  [ fetch dt.entity.aws_credentials | fields awsAccountId, aws_connection_name=entity.name, id ] , sourceField:ec2_awscredentials[0], lookupField:id, prefix:\"conn_\"\n| fieldsremove disk_avail_disksize,disk_disksize\n| fieldsadd conn_awsAccountId, conn_aws_connection_name",
+        "failOnEmptyResult": true
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Executes DQL query",
+      "predecessors": []
+    }
+  }
+}

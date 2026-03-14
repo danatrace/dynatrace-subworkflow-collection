@@ -1,0 +1,38 @@
+{
+  "id": "29bee926-17e3-4dfc-a529-b79f1c45a2e3",
+  "title": "\ud83e\udde9subworkflow - aws get lambda data (gen 2 aws connector)",
+  "description": "Subworkflow to get data of an aws lambda function without needing to know dql.\n\nAn easy way to get additional data of an aws lambda function\nsuch as region, arn, tags, lifetime, runtime, timeout etc.\nwhich is needed to for example to failover the lambda to a different region.\n\nParameters:\n\nlambda_entity_id: (Required) Dynatrace Lambda Entity Id",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"dql-get-lambda-info\").records[0] }}",
+  "type": "STANDARD",
+  "input": {
+    "lambda_entity_id": "AWS_LAMBDA_FUNCTION-4A933904BF768A57"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\udde9 **Subworkflow to Get AWS Lambda Function Data (No DQL Required)**\n\n\ud83d\udd0d This subworkflow provides an **easy and DQL\u2011free way** to retrieve additional metadata for an **AWS Lambda function** from Dynatrace.\n\n\u2601\ufe0f The integration uses the **Dynatrace AWS Gen2 connector**, enabling secure, scalable, and modern access to AWS Lambda metadata without requiring direct AWS API calls or custom queries.\n\nIt is commonly used to collect information such as:\n- \ud83c\udf0d AWS region  \n- \ud83e\uddfe Lambda ARN  \n- \ud83c\udff7\ufe0f Tags  \n- \u23f1\ufe0f Function timeout  \n- \ud83e\udde0 Runtime  \n- \ud83d\udcc6 Lifetime and configuration metadata  \n\n\u27a1\ufe0f This data is typically required for downstream automation use cases, such as **failing over a Lambda function to a different AWS region**, validating configuration, or driving remediation workflows.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **lambda_entity_id** (Required): \ud83e\uddec The Dynatrace **Lambda Entity ID** representing the AWS Lambda function.\n\n---\n\n### \ud83e\udde0 **Usage Context**\n\n- \u2705 Uses the **Dynatrace AWS Gen2 connector**\n- \u2705 Eliminates the need to write **DQL queries**\n- \u2705 Simplifies Lambda-aware automation and decision logic\n- \u2705 Designed as a **helper / data\u2011enrichment subworkflow**\n- \u2705 Commonly used for failover, validation, and configuration\u2011driven automation\n\n---",
+  "tasks": {
+    "dql-get-lambda-info": {
+      "name": "dql-get-lambda-info",
+      "input": {
+        "query": "fetch dt.entity.aws_lambda_function, from: now()-10h\n| fieldsadd accessible_by, apiEndpointUrls, arn, awsCodeSize, awsMemorySize, awsNameTag, awsRuntime, awsTimeout, awsVersion, entity.type, lifetime, tags\n| filter id == \"{{input()[\"lambda_entity_id\"] }}\"\n|  lookup[ fetch dt.entity.aws_availability_zone| fields awsregion=entity.name, id ] , sourceField:belongs_to[dt.entity.aws_availability_zone], lookupField:id, prefix: \"lambda_data_\"\n",
+        "failOnEmptyResult": true
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Executes DQL query",
+      "predecessors": []
+    }
+  }
+}

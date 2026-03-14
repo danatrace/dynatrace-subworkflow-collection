@@ -1,0 +1,42 @@
+{
+  "id": "8a774787-e7b7-471a-b918-4e30298b5107",
+  "title": "\ud83e\udde9subworkflow - dynatrace delete workflow",
+  "description": "Subworkflow to delete a workflow.\n\nThis Subworkflow is used to delete a workflow.\nUse Case, can be used to Automatically delete\nun-authorized workflows.\n\nParameters:\n\nworkflowid: (Required) the workflow id of the workflow to be deleted",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"delete-workflow\") }}",
+  "type": "STANDARD",
+  "input": {
+    "workflowid": "0cbff654-deb9-44c6-8f59-a888086f1714"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\uddd1\ufe0f **Subworkflow to Delete a Workflow**\n\n\ud83e\uddf9 This subworkflow provides a simple and automated way to **delete an existing workflow**.\n\nIt is commonly used for **governance and cleanup scenarios**, such as automatically removing **unauthorized, deprecated, or non-compliant workflows** from an environment.\n\n\u2705 If the workflow is deleted successfully, the subworkflow completes.  \n\u274c If the deletion fails, the subworkflow fails\u2014allowing the **parent workflow to retry or take alternative action**.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udeab Automatically deleting **unauthorized workflows**\n- \ud83e\uddfc Cleaning up obsolete or deprecated workflows\n- \ud83d\udee1\ufe0f Enforcing automation governance and compliance\n- \ud83d\udd01 Maintaining a controlled and standardized workflow environment\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **workflowid** (Required): \ud83c\udd94 The ID of the workflow to be deleted.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow submits a delete request for the specified workflow ID\n- \ud83d\uddd1\ufe0f The workflow is removed from the environment\n- \u2705 If deletion is successful, the subworkflow completes\n- \u274c If deletion fails, the subworkflow fails to enable **restart-on-error** handling in the parent workflow\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **workflow lifecycle management**\n- \u2705 Useful in governance, compliance, and cleanup workflows\n- \u2705 Complements workflow creation and export subworkflows\n- \u2705 Supports automation-at-scale best practices\n\n---",
+  "tasks": {
+    "delete-workflow": {
+      "name": "delete-workflow",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { workflowsClient } from \"@dynatrace-sdk/client-automation\";\n\nexport default async function ({ executionId , action_execution_id }) {\n  // your code goes here\n  // e.g. get the current execution\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  const data = await workflowsClient.deleteWorkflow({\n    id: input.workflowid,\n  });\n  return data;\n}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 9000,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": []
+    }
+  }
+}

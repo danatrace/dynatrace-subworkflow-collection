@@ -1,0 +1,60 @@
+{
+  "id": "20661ec0-29d5-471f-9973-29679d5fe908",
+  "title": "\ud83e\udde9subworkflow - aws wait for systems manager  document execution",
+  "description": "Subworkflow to wait for aws ssm document execution to finish\n\nThis subworkflow is used in subworkflows that execute ssm documents\nto wait for the execution to finish and check the status of the execution.\nIf the execution wasnt successful the subworklow will fail so that\nparent workflows can respond with rerun on error.\n\nParameters: \n\nawsregion: (Required) Region in which the SSM document runs\nAutomationExecutionId: (Required) Execution id of the SSM document (Returned by Start SSM actions)\ndynatraceawsconnection: (Required) Dynatrace oidc connection name",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\").AutomationExecution }}",
+  "type": "STANDARD",
+  "input": {
+    "awsregion": "us-east-1",
+    "AutomationExecutionId": "08093423-3443-4182-8397-12e802518f29",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u23f3 **Subworkflow to Wait for AWS SSM Document Execution to Finish**\n\n\ud83e\udde0 This subworkflow is used by other subworkflows that **execute AWS SSM documents** to **wait for the execution to complete** and **validate the execution status**.\n\n\u2705 If the SSM document execution completes successfully, the subworkflow finishes.  \n\u274c If the execution fails, the subworkflow fails as well\u2014allowing **parent workflows to respond with rerun-on-error or alternative handling logic**.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **awsregion** (Required): \ud83c\udf0d The AWS region in which the SSM document is executed.  \n- **AutomationExecutionId** (Required): \ud83e\uddfe The execution ID of the SSM document  \n  *(returned by the Start SSM Automation action)*.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \u23f3 The subworkflow continuously checks the status of the specified SSM document execution\n- \u2705 If the execution completes successfully, the subworkflow finishes\n- \u274c If the execution fails or returns an error state, the subworkflow fails\n- \ud83d\udd01 This enables **rerun-on-error or compensating logic** in the parent workflow\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed as a **helper / control-flow subworkflow**\n- \u2705 Used by subworkflows that trigger AWS SSM Automation documents\n- \u2705 Ensures downstream workflow steps only execute after SSM completion\n- \u2705 Commonly paired with remediation, provisioning, and infrastructure workflows\n\n---",
+  "tasks": {
+    "get-status": {
+      "name": "get-status",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "AutomationExecutionId": "{{ input()[\"AutomationExecutionId\"] }}"
+      },
+      "action": "dynatrace.aws.connector:ssm-get-automation-execution",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Get detailed information about a particular Automation execution",
+      "predecessors": []
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/get-status/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecution.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status ==\"INPROGRESS\" || status ==\"PENDING\" ) {\n        console.log(\"Automation still running, restarting again!\");\n        throw new Error(\"Automation still running, restarting again!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-status": "OK"
+        }
+      },
+      "description": "Build a custom task running js Code",
+      "predecessors": [
+        "get-status"
+      ]
+    }
+  }
+}

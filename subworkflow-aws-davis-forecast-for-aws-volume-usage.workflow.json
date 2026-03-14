@@ -1,0 +1,162 @@
+{
+  "id": "a13c2f6f-9e3d-478a-8399-1d17fecf6779",
+  "title": "\ud83e\udde9subworkflow - aws davis forecast for aws volume usage",
+  "description": "Subworkflow: Forecasting AWS Volume Disk Usage\nThis subworkflow provides a streamlined method for forecasting the disk usage of an AWS EBS volume.\n\nSince an AWS volume can only be extended once every 6 hours, this subworkflow estimates the maximum expected usage within that time window.\nThe forecasted value can then be passed to a workflow task responsible for extending the volume to the predicted size.\n\nParameters\nhost_entity_id (Required):\nThe Dynatrace Host entity ID associated with the AWS volume.\n\nforecast_method (Required):\npossible values are \"point\", \"upper\", \"lower\" depending on which of the prediction outcomes you would like to use\npoint = dt.davis.forecast:point\nupper = dt.davis.forecast:upper\nlower = dt.davis.forecast:lower\nYou can find more information about these methods in the documentation:\nhttps://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/ai-models/forecast-analysis\nhttps://www.dynatrace.com/news/blog/stay-ahead-of-the-game-forecast-it-capacity-with-dynatrace-grail-and-davis-ai/\n\non_forecast_failure_increase_by_percentage_of_total_diskspace (Required):\nA fallback percentage of the total volume size used to calculate an extension size if the forecast fails or returns a value smaller than the current volume size.\n\nWorkflow Logic\nWhen triggered, the subworkflow uses the host_entity_id to forecast the disk usage 6 hours into the future.\nIf the forecast failsdue to insufficient data or if the predicted usage is less than the current volume sizethe subworkflow performs an alternative calculation using the fallback parameter.\n\nAlternative Calculation\nIf forecasting is unsuccessful, the volume is extended using the following formula:\nNew Volume Size = Current Volume Size + (Current Volume Size  Fallback Percentage)\n\nFor example:\nIf the current volume size is 100 GB and the fallback percentage is 50%, the new volume size will be:\n100 GB + (100 GB  0.50) = 150 GB",
+  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{result(\"get-prediction-result\")}}",
+  "type": "STANDARD",
+  "input": {
+    "host_entity_id": "HOST-584C330971260086",
+    "forecast_method": "point",
+    "on_forecast_failure_increase_by_percentag_of_total_diskspace": 100
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udcc8 **Subworkflow for Forecasting AWS Volume Disk Usage**\n\n\ud83d\udd2e This subworkflow provides a streamlined method for **forecasting disk usage of an AWS EBS volume** using Dynatrace Davis AI.\n\n---\n\n### \ud83d\udd52 **Overview**\n\nSince an AWS volume can only be extended **once every 6 hours**, this subworkflow estimates the **maximum expected disk usage within that time window**.  \n\ud83d\udcca The forecasted value can then be passed to a workflow task responsible for extending the volume to the predicted size.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **host_entity_id** (Required): \ud83d\udda5\ufe0f The Dynatrace Host entity ID associated with the AWS volume.\n\n- **forecast_method** (Required): \ud83d\udcd0 Specifies which forecast prediction to use.  \n  Possible values:\n  - **point** \u2192 `dt.davis.forecast:point`\n  - **upper** \u2192 `dt.davis.forecast:upper`\n  - **lower** \u2192 `dt.davis.forecast:lower`\n\n  \ud83d\udcda More information about these methods:\n  - https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/ai-models/forecast-analysis  \n  - https://www.dynatrace.com/news/blog/stay-ahead-of-the-game-forecast-it-capacity-with-dynatrace-grail-and-davis-ai/\n\n- **on_forecast_failure_increase_by_percentage_of_total_diskspace** (Required): \ud83d\udedf  \n  A fallback percentage of the total volume size used to calculate an extension size if:\n  - forecasting fails due to insufficient data, or  \n  - the forecasted value is smaller than the current volume size.\n\n---\n\n### \ud83d\udd17 **Workflow Requirement**\n\nWorkflow needs subworkflow  \n[subworkflow - aws get host data of ec2 instance](/ui/apps/dynatrace.automations/workflows/3e5454a4-50ad-4dab-914c-638b6df5b283?trigger=&view=live)\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \u25b6\ufe0f When triggered, the subworkflow uses the **host_entity_id** to forecast disk usage **6 hours into the future**.\n- \u26a0\ufe0f If the forecast fails due to insufficient data **or** the predicted usage is less than the current volume size, the subworkflow performs an alternative calculation using the fallback parameter.\n\n---\n\n### \ud83d\udd01 **Alternative Calculation**\n\nIf forecasting is unsuccessful, the volume is extended using the following formula:",
+  "tasks": {
+    "get-disk-lifetime": {
+      "name": "get-disk-lifetime",
+      "input": {
+        "workflowId": "3e5454a4-50ad-4dab-914c-638b6df5b283",
+        "workflowInput": "{\n  \"host_entity_id\": \"{{input()[\"host_entity_id\"] }}\"\n}"
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": []
+    },
+    "get-total-disk-size": {
+      "name": "get-total-disk-size",
+      "input": {
+        "query": "fetch dt.entity.host\n| filter matchesPhrase(id, \"{{input()[\"host_entity_id\"]}}\")\n| lookup  [ timeseries max(dt.host.disk.used), by: { dt.entity.host }\n| fieldsAdd disksizex = arrayLast(`max(dt.host.disk.used)`)/1000000000\n| fields disksize=round(disksizex), dt.entity.host\n] , sourceField:id, lookupField:dt.entity.host, prefix:\"disk_\"\n| lookup  [ timeseries max(dt.host.disk.avail), by: { dt.entity.host }\n| fieldsAdd disksizex = arrayLast(`max(dt.host.disk.avail)`)/1000000000\n| fields disksize=round(disksizex), dt.entity.host\n] , sourceField:id, lookupField:dt.entity.host, prefix:\"disk_avail_\"\n| fields total_disk_size=disk_disksize + disk_avail_disksize"
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 6
+      },
+      "conditions": {
+        "states": {
+          "davis-ai-forecast-disk-size": "OK"
+        }
+      },
+      "description": "Make use of Dynatrace Grail data in your workflow.",
+      "predecessors": [
+        "davis-ai-forecast-disk-size"
+      ]
+    },
+    "get-prediction-result": {
+      "name": "get-prediction-result",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\n\n\nexport default async function ({ executionId }) {\n    const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n    const exe = await execution(executionId);\n    const predResult = await exe.result('davis-ai-forecast-disk-size');\n    const getTotaldisksizeReult = await exe.result('get-total-disk-size');\n    //console.log(getTotaldisksizeReult)\n    //console.log(getTotaldisksizeReult.records[0].total_disk_size)\n    const result = predResult['result'];\n    const predictionSummary = { violation: false, violations: new Array<Record<string, string>>() };\n    //console.log(\"Total number of predicted lines: \" + result.output.length);\n    // Check if prediction was successful.\n    if (result && result.executionStatus == 'COMPLETED' && result.output[0].analysisStatus == \"OK\") {\n        console.log('Prediction was successful.')\n            const lowerPredictions = result.output[0].timeSeriesDataWithPredictions.records[0]['dt.davis.forecast:lower'];\n            const upperPredictions = result.output[0].timeSeriesDataWithPredictions.records[0]['dt.davis.forecast:upper'];\n            const pointPredictions = result.output[0].timeSeriesDataWithPredictions.records[0]['dt.davis.forecast:point'];\n            const lowerPredictions_last = lowerPredictions[lowerPredictions.length - 1];\n            const upperPredictions_last = upperPredictions[upperPredictions.length - 1];\n            const pointPredictions_last = pointPredictions[pointPredictions.length - 1];\n            console.log(lowerPredictions_last/1000000000)\n            console.log(upperPredictions_last/1000000000)\n            console.log(pointPredictions_last/1000000000)\n            var predicted_disk_usage_in_gb=pointPredictions_last/1000000000;\n            var predicted_disk_usage_in_gb_round = Math.round(predicted_disk_usage_in_gb)\n            var lower_in_gb=lowerPredictions_last/1000000000;\n            var lower = Math.round(lower_in_gb)\n            var upper_in_gb=upperPredictions_last/1000000000;\n            var upper = Math.round(upper_in_gb)\n            let prediction_method = predicted_disk_usage_in_gb_round\n            if (input.forecast_method == \"upper\") {\n              prediction_method = upper\n            } else if (input.forecast_method == \"lower\") {\n              prediction_method = upper\n            } else {\n              prediction_method = predicted_disk_usage_in_gb_round\n            }\n            console.log(\"using prediction method \"+input.forecast_method )\n\n      \n            if (prediction_method > getTotaldisksizeReult.records[0].total_disk_size) {\n            return {\"predicted_disk_size\": prediction_method,\"dt.davis.forecast:lower\": lower,\"dt.davis.forecast:upper\": upper, \"dt.davis.forecast:point\": predicted_disk_usage_in_gb_round };\n            } else {\n              console.log('Prediction smaller than total disk size, increase by '+input.on_forecast_failure_increase_by_percentag_of_total_diskspace+\"% of total disksize instead\")\n              const total=(getTotaldisksizeReult.records[0].total_disk_size/100*input.on_forecast_failure_increase_by_percentag_of_total_diskspace) + getTotaldisksizeReult.records[0].total_disk_size\n              return {\"predicted_disk_size\": total,\"dt.davis.forecast:lower\": lower,\"dt.davis.forecast:upper\": upper, \"dt.davis.forecast:point\": predicted_disk_usage_in_gb_round };\n\n            }\n      \n\n    } else {\n        console.log('Prediction run failed!');\n        console.log('Increase by ' +input.on_forecast_failure_increase_by_percentag_of_total_diskspace+\"% of total disksize\");\n        const total=(getTotaldisksizeReult.records[0].total_disk_size/100*input.on_forecast_failure_increase_by_percentag_of_total_diskspace) + getTotaldisksizeReult.records[0].total_disk_size\n        return {\"predicted_disk_size\": total };\n\n    }\n }"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 7
+      },
+      "conditions": {
+        "states": {
+          "get-total-disk-size": "ANY"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "get-total-disk-size"
+      ]
+    },
+    "calculate-lifetime-duration": {
+      "name": "calculate-lifetime-duration",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { queryExecutionClient } from \"@dynatrace-sdk/client-query\";\n\nexport default async function ({ executionId }) {\n  const exe = await execution(executionId);\n  const ebs = await exe.result('get-disk-lifetime');\n  const disk_starttime = new Date(ebs.ebs_lifetime.start)\n  const disk_endtime = new Date(ebs.ebs_lifetime.end)\n  const timestamp1 = disk_starttime.getTime(); // Milliseconds for date1\n  const timestamp2 = disk_endtime.getTime(); // Milliseconds for date2\n  const differenceInMilliseconds = timestamp2 - timestamp1;\n  const differenceInHours = differenceInMilliseconds / (1000 * 60 * 60);\n  console.log(differenceInHours)\n  const roundeddiff = Math.floor(differenceInHours);\n  console.log(roundeddiff)\n  let difference = roundeddiff\n  \n  if (roundeddiff == 0) {\n    difference = 1\n  } else {\n    difference = roundeddiff\n  }\n    \n  return difference;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-disk-lifetime": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "get-disk-lifetime"
+      ]
+    },
+    "davis-ai-forecast-disk-size": {
+      "name": "davis-ai-forecast-disk-size",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { analyzersClient } from '@dynatrace-sdk/client-davis-analyzers';\n\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  const exe = await execution(executionId);\n  const duration = await exe.result('caculate-if-recent-or-constant-growth');\n  console.log(input.host_entity_id)\n  console.log(duration)\n\n\n  \n  const query = 'timeseries max(dt.host.disk.used), by: { dt.entity.host }, interval:1m | filter matchesPhrase(dt.entity.host, \"'+input.host_entity_id+'\")'\n  const analyzerName = 'dt.statistics.GenericForecastAnalyzer';\n  const response = await analyzersClient.executeAnalyzer({\n    analyzerName,\n    body: {\n      nPaths: 200,\n      useModelCache: true,\n      forecastOffset: 0,\n      forecastHorizon: 600,\n      coverageProbability: 0.9,\n      applyZeroLowerBoundHeuristic: true,\n      generalParameters: {\n         timeframe: {\n             endTime: \"now\",\n             startTime: \"now-\"+duration.key+\"\"   \n             //startTime: \"now-2h\" \n             },\n        logVerbosity: \"WARNING\",  \n        resolveDimensionalQueryData: false\n      },\n      timeSeriesData: {\n        expression: query,\n      },\n    },\n  });\n\n\n  return response;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 5
+      },
+      "conditions": {
+        "states": {
+          "caculate-if-recent-or-constant-growth": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "caculate-if-recent-or-constant-growth"
+      ]
+    },
+    "calculate-forecast-timeframes": {
+      "name": "calculate-forecast-timeframes",
+      "input": {
+        "query": "timeseries full_time_of_existancex=max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-{{result(\"calculate-lifetime-duration\") }}h\n| fieldsadd full_time_of_existance=arrayRemoveNulls(full_time_of_existancex)\n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\")\n| fieldsadd result_full = (arraylast(full_time_of_existance) - arrayfirst(full_time_of_existance)) / arrayfirst(full_time_of_existance) * 100 / arraySize(full_time_of_existance)\n| append [timeseries hours1 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-1h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\")\n| fieldsadd result_hours1 = (arraylast(hours1)- arrayfirst(hours1)) / arrayfirst(hours1) * 100 / arraySize(hours1)] \n| append [timeseries hours2 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-2h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours2 = (arraylast(hours2) -arrayfirst(hours2)) / arrayfirst(hours2) * 100 / arraySize(hours2)] \n| append [timeseries hours3 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-3h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\")\n| fieldsadd result_hours3 = (arraylast(hours3) -arrayfirst(hours3)) / arrayfirst(hours3) * 100 / arraySize(hours3)]  \n| append [timeseries hours4 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-4h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours4 = (arraylast(hours4) -arrayfirst(hours4)) / arrayfirst(hours4) * 100 / arraySize(hours4)]  \n| append [timeseries hours5 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-5h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours5 = (arraylast(hours5) -arrayfirst(hours5)) / arrayfirst(hours5) * 100 / arraySize(hours5)]  \n| append [timeseries hours6 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-6h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours6 = (arraylast(hours6) -arrayfirst(hours6)) / arrayfirst(hours6) * 100 / arraySize(hours6)]  \n| append [timeseries hours7 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-7h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours7 = (arraylast(hours7) -arrayfirst(hours7)) / arrayfirst(hours7) * 100 / arraySize(hours7)]  \n| append [timeseries hours8 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-8h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours8 = (arraylast(hours8) -arrayfirst(hours8)) / arrayfirst(hours8) * 100 / arraySize(hours8)]  \n| append [timeseries hours9 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-9h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours9 = (arraylast(hours9) -arrayfirst(hours9)) / arrayfirst(hours9) * 100 / arraySize(hours9)]  \n| append [timeseries hours10 = max(dt.host.disk.used), by: { dt.entity.host }, interval:1m, from:now()-10h \n| filter matchesPhrase(dt.entity.host, \"{{input()[\"host_entity_id\"] }}\") \n| fieldsadd result_hours10 = (arraylast(hours10) -arrayfirst(hours10)) / arrayfirst(hours10) * 100 / arraySize(hours10)]  \n| summarize alltime=max(result_full), hours1=max(result_hours1), hours2=max(result_hours2), hours3=max(result_hours3), hours4=max(result_hours4), hours5=max(result_hours5), hours6=max(result_hours6), hours7=max(result_hours7), hours8=max(result_hours8), hours9=max(result_hours9), hours10=max(result_hours10)"
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "custom": "",
+        "states": {
+          "calculate-lifetime-duration": "OK"
+        }
+      },
+      "description": "Make use of Dynatrace Grail data in your workflow.",
+      "predecessors": [
+        "calculate-lifetime-duration"
+      ]
+    },
+    "caculate-if-recent-or-constant-growth": {
+      "name": "caculate-if-recent-or-constant-growth",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ executionId }) {\n\n  interface NumberDictionary {\n  [key: string]: number;\n  }\n  const growth: NumberDictionary = {};\n  const exe = await execution(executionId);\n  const lifetimeduration = await exe.result('calculate-lifetime-duration');\n  const gap1 = await exe.result('calculate-forecast-timeframes');\n  // e.g. get the current execution\n  console.log(gap1.records[0]);\n  growth[lifetimeduration+\"h\"] = gap1.records[0].alltime;\n  growth[\"1h\"] = gap1.records[0].hours1;\n  growth[\"2h\"] = gap1.records[0].hours2;\n  growth[\"3h\"] = gap1.records[0].hours3;\n  growth[\"4h\"] = gap1.records[0].hours4;\n  growth[\"5h\"] = gap1.records[0].hours5;\n  growth[\"6h\"] = gap1.records[0].hours6;\n  growth[\"7h\"] = gap1.records[0].hours7;\n  growth[\"8h\"] = gap1.records[0].hours8;\n  growth[\"9h\"] = gap1.records[0].hours9;\n  growth[\"10h\"] = gap1.records[0].hours10;\n\n  function getHighestKeyValue(obj: { [key: string]: number }): { key: string; value: number } | undefined {\n  let highestValue: number | undefined;\n  let highestKey: string | undefined;\n\n  for (const key in obj) {\n      if (obj.hasOwnProperty(key)) {\n        const value = obj[key];\n        if (typeof value === 'number') { // Ensure the value is a number for comparison\n          if (highestValue === undefined || value > highestValue) {\n            highestValue = value;\n            highestKey = key;\n          }\n        }\n      }\n    }\n  \n    if (highestKey !== undefined && highestValue !== undefined) {\n      return { key: highestKey, value: highestValue };\n    } else {\n      return undefined; // Handle case of empty object or no numeric values\n    }\n  }\n\n  const Result = getHighestKeyValue(growth)\n    \n  \n  return Result;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 4
+      },
+      "conditions": {
+        "states": {
+          "calculate-forecast-timeframes": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "calculate-forecast-timeframes"
+      ]
+    }
+  }
+}
