@@ -1,0 +1,62 @@
+{
+  "title": "subworkflow - awsregionfailover wait for systems manager automation execution",
+  "description": "Helper subworkflow to wait for AWS SSM Automation completion during region failover orchestrations.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "AutomationExecutionId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u23f3 AWS Region Failover Helper: Wait for SSM Automation\\n\\n\ud83e\udde0 Polls SSM Automation status and retries while still running.\\n\\n### \u2699\ufe0f Inputs\\n- \ud83c\udf0d `awsregion`\\n- \ud83e\uddfe `AutomationExecutionId`\\n- \ud83d\udd0c `dynatraceawsconnection`\\n\\n### \u2705 Behavior\\n- Calls `ssm-get-automation-execution`\\n- Retries while status is in-progress\\n- Returns final automation payload",
+  "tasks": {
+    "get-status": {
+      "name": "get-status",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "AutomationExecutionId": "{{ input()[\"AutomationExecutionId\"] }}",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "action": "dynatrace.aws.connector:ssm-get-automation-execution",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Get automation execution details.",
+      "predecessors": []
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\\n  const r = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/get-status/result');\\n  const b = await r.json();\\n  const status = (b?.AutomationExecution?.AutomationExecutionStatus || '').toUpperCase();\\n  if (status === 'PENDING' || status === 'INPROGRESS') {\\n    throw new Error('Automation still running: ' + status);\\n  }\\n  return b;\\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-status": "OK"
+        }
+      },
+      "description": "Retry until automation reaches terminal state.",
+      "predecessors": [
+        "get-status"
+      ]
+    }
+  }
+}

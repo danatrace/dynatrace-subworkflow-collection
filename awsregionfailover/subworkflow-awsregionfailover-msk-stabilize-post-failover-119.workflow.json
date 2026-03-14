@@ -1,0 +1,285 @@
+{
+  "title": "subworkflow - aws region failover msk stabilize post failover",
+  "description": "AWS cross-region failover subworkflow for msk.\\n\\nStabilize services after failover to avoid cascading outages.\\n\\nThis workflow executes failover orchestration with explicit wait and final status checks for every critical action.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-final-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "primaryResourceId": "",
+    "sourceRegion": "us-east-1",
+    "targetRegion": "us-west-2",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground",
+    "AutomationAssumeRolearn": "",
+    "instanceId": "",
+    "artifactBucket": "dr-artifacts-bucket",
+    "runbookDocumentNameOverride": "",
+    "failoverReason": "",
+    "serviceName": "msk"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83c\udf0d AWS Cross-Region Failover Subworkflow\\n\\n### \ud83c\udfaf Purpose\\n- Stabilize services after failover to avoid cascading outages.\\n- Service profile: **msk**\\n\\n### \u2699\ufe0f Inputs\\n- \ud83c\udf10 **sourceRegion**: Primary region\\n- \ud83c\udf10 **targetRegion**: Failover region\\n- \ud83d\udd11 **primaryResourceId**: Workload/resource identifier\\n- \ud83d\udd0c **dynatraceawsconnection**: Dynatrace AWS OIDC connection\\n- \ud83e\uddfe **runbookDocumentNameOverride**: Optional custom SSM runbook\\n\\n### \u25b6\ufe0f Execution Behavior\\n- \ud83d\udd0e Pre-flight security group visibility check\\n- \ud83d\udee1\ufe0f Harden failover artifact bucket\\n- \ud83e\udde0 Run operator advisory command via SSM Run Command\\n- \u23f3 Wait for run command completion (helper subworkflow)\\n- \ud83d\ude80 Start SSM failover automation runbook\\n- \u23f3 Wait for automation completion (helper subworkflow)\\n- \u267b\ufe0f Optional EC2 reboot and running-state wait for stabilization\\n- \u2705 Final status check fails workflow on unsuccessful outcomes\\n\\n### \ud83d\udd17 Dependencies\\n- \ud83d\udcce `subworkflow-awsregionfailover-wait-for-run-command-execution`\\n- \ud83d\udcce `subworkflow-awsregionfailover-wait-for-ssm-automation-execution`",
+  "tags": [
+    "aws",
+    "region-failover",
+    "msk",
+    "stabilize-post-failover",
+    "execute-wait-check"
+  ],
+  "tasks": {
+    "preflight-describe-security-groups": {
+      "name": "preflight-describe-security-groups",
+      "input": {
+        "region": "{{ input()[\"sourceRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-describe-security-groups",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Pre-flight check for security group posture.",
+      "predecessors": []
+    },
+    "harden-artifact-bucket": {
+      "name": "harden-artifact-bucket",
+      "input": {
+        "region": "{{ input()[\"targetRegion\"] }}",
+        "Bucket": "{{ input()[\"artifactBucket\"] }}",
+        "PublicAccessBlockConfiguration": "{\"BlockPublicAcls\":true,\"IgnorePublicAcls\":true,\"BlockPublicPolicy\":true,\"RestrictPublicBuckets\":true}",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:s3-put-public-access-block",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "preflight-describe-security-groups": "OK"
+        }
+      },
+      "description": "Ensure failover artifact bucket is not publicly accessible.",
+      "predecessors": [
+        "preflight-describe-security-groups"
+      ]
+    },
+    "send-failover-command": {
+      "name": "send-failover-command",
+      "input": {
+        "region": "{{ input()[\"sourceRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "DocumentName": "AWS-RunShellScript",
+        "InstanceIds": "[\"{{ input()[\"instanceId\"] }}\"]",
+        "Parameters": "{\n  \"commands\": [\n    \"echo 'Failover preparation for service msk pattern stabilize-post-failover'\",\n    \"echo 'Source={{ input()[\\\"sourceRegion\\\"] }} Target={{ input()[\\\"targetRegion\\\"] }} Resource={{ input()[\\\"primaryResourceId\\\"] }}'\"\n  ]\n}",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-send-command",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "harden-artifact-bucket": "OK"
+        }
+      },
+      "description": "Dispatch pre-failover command to orchestrator host.",
+      "predecessors": [
+        "harden-artifact-bucket"
+      ]
+    },
+    "wait-for-run-command-completed": {
+      "name": "wait-for-run-command-completed",
+      "input": {
+        "workflowId": "11111111-1111-4111-8111-111111111111",
+        "workflowInput": "{\\n\"CommandId\":\"{{result(\\\"send-failover-command\\\").Command.CommandId}}\",\\n\"awsregion\":\"{{input()[\\\"sourceRegion\\\"]}}\",\\n\"dynatraceawsconnection\":\"{{input()[\\\"dynatraceawsconnection\\\"]}}\"\\n}"
+      },
+      "retry": {
+        "count": 30,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 4
+      },
+      "conditions": {
+        "states": {
+          "send-failover-command": "OK"
+        }
+      },
+      "description": "Wait for run command execution using helper subworkflow.",
+      "predecessors": [
+        "send-failover-command"
+      ]
+    },
+    "start-failover-automation": {
+      "name": "start-failover-automation",
+      "input": {
+        "region": "{{ input()[\"sourceRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "DocumentName": "{{ input()[\"runbookDocumentNameOverride\"] if input()[\"runbookDocumentNameOverride\"] else \"AWSSupport-FailoverMskCluster\" }}",
+        "Parameters": "{\n  \"PrimaryResourceId\": [\n    \"{{ input()[\\\"primaryResourceId\\\"] }}\"\n  ],\n  \"SourceRegion\": [\n    \"{{ input()[\\\"sourceRegion\\\"] }}\"\n  ],\n  \"TargetRegion\": [\n    \"{{ input()[\\\"targetRegion\\\"] }}\"\n  ],\n  \"AutomationAssumeRole\": [\n    \"{{ input()[\\\"AutomationAssumeRolearn\\\"] }}\"\n  ],\n  \"FailoverReason\": [\n    \"{{ input()[\\\"failoverReason\\\"] }}\"\n  ]\n}",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 5
+      },
+      "conditions": {
+        "states": {
+          "wait-for-run-command-completed": "OK"
+        }
+      },
+      "description": "Start region-failover automation runbook.",
+      "predecessors": [
+        "wait-for-run-command-completed"
+      ]
+    },
+    "wait-for-ssm-automation-completed": {
+      "name": "wait-for-ssm-automation-completed",
+      "input": {
+        "workflowId": "22222222-2222-4222-8222-222222222222",
+        "workflowInput": "{\\n\"AutomationExecutionId\":\"{{result(\\\"start-failover-automation\\\").AutomationExecutionId}}\",\\n\"awsregion\":\"{{input()[\\\"sourceRegion\\\"]}}\",\\n\"dynatraceawsconnection\":\"{{input()[\\\"dynatraceawsconnection\\\"]}}\"\\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 6
+      },
+      "conditions": {
+        "states": {
+          "start-failover-automation": "OK"
+        }
+      },
+      "description": "Wait for SSM automation completion using helper subworkflow.",
+      "predecessors": [
+        "start-failover-automation"
+      ]
+    },
+    "reboot-orchestrator-instance": {
+      "name": "reboot-orchestrator-instance",
+      "input": {
+        "region": "{{ input()[\"sourceRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "InstanceIds": "[\"{{ input()[\"instanceId\"] }}\"]",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 2,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-reboot-instances",
+      "active": true,
+      "timeout": 1200,
+      "position": {
+        "x": 0,
+        "y": 7
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-automation-completed": "OK"
+        }
+      },
+      "description": "Optional stabilization reboot on orchestrator EC2 host.",
+      "predecessors": [
+        "wait-for-ssm-automation-completed"
+      ]
+    },
+    "wait-instance-running": {
+      "name": "wait-instance-running",
+      "input": {
+        "region": "{{ input()[\"sourceRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "InstanceIds": "[\"{{ input()[\"instanceId\"] }}\"]",
+        "InstanceState": "running",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 20,
+        "delay": 15,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-wait-state",
+      "active": true,
+      "timeout": 1200,
+      "position": {
+        "x": 0,
+        "y": 8
+      },
+      "conditions": {
+        "states": {
+          "reboot-orchestrator-instance": "OK"
+        }
+      },
+      "description": "Wait for orchestrator instance to return to running state.",
+      "predecessors": [
+        "reboot-orchestrator-instance"
+      ]
+    },
+    "check-final-status": {
+      "name": "check-final-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\\n  const runCmd = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-run-command-completed/result').then(r => r.json());\\n  const auto = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-ssm-automation-completed/result').then(r => r.json());\\n  const status = (auto?.AutomationExecution?.AutomationExecutionStatus || auto?.AutomationExecutionStatus || '').toUpperCase();\\n  if (status !== 'SUCCESS') {\\n    throw new Error('Failover automation not successful: ' + status);\\n  }\\n  return { runCommand: runCmd, automation: auto, finalStatus: status };\\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 9
+      },
+      "conditions": {
+        "states": {
+          "wait-instance-running": "OK"
+        }
+      },
+      "description": "Final gate: ensure failover completed successfully.",
+      "predecessors": [
+        "wait-instance-running"
+      ]
+    }
+  }
+}

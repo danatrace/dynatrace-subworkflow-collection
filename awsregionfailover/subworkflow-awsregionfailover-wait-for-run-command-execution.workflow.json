@@ -1,0 +1,62 @@
+{
+  "title": "subworkflow - awsregionfailover wait for run command execution",
+  "description": "Helper subworkflow to wait for AWS SSM Run Command completion during region failover orchestrations.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "CommandId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u23f3 AWS Region Failover Helper: Wait for Run Command\\n\\n\ud83e\udde0 Polls AWS SSM Run Command status and retries while still running.\\n\\n### \u2699\ufe0f Inputs\\n- \ud83c\udf0d `awsregion`\\n- \ud83e\uddfe `CommandId`\\n- \ud83d\udd0c `dynatraceawsconnection`\\n\\n### \u2705 Behavior\\n- Calls `ssm-list-commands`\\n- Retries while status is in-progress\\n- Returns final command status payload",
+  "tasks": {
+    "get-status": {
+      "name": "get-status",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "CommandId": "{{ input()[\"CommandId\"] }}",
+        "connection": "{% set awsconnection = input()['dynatraceawsconnection'] %}\\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "action": "dynatrace.aws.connector:ssm-list-commands",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Poll command status list by CommandId.",
+      "predecessors": []
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\\n  const r = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/get-status/result');\\n  const b = await r.json();\\n  const cmd = (b?.Commands || [])[0] || {};\\n  const status = (cmd.Status || '').toUpperCase();\\n  if (['PENDING','INPROGRESS','DELAYED'].includes(status)) {\\n    throw new Error('Run command still running: ' + status);\\n  }\\n  return b;\\n}"
+      },
+      "retry": {
+        "count": 30,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "get-status": "OK"
+        }
+      },
+      "description": "Retry until run command reaches terminal state.",
+      "predecessors": [
+        "get-status"
+      ]
+    }
+  }
+}
