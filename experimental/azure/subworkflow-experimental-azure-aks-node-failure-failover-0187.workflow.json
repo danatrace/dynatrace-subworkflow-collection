@@ -1,0 +1,112 @@
+{
+  "title": "subworkflow - experimental azure aks node failure failover",
+  "description": "Experimental outage prevention subworkflow for azure-aks / node-failure-failover.\\n\\nSources considered: public engineering discussions, Stack Overflow trend tags, ServiceNow automation operations themes, and common enterprise SRE incident classes. Gartner/Forrester insights are represented as generalized resilience themes due publication access boundaries.\\n\\nThis workflow enforces execute -> wait -> verify and avoids fire-and-forget behavior.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "primaryResourceId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground",
+    "AutomationAssumeRolearn": "",
+    "instanceId": "",
+    "bucketName": "",
+    "automationExecutionId": "",
+    "commandId": "",
+    "azuresubscriptionid": "",
+    "automationresourcegroup": "",
+    "automationaccountname": "",
+    "jobId": "",
+    "dynatraceazureconnection": "azureplayground",
+    "namespace": "default",
+    "jobName": "",
+    "dynatracekubernetesconnection": "kubernetesplayground",
+    "githubOwner": "",
+    "githubRepository": "",
+    "githubBranch": "main",
+    "githubConnectionId": ""
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\uddea Experimental Outage-Prevention Subworkflow\\n\\nThis experimental subworkflow targets a critical outage-prevention scenario synthesized from engineering forum patterns and automation operations use cases.\\n\\n### \ud83c\udfaf Scenario\\n- Context: **azure-aks**\\n- Remediation focus: **node-failure-failover**\\n- Primary action: **dynatrace.kubernetes.connector:kubernetes-batch-v1-read-namespaced-job-status**\\n\\n### \ud83e\udde0 Reliability Pattern\\n- \u25b6\ufe0f Execute primary remediation action\\n- \u23f3 Wait for action stabilization\\n- \u2705 Verify action completion and fail on unsuccessful statuses\\n\\n### \ud83d\udd2e Forecasting\\n- \u2139\ufe0f Forecasting pre-check not required for this scenario.\\n\\n### \ud83d\udd27 Notes\\n- This is an experimental template and may require environment-specific parameter tuning.\\n- No fire-and-forget behavior is allowed; wait and check tasks are always present.",
+  "tags": [
+    "experimental",
+    "outage-prevention",
+    "azure-aks",
+    "node-failure-failover",
+    "execute-wait-verify"
+  ],
+  "tasks": {
+    "perform-action": {
+      "name": "perform-action",
+      "input": {
+        "namespace": "{{ input()[\"namespace\"] }}",
+        "name": "{{ input()[\"jobName\"] }}",
+        "connection": "{{ input()[\"dynatracekubernetesconnection\"] }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.kubernetes.connector:kubernetes-batch-v1-read-namespaced-job-status",
+      "active": true,
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Execute primary remediation action.",
+      "predecessors": []
+    },
+    "wait-for-action": {
+      "name": "wait-for-action",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/perform-action/result');\n  const body = await response.json();\n\n  await new Promise((resolve) => setTimeout(resolve, 2000));\n\n  const status = (\n    body?.AutomationExecution?.AutomationExecutionStatus ||\n    body?.AutomationExecutionStatus ||\n    body?.properties?.status ||\n    body?.status ||\n    body?.state ||\n    body?.executionStatus ||\n    body?.result?.executionStatus ||\n    body?.jobStatus ||\n    ''\n  ).toString().toUpperCase();\n\n  const inProgress = ['INPROGRESS','PENDING','RUNNING','NEW','ACTIVATING','QUEUED','STARTING'];\n  if (inProgress.includes(status)) {\n    throw new Error('Action still running: ' + status);\n  }\n\n  return { status, body };\n}"
+      },
+      "retry": {
+        "count": 12,
+        "delay": 20,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "perform-action": "OK"
+        }
+      },
+      "description": "Wait for action stabilization and detect in-progress states.",
+      "predecessors": [
+        "perform-action"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const response = await fetch('/platform/automation/v1/executions/' + execution_id + '/tasks/wait-for-action/result');\n  const payload = await response.json();\n  const status = (payload?.status || '').toString().toUpperCase();\n\n  const failed = ['FAILED','FAILURE','ERROR','TIMED_OUT','CANCELLED','STOPPED','BLOCKED'];\n  if (failed.includes(status)) {\n    throw new Error('Action reported failure status: ' + status);\n  }\n\n  if (!payload || !payload.body) {\n    throw new Error('Action result payload is empty');\n  }\n\n  return payload.body;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "active": true,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-action": "OK"
+        }
+      },
+      "description": "Verify final action result and fail on bad terminal status.",
+      "predecessors": [
+        "wait-for-action"
+      ]
+    }
+  }
+}
