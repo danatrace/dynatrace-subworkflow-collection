@@ -43,7 +43,8 @@
         <p id="result-count">0 workflows</p>
         <div class="selection-tools">
           <span id="selected-count">0 selected</span>
-          <button id="generate-terraform" class="button button-secondary" type="button">Generate Terraform Example</button>
+          <button id="select-all" class="button button-secondary" type="button">Select All</button>
+          <button id="generate-terraform" class="button button-secondary" type="button">Generate Terraform Script</button>
         </div>
         <div class="pager">
           <button id="prev-page" class="page-button" type="button">Previous</button>
@@ -92,7 +93,7 @@
     <div id="terraform-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="terraform-title" hidden>
       <div class="modal">
         <div class="modal-header">
-          <h2 id="terraform-title" class="modal-title">Terraform example for selected workflows</h2>
+          <h2 id="terraform-title" class="modal-title">Terraform script for selected workflows</h2>
           <button id="terraform-close" class="modal-close" type="button" aria-label="Close terraform example">&times;</button>
         </div>
         <div class="modal-body">

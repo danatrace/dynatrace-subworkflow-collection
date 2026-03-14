@@ -43,6 +43,7 @@ const nextPageButton = document.getElementById("next-page");
 const cardTemplate = document.getElementById("card-template");
 const tabButtons = [...document.querySelectorAll(".tab")];
 const selectedCount = document.getElementById("selected-count");
+const selectAllButton = document.getElementById("select-all");
 const generateTerraformButton = document.getElementById("generate-terraform");
 const terraformModal = document.getElementById("terraform-modal");
 const terraformContent = document.getElementById("terraform-content");
@@ -54,9 +55,69 @@ function sanitizeTfName(path) {
     .slice(0, 64) || "workflow";
 }
 
-function buildTerraformExample(items) {
-  const header = [
+function buildTerraformScript(items) {
+  const installLines = [
+    "#!/usr/bin/env bash",
+    "set -euo pipefail",
+    "",
+    "# Full setup from scratch: install Terraform, configure Dynatrace provider, and upload selected workflows.",
+    "",
+    "if command -v terraform >/dev/null 2>&1; then",
+    "  echo \"Terraform already installed: $(terraform version | head -n1)\"",
+    "elif command -v apt-get >/dev/null 2>&1; then",
+    "  sudo apt-get update",
+    "  sudo apt-get install -y gnupg software-properties-common curl unzip",
+    "  curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg",
+    "  echo \"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(. /etc/os-release && echo $VERSION_CODENAME) main\" | sudo tee /etc/apt/sources.list.d/hashicorp.list >/dev/null",
+    "  sudo apt-get update",
+    "  sudo apt-get install -y terraform",
+    "elif command -v brew >/dev/null 2>&1; then",
+    "  brew tap hashicorp/tap",
+    "  brew install hashicorp/tap/terraform",
+    "else",
+    "  echo \"Please install Terraform manually: https://developer.hashicorp.com/terraform/install\"",
+    "  exit 1",
+    "fi",
+    "",
+    "if ! command -v curl >/dev/null 2>&1; then",
+    "  echo \"curl is required to download workflow JSON files\"",
+    "  exit 1",
+    "fi",
+  ];
+
+  const resources = items
+    .map((item) => {
+      const resourceName = sanitizeTfName(item.path);
+      const fileName = `${resourceName}.workflow.json`;
+      return [
+        `# Source: ${item.path}`,
+        `resource \"dynatrace_automation_workflow\" \"${resourceName}\" {`,
+        `  workflow_json = file(\"${"${path.module}"}/workflows/${fileName}\")`,
+        "}",
+      ].join("\n");
+    })
+    .join("\n\n");
+
+  const downloads = items
+    .map((item) => {
+      const resourceName = sanitizeTfName(item.path);
+      const fileName = `${resourceName}.workflow.json`;
+      return [
+        `echo \"Downloading ${item.path}\"`,
+        `curl -fsSL -o workflows/${fileName} \"${item.downloadUrl}\"`,
+      ].join("\n");
+    })
+    .join("\n\n");
+
+  return [
+    ...installLines,
+    "",
+    "mkdir -p dynatrace-workflow-deploy/workflows",
+    "cd dynatrace-workflow-deploy",
+    "",
+    "cat > versions.tf <<'EOF'",
     "terraform {",
+    "  required_version = \">= 1.5.0\"",
     "  required_providers {",
     "    dynatrace = {",
     "      source  = \"dynatrace-oss/dynatrace\"",
@@ -64,43 +125,58 @@ function buildTerraformExample(items) {
     "    }",
     "  }",
     "}",
+    "EOF",
     "",
+    "cat > provider.tf <<'EOF'",
     "provider \"dynatrace\" {",
-    "  dt_env_url = var.dt_env_url",
+    "  dt_env_url   = var.dt_env_url",
     "  dt_api_token = var.dt_api_token",
     "}",
     "",
-    "variable \"dt_env_url\" { type = string }",
-    "variable \"dt_api_token\" { type = string, sensitive = true }",
+    "variable \"dt_env_url\" {",
+    "  type        = string",
+    "  description = \"Dynatrace environment URL, for example https://abc123.live.dynatrace.com\"",
+    "}",
     "",
-    "# Place workflow JSON files under ./workflows/ before running terraform apply.",
+    "variable \"dt_api_token\" {",
+    "  type        = string",
+    "  sensitive   = true",
+    "  description = \"Dynatrace API token with workflow write permissions\"",
+    "}",
+    "EOF",
+    "",
+    "cat > workflows.tf <<'EOF'",
+    resources,
+    "EOF",
+    "",
+    "mkdir -p workflows",
+    downloads,
+    "",
+    "echo \"Set your Dynatrace credentials:\"",
+    "echo \"  export DT_ENV_URL=https://<tenant>.live.dynatrace.com\"",
+    "echo \"  export DT_API_TOKEN=<token>\"",
+    "",
+    "if [[ -z \"${DT_ENV_URL:-}\" || -z \"${DT_API_TOKEN:-}\" ]]; then",
+    "  echo \"DT_ENV_URL and DT_API_TOKEN must be set before apply\"",
+    "  exit 1",
+    "fi",
+    "",
+    "terraform init",
+    "terraform apply -auto-approve -var=\"dt_env_url=${DT_ENV_URL}\" -var=\"dt_api_token=${DT_API_TOKEN}\"",
+    "",
+    "echo \"Completed. Selected workflows were uploaded to your Dynatrace tenant.\"",
   ].join("\n");
-
-  const blocks = items
-    .map((item) => {
-      const resourceName = sanitizeTfName(item.path);
-      const fileName = item.path.split("/").pop();
-      return [
-        `resource \"dynatrace_automation_workflow\" \"${resourceName}\" {`,
-        `  workflow_json = file(\"\${path.module}/workflows/${fileName}\")`,
-        "}",
-        "",
-        "# Optional import block if this workflow already exists in your tenant.",
-        "# Replace <existing-workflow-id> with the real Dynatrace workflow ID.",
-        "# import {",
-        `#   to = dynatrace_automation_workflow.${resourceName}`,
-        "#   id = \"<existing-workflow-id>\"",
-        "# }",
-      ].join("\n");
-    })
-    .join("\n\n");
-
-  return [header, blocks].join("\n\n");
 }
 
 function updateSelectionUi() {
   const count = state.selectedPaths.size;
+  const filtered = filterWorkflows();
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((item) => state.selectedPaths.has(item.path));
+
   selectedCount.textContent = `${count} selected`;
+  selectAllButton.textContent = allFilteredSelected ? "Clear All" : "Select All";
+  selectAllButton.disabled = filtered.length === 0;
   generateTerraformButton.disabled = count === 0;
 }
 
@@ -145,6 +221,47 @@ function getPage(items) {
   return items.slice(start, start + PAGE_SIZE);
 }
 
+function toShortPlainText(value, maxLength = 220) {
+  const text = (value || "")
+    .toString()
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[*_`~>\-]/g, " ")
+    .replace(/\[[^\]]+\]\([^)]*\)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!text) {
+    return "No summary available. Click \"View Guide\" for details.";
+  }
+
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength).trimEnd()}...`;
+}
+
+function getCardSummary(item) {
+  if (item.guideSummary && item.guideSummary.trim()) {
+    return toShortPlainText(item.guideSummary, 240);
+  }
+
+  if (item.description && item.description.trim()) {
+    return toShortPlainText(item.description, 240);
+  }
+
+  if (item.guideText && item.guideText.trim()) {
+    return toShortPlainText(item.guideText, 240);
+  }
+
+  if (item.guide && item.guide.trim()) {
+    return toShortPlainText(item.guide, 240);
+  }
+
+  return "No summary available. Click \"View Guide\" for details.";
+}
+
 function drawCards(items) {
   const fragment = document.createDocumentFragment();
 
@@ -153,7 +270,7 @@ function drawCards(items) {
 
     node.querySelector(".card-title").textContent = item.title || item.path;
     node.querySelector(".card-path").textContent = item.path;
-    const summary = item.guideSummary || item.description || "No guide text available.";
+  const summary = getCardSummary(item);
     node.querySelector(".card-description").textContent = summary;
 
     const sectionPill = node.querySelector(".section-pill");
@@ -319,13 +436,27 @@ function setupEvents() {
     render();
   });
 
+  selectAllButton.addEventListener("click", () => {
+    const filtered = filterWorkflows();
+    const allFilteredSelected =
+      filtered.length > 0 && filtered.every((item) => state.selectedPaths.has(item.path));
+
+    if (allFilteredSelected) {
+      filtered.forEach((item) => state.selectedPaths.delete(item.path));
+    } else {
+      filtered.forEach((item) => state.selectedPaths.add(item.path));
+    }
+
+    render();
+  });
+
   generateTerraformButton.addEventListener("click", () => {
     const selectedItems = state.all.filter((item) => state.selectedPaths.has(item.path));
     if (selectedItems.length === 0) {
       return;
     }
 
-    terraformContent.textContent = buildTerraformExample(selectedItems);
+    terraformContent.textContent = buildTerraformScript(selectedItems);
     terraformModal.hidden = false;
   });
 }
