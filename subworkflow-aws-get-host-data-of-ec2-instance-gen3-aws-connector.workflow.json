@@ -1,9 +1,7 @@
 {
   "id": "938bbc7f-29dd-4874-830b-cba77abcb548",
-  "title": "\ud83e\udde9subworkflow - aws get host data of ec2 instance (gen3 aws connector)",
+  "title": "🧩subworkflow - aws get host data of ec2 instance (gen3 aws connector)",
   "description": "",
-  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": true,
   "schemaVersion": 3,
@@ -14,7 +12,7 @@
     "host_entity_id": "HOST-EA0E775A9C448B02"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83e\uddfe **Subworkflow to Get AWS EC2 Instance Data (No DQL Required)**\n\n\ud83d\udd0d This subworkflow provides an **easy and DQL\u2011free way** to retrieve additional metadata for an AWS EC2 instance from Dynatrace.\n\n\u2601\ufe0f The integration leverages the **Dynatrace AWS Gen3 connector**, ensuring secure, scalable, and modern access to AWS infrastructure metadata.\n\nIt is commonly used to collect information such as:\n- \ud83c\udd94 EC2 instance ID  \n- \ud83d\udcbd Attached volume IDs  \n- \ud83d\udce6 Other host-level metadata  \n\n\u27a1\ufe0f This data is typically required for follow-up automation steps, such as **resizing AWS EBS volumes** or performing infrastructure remediation.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **host_entity_id** (Required): \ud83d\udda5\ufe0f The Dynatrace **Host Entity ID** representing the AWS EC2 instance.\n\n---\n\n### \ud83e\udde0 **Usage Context**\n\n- \u2705 Uses the **Dynatrace AWS Gen3 connector**\n- \u2705 Eliminates the need to write **DQL queries**\n- \u2705 Simplifies downstream automation logic\n- \u2705 Designed as a **helper / data-enrichment subworkflow**\n- \u2705 Commonly paired with volume extension, remediation, or validation workflows\n\n---",
+  "guide": "## 🧾 **Subworkflow to Get AWS EC2 Instance Data (No DQL Required)**\n\n🔍 This subworkflow provides an **easy and DQL‑free way** to retrieve additional metadata for an AWS EC2 instance from Dynatrace.\n\n☁️ The integration leverages the **Dynatrace AWS Gen3 connector**, ensuring secure, scalable, and modern access to AWS infrastructure metadata.\n\nIt is commonly used to collect information such as:\n- 🆔 EC2 instance ID  \n- 💽 Attached volume IDs  \n- 📦 Other host-level metadata  \n\n➡️ This data is typically required for follow-up automation steps, such as **resizing AWS EBS volumes** or performing infrastructure remediation.\n\n---\n\n### ⚙️ **Parameters**\n\n- **host_entity_id** (Required): 🖥️ The Dynatrace **Host Entity ID** representing the AWS EC2 instance.\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Uses the **Dynatrace AWS Gen3 connector**\n- ✅ Eliminates the need to write **DQL queries**\n- ✅ Simplifies downstream automation logic\n- ✅ Designed as a **helper / data-enrichment subworkflow**\n- ✅ Commonly paired with volume extension, remediation, or validation workflows\n\n---",
   "tasks": {
     "dql-get-host-info": {
       "name": "dql-get-host-info",

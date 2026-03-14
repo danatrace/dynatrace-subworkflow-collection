@@ -1,9 +1,7 @@
 {
   "id": "9bbe1c31-0649-4e91-b78f-0172a95af176",
-  "title": "\ud83e\udde9subworkflow - dynatrace create dashboard",
+  "title": "🧩subworkflow - dynatrace create dashboard",
   "description": "Subworkflow to create a dashboard.\n\nThis Subworkflow is used to create a dashboard\nUse Case example, create a Investigation Dashboard\nwhen Davis Raises a Problem, for Teams to easily\naccess the Data needed to solve the problem.\n\nParameters:\n\ndashboardname: (Required) name of dashboard to be created\ndashboardjson: (Required) Json def. of dashboard to be created",
-  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -21,7 +19,7 @@
               "isAvailable": true
             }
           },
-          "query": "fetch events\n| filter matchesValue(event.name, \"Process memory Saturation\") and  matchesPhrase(display_id, \"*P*\") and  matchesValue(event.status_transition, \"CREATED\") or matchesValue(event.name, \"Process CPU Saturation\") and  matchesPhrase(display_id, \"*P*\") and  matchesValue(event.status_transition, \"CREATED\") or matchesValue(event.name, \"Low Storage Warning\") and  matchesPhrase(display_id, \"*P*\") and  matchesValue(event.status_transition, \"CREATED\")  or matchesPhrase(event.name, \"*Remediation -*\") \n//| filter matchesPhrase(display_id, \"*P*\") \n//| filter matchesValue(event.status_transition, \"CREATED\")\n| fieldsadd Problemid=concat(\"\ud83d\udd25 \" ,display_id, \" \")\n//| filter dt.davis.is_duplicate==false\n| fieldsadd msg=if(matchesPhrase(event.name, \"*Remediation -*\") == true, concat(\"\u267b\ufe0f \", event.name), else:if(matchesPhrase(event.name, \"*Remediation Email*\") == true, concat(\"\ud83d\udce8 \", event.name), else:concat(Problemid,event.name)))\n| fields  timestamp, msg, event.id, workflow, Url\n| fieldsadd url=if(matchesPhrase(msg, \"*Remediation -*\") == true, workflow, else:concat(\"https://kyw96254.apps.dynatrace.com/ui/apps/dynatrace.davis.problems/problem/\",event.id)), urlcl=concat(\"https://kyw96254.apps.dynatrace.com/ui/apps/dynatrace.classic.problems/#problems/problemdetails;gtf=-2h;gf=all;pid=\",event.id)\n| summarize time=takeFirst(timestamp), Message=collectDistinct(msg),url=takefirst(url),snowurl=takefirst(Url),by:{msg}\n| sort time desc\n|  fieldsRemove msg\n",
+          "query": "fetch events\n| filter matchesValue(event.name, \"Process memory Saturation\") and  matchesPhrase(display_id, \"*P*\") and  matchesValue(event.status_transition, \"CREATED\") or matchesValue(event.name, \"Process CPU Saturation\") and  matchesPhrase(display_id, \"*P*\") and  matchesValue(event.status_transition, \"CREATED\") or matchesValue(event.name, \"Low Storage Warning\") and  matchesPhrase(display_id, \"*P*\") and  matchesValue(event.status_transition, \"CREATED\")  or matchesPhrase(event.name, \"*Remediation -*\") \n//| filter matchesPhrase(display_id, \"*P*\") \n//| filter matchesValue(event.status_transition, \"CREATED\")\n| fieldsadd Problemid=concat(\"🔥 \" ,display_id, \" \")\n//| filter dt.davis.is_duplicate==false\n| fieldsadd msg=if(matchesPhrase(event.name, \"*Remediation -*\") == true, concat(\"♻️ \", event.name), else:if(matchesPhrase(event.name, \"*Remediation Email*\") == true, concat(\"📨 \", event.name), else:concat(Problemid,event.name)))\n| fields  timestamp, msg, event.id, workflow, Url\n| fieldsadd url=if(matchesPhrase(msg, \"*Remediation -*\") == true, workflow, else:concat(\"https://kyw96254.apps.dynatrace.com/ui/apps/dynatrace.davis.problems/problem/\",event.id)), urlcl=concat(\"https://kyw96254.apps.dynatrace.com/ui/apps/dynatrace.classic.problems/#problems/problemdetails;gtf=-2h;gf=all;pid=\",event.id)\n| summarize time=takeFirst(timestamp), Message=collectDistinct(msg),url=takefirst(url),snowurl=takefirst(Url),by:{msg}\n| sort time desc\n|  fieldsRemove msg\n",
           "title": "Problem and Remediation Events",
           "timeframe": {
             "tileTimeframe": {
@@ -147,7 +145,7 @@
         "3": {
           "type": "data",
           "davis": {},
-          "query": "fetch  events\n| filter dt.davis.is_duplicate==false\n| filter matchesValue(event.name, \"Process memory Saturation\") or matchesValue(event.name, \"Process CPU Saturation\") or matchesValue(event.name, \"Low Storage Warning\")\n| filter matchesPhrase( entity_tags, \"remediation:on\")  \n| filter matchesValue(event.kind, \"DAVIS_PROBLEM\") and matchesValue(event.status, \"ACTIVE\") \n| summarize countDistinct(display_id), alias: Number_of_open_davis_problems\n//| fields concat( Number_of_open_davis_problems,\" \ud83e\udde0 \")",
+          "query": "fetch  events\n| filter dt.davis.is_duplicate==false\n| filter matchesValue(event.name, \"Process memory Saturation\") or matchesValue(event.name, \"Process CPU Saturation\") or matchesValue(event.name, \"Low Storage Warning\")\n| filter matchesPhrase( entity_tags, \"remediation:on\")  \n| filter matchesValue(event.kind, \"DAVIS_PROBLEM\") and matchesValue(event.status, \"ACTIVE\") \n| summarize countDistinct(display_id), alias: Number_of_open_davis_problems\n//| fields concat( Number_of_open_davis_problems,\" 🧠 \")",
           "title": "",
           "querySettings": {
             "enableSampling": false,
@@ -205,7 +203,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -214,7 +212,7 @@
                     },
                     "label": "",
                     "value": 1,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -223,7 +221,7 @@
                     },
                     "label": "",
                     "value": 2,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -234,7 +232,7 @@
               "value": "Number_of_open_davis_problems"
             },
             "singleValue": {
-              "label": "Detected Problems \ud83e\udde0",
+              "label": "Detected Problems 🧠",
               "trend": {
                 "isVisible": true,
                 "trendType": "auto"
@@ -412,7 +410,7 @@
         "9": {
           "type": "data",
           "davis": {},
-          "query": "fetch  events\n| filter matchesValue(event.name, \"Process memory Saturation\") or matchesValue(event.name, \"Process CPU Saturation\") or matchesValue(event.name, \"Low Storage Warning\")\n| filter dt.davis.is_duplicate==false\n| filter matchesPhrase( entity_tags, \"remediation:on\")  \n| filter matchesValue(event.kind, \"DAVIS_PROBLEM\") and matchesValue(event.status, \"CLOSED\") \n| summarize countDistinct(display_id) , alias: Number_of_open_davis_problems\n//| fields concat( Number_of_open_davis_problems,\" \ud83e\udde0 \")",
+          "query": "fetch  events\n| filter matchesValue(event.name, \"Process memory Saturation\") or matchesValue(event.name, \"Process CPU Saturation\") or matchesValue(event.name, \"Low Storage Warning\")\n| filter dt.davis.is_duplicate==false\n| filter matchesPhrase( entity_tags, \"remediation:on\")  \n| filter matchesValue(event.kind, \"DAVIS_PROBLEM\") and matchesValue(event.status, \"CLOSED\") \n| summarize countDistinct(display_id) , alias: Number_of_open_davis_problems\n//| fields concat( Number_of_open_davis_problems,\" 🧠 \")",
           "title": "",
           "querySettings": {
             "enableSampling": false,
@@ -470,7 +468,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -479,7 +477,7 @@
                     },
                     "label": "",
                     "value": 1,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -488,7 +486,7 @@
                     },
                     "label": "",
                     "value": 2,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -499,7 +497,7 @@
               "value": "Number_of_open_davis_problems"
             },
             "singleValue": {
-              "label": "Solved Problems \ud83e\udde0",
+              "label": "Solved Problems 🧠",
               "trend": {
                 "isVisible": true,
                 "trendType": "auto"
@@ -593,7 +591,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -602,7 +600,7 @@
                     },
                     "label": "",
                     "value": 1,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -611,7 +609,7 @@
                     },
                     "label": "",
                     "value": 2,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -717,7 +715,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -726,7 +724,7 @@
                     },
                     "label": "",
                     "value": 1,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -735,7 +733,7 @@
                     },
                     "label": "",
                     "value": 2,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -853,7 +851,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -862,7 +860,7 @@
                     },
                     "label": "",
                     "value": 1,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -871,7 +869,7 @@
                     },
                     "label": "",
                     "value": 2,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -1058,7 +1056,7 @@
                     },
                     "label": "Good",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -1067,7 +1065,7 @@
                     },
                     "label": "Warning",
                     "value": 60,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -1076,7 +1074,7 @@
                     },
                     "label": "Problem",
                     "value": 90,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -1274,7 +1272,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -1283,7 +1281,7 @@
                     },
                     "label": "",
                     "value": 60,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -1292,7 +1290,7 @@
                     },
                     "label": "",
                     "value": 80,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -1482,7 +1480,7 @@
                     "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
                   },
                   "value": 0,
-                  "comparator": "\u2265"
+                  "comparator": "≥"
                 }
               ],
               "dataMappings": {
@@ -1505,7 +1503,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -1514,7 +1512,7 @@
                     },
                     "label": "",
                     "value": 70,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -1523,7 +1521,7 @@
                     },
                     "label": "",
                     "value": 90,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -1727,7 +1725,7 @@
               "value": "HostCpuUsage"
             },
             "singleValue": {
-              "label": "\ud83d\udda7 Servers \ud83d\udda7",
+              "label": "🖧 Servers 🖧",
               "trend": {
                 "label": "",
                 "upward": {
@@ -2066,7 +2064,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -2075,7 +2073,7 @@
                     },
                     "label": "",
                     "value": 1,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -2084,7 +2082,7 @@
                     },
                     "label": "",
                     "value": 2,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -2190,7 +2188,7 @@
                     },
                     "label": "",
                     "value": 0,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 1,
@@ -2199,7 +2197,7 @@
                     },
                     "label": "",
                     "value": 1,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   },
                   {
                     "id": 2,
@@ -2208,7 +2206,7 @@
                     },
                     "label": "",
                     "value": 2,
-                    "comparator": "\u2265"
+                    "comparator": "≥"
                   }
                 ],
                 "title": "",
@@ -2391,7 +2389,7 @@
     "dashboardname": "Investigation dashbaord"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83d\udcca **Subworkflow to Create a Dashboard**\n\n\ud83e\udde9 This subworkflow provides a simple and automated way to **create a dashboard** using a predefined JSON definition.\n\nIt is commonly used to **dynamically create investigation or troubleshooting dashboards** as part of automation workflows.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nA typical use case is to **automatically create an investigation dashboard when a problem is raised**, allowing teams to quickly access all relevant data needed to analyze and resolve the issue.\n\nThis helps:\n- \ud83d\udd0d Centralize relevant metrics and data\n- \u26a1 Reduce time to investigation\n- \ud83d\udc65 Enable teams to collaborate using a shared, ready-to-use dashboard\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **dashboardname** (Required): \ud83c\udff7\ufe0f The name of the dashboard to be created.  \n- **dashboardjson** (Required): \ud83e\uddfe The JSON definition of the dashboard to be created.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow submits the provided dashboard JSON definition\n- \ud83d\udcca A new dashboard is created with the specified name\n- \u2705 If creation is successful, the subworkflow completes\n- \u274c If creation fails, the subworkflow fails\u2014allowing the **parent workflow to retry or take alternative action**\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Commonly used in **incident or problem response workflows**\n- \u2705 Enables on-demand creation of investigation dashboards\n- \u2705 Works well with automated remediation and validation steps\n- \u2705 Reduces manual dashboard setup during critical situations\n\n---",
+  "guide": "## 📊 **Subworkflow to Create a Dashboard**\n\n🧩 This subworkflow provides a simple and automated way to **create a dashboard** using a predefined JSON definition.\n\nIt is commonly used to **dynamically create investigation or troubleshooting dashboards** as part of automation workflows.\n\n---\n\n### 🎯 **Use Case**\n\nA typical use case is to **automatically create an investigation dashboard when a problem is raised**, allowing teams to quickly access all relevant data needed to analyze and resolve the issue.\n\nThis helps:\n- 🔍 Centralize relevant metrics and data\n- ⚡ Reduce time to investigation\n- 👥 Enable teams to collaborate using a shared, ready-to-use dashboard\n\n---\n\n### ⚙️ **Parameters**\n\n- **dashboardname** (Required): 🏷️ The name of the dashboard to be created.  \n- **dashboardjson** (Required): 🧾 The JSON definition of the dashboard to be created.\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 📤 The subworkflow submits the provided dashboard JSON definition\n- 📊 A new dashboard is created with the specified name\n- ✅ If creation is successful, the subworkflow completes\n- ❌ If creation fails, the subworkflow fails—allowing the **parent workflow to retry or take alternative action**\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Commonly used in **incident or problem response workflows**\n- ✅ Enables on-demand creation of investigation dashboards\n- ✅ Works well with automated remediation and validation steps\n- ✅ Reduces manual dashboard setup during critical situations\n\n---",
   "tasks": {
     "create-dashboard": {
       "name": "create-dashboard",

@@ -1,9 +1,7 @@
 {
   "id": "47448866-dd9d-415c-90c7-51c74798cc79",
-  "title": "\ud83e\udde9subworkflow - aws get process data of process running on ec2 instance",
+  "title": "🧩subworkflow - aws get process data of process running on ec2 instance",
   "description": "Subworkflow to get data of a process running on an aws ec2 instance without needing to know DQL or Javascript\n\nAn easy way to get additional data of a process running on an aws ec2 instance\nsuch as process name, ec2 region, ec2 instance id, ec2 volume id, tags etc.\nwhich is needed to for example to remediate a problem created by a process\nrunning on an ec2 instance.\n\nParameters:\n\nprocess_group_instance_id:  (Required) the dynatrace process group instance id",
-  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -14,7 +12,7 @@
     "process_group_instance_id": "PROCESS_GROUP_INSTANCE-B70759A89E81BB09"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83e\uddec **Subworkflow to Get Data of a Process Running on an AWS EC2 Instance (No DQL or JavaScript Required)**\n\n\ud83d\udd0d This subworkflow provides an **easy, DQL\u2011free and JavaScript\u2011free way** to retrieve detailed information about a **process running on an AWS EC2 instance** from Dynatrace.\n\n\u2601\ufe0f The integration leverages the **Dynatrace AWS Gen3 connector**, ensuring secure, scalable, and modern access to AWS and process-level metadata.\n\nIt is commonly used to collect information such as:\n- \ud83e\uddfe Process name  \n- \ud83c\udf0d AWS region  \n- \ud83c\udd94 EC2 instance ID  \n- \ud83d\udcbd Associated volume IDs  \n- \ud83c\udff7\ufe0f Tags and related metadata  \n\n\u27a1\ufe0f This data is typically required for **process-driven remediation**, root cause analysis, or automation workflows that respond to problems caused by processes running on EC2 instances.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **process_group_instance_id** (Required): \ud83e\uddec The Dynatrace **Process Group Instance ID** representing the running process.\n\n---\n\n### \ud83e\udde0 **Usage Context**\n\n- \u2705 Uses the **Dynatrace AWS Gen3 connector**\n- \u2705 Eliminates the need to write **DQL or JavaScript**\n- \u2705 Enables process-aware automation and remediation\n- \u2705 Designed as a **helper / data-enrichment subworkflow**\n- \u2705 Commonly paired with process remediation, validation, or escalation workflows\n\n---",
+  "guide": "## 🧬 **Subworkflow to Get Data of a Process Running on an AWS EC2 Instance (No DQL or JavaScript Required)**\n\n🔍 This subworkflow provides an **easy, DQL‑free and JavaScript‑free way** to retrieve detailed information about a **process running on an AWS EC2 instance** from Dynatrace.\n\n☁️ The integration leverages the **Dynatrace AWS Gen3 connector**, ensuring secure, scalable, and modern access to AWS and process-level metadata.\n\nIt is commonly used to collect information such as:\n- 🧾 Process name  \n- 🌍 AWS region  \n- 🆔 EC2 instance ID  \n- 💽 Associated volume IDs  \n- 🏷️ Tags and related metadata  \n\n➡️ This data is typically required for **process-driven remediation**, root cause analysis, or automation workflows that respond to problems caused by processes running on EC2 instances.\n\n---\n\n### ⚙️ **Parameters**\n\n- **process_group_instance_id** (Required): 🧬 The Dynatrace **Process Group Instance ID** representing the running process.\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Uses the **Dynatrace AWS Gen3 connector**\n- ✅ Eliminates the need to write **DQL or JavaScript**\n- ✅ Enables process-aware automation and remediation\n- ✅ Designed as a **helper / data-enrichment subworkflow**\n- ✅ Commonly paired with process remediation, validation, or escalation workflows\n\n---",
   "tasks": {
     "dql-get-process-info": {
       "name": "dql-get-process-info",

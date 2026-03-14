@@ -1,9 +1,7 @@
 {
   "id": "8bf7b3a8-7dad-4dfd-add4-12f94b5fa669",
-  "title": "\ud83e\udde9subworkflow - aws scan for security groups with ports open to 0.0.0.0/0",
+  "title": "🧩subworkflow - aws scan for security groups with ports open to 0.0.0.0/0",
   "description": "This subworkflow scans for security groups Ingress entry defenitions with ports open to 0.0.0.0/0 (the entire internet) and raised a custom Alert!\nAs AWS Security Hub only scans every 12 - 24 hours, this subworkflow is an alternative way to catch these issues in a more frequent interval\n\nParameters:\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\nregions_to_search: (Reguired) Aws region to scan for security groups Ingress entry defenitions with ports open to 0.0.0.0/0",
-  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -29,7 +27,7 @@
     "dynatraceawsconnection": "awssandbox"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83d\udd0d **Subworkflow to Scan for Publicly Exposed AWS Security Group Ingress Rules**\n\n\ud83d\udea8 This subworkflow scans AWS security groups for **ingress rule definitions with ports open to `0.0.0.0/0`**, exposing them to **the entire internet**, and **raises a custom Dynatrace alert** when such configurations are detected.\n\n---\n\n### \u23f1\ufe0f **Why This Matters**\n\nAWS Security Hub typically scans for these misconfigurations only every **12\u201324 hours**.  \n\u26a1 This subworkflow provides a **more frequent and proactive alternative**, allowing you to detect and respond to insecure security group configurations much faster.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **dynatraceawsconnection** (Required): \ud83d\udd11 The name of the Dynatrace OIDC connection used to authenticate with AWS.  \n- **regions_to_search** (Required): \ud83c\udf0d One or more AWS regions to scan for security groups with ingress rules open to `0.0.0.0/0`.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udd0d The subworkflow scans security groups across the specified AWS regions\n- \ud83d\udeab Ingress rules allowing access from `0.0.0.0/0` are identified\n- \ud83d\udea8 A **custom Dynatrace alert** is raised when insecure configurations are detected\n- \u2705 Enables downstream workflows to remediate or notify based on the alert\n\n---",
+  "guide": "## 🔍 **Subworkflow to Scan for Publicly Exposed AWS Security Group Ingress Rules**\n\n🚨 This subworkflow scans AWS security groups for **ingress rule definitions with ports open to `0.0.0.0/0`**, exposing them to **the entire internet**, and **raises a custom Dynatrace alert** when such configurations are detected.\n\n---\n\n### ⏱️ **Why This Matters**\n\nAWS Security Hub typically scans for these misconfigurations only every **12–24 hours**.  \n⚡ This subworkflow provides a **more frequent and proactive alternative**, allowing you to detect and respond to insecure security group configurations much faster.\n\n---\n\n### ⚙️ **Parameters**\n\n- **dynatraceawsconnection** (Required): 🔑 The name of the Dynatrace OIDC connection used to authenticate with AWS.  \n- **regions_to_search** (Required): 🌍 One or more AWS regions to scan for security groups with ingress rules open to `0.0.0.0/0`.\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 🔍 The subworkflow scans security groups across the specified AWS regions\n- 🚫 Ingress rules allowing access from `0.0.0.0/0` are identified\n- 🚨 A **custom Dynatrace alert** is raised when insecure configurations are detected\n- ✅ Enables downstream workflows to remediate or notify based on the alert\n\n---",
   "tasks": {
     "loop_though_result": {
       "name": "loop_though_result",

@@ -1,9 +1,7 @@
 {
   "id": "0a90e267-33ba-49e7-90a7-7b37fb87d24a",
-  "title": "\ud83e\udde9subworkflow - dynatrace get event data",
+  "title": "🧩subworkflow - dynatrace get event data",
   "description": "Subworkflow to get data of an event\n\nAn easy way to get data of an event by id.\n\n\nParameters:\nevent_id: (Required) Dyantrace Event id",
-  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -14,7 +12,7 @@
     "event_id": ""
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83e\uddfe **Subworkflow to Get Data of an Event**\n\n\ud83d\udd0d This subworkflow provides a simple and standardized way to **retrieve detailed information for an event using its ID**.\n\nIt is commonly used to **enrich workflows with event context**, enabling better decision\u2011making, correlation, or downstream automation without needing custom scripting.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udccc Enriching workflows with full event details\n- \ud83d\udd17 Correlating events with problems, entities, or remediation steps\n- \ud83e\udde0 Driving conditional logic based on event metadata\n- \ud83e\udde9 Supporting investigation, escalation, or audit workflows\n\nThis subworkflow removes the need to manually query or parse event data.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **event_id** (Required): \ud83c\udd94 The event ID to retrieve data for.\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed as a **helper / data\u2011enrichment subworkflow**\n- \u2705 Works well as an early step in investigation or remediation workflows\n- \u2705 Enables cleaner and more readable parent workflows\n- \u2705 Complements problem, entity, and validation subworkflows\n\n---",
+  "guide": "## 🧾 **Subworkflow to Get Data of an Event**\n\n🔍 This subworkflow provides a simple and standardized way to **retrieve detailed information for an event using its ID**.\n\nIt is commonly used to **enrich workflows with event context**, enabling better decision‑making, correlation, or downstream automation without needing custom scripting.\n\n---\n\n### 🎯 **Use Case**\n\nTypical use cases include:\n\n- 📌 Enriching workflows with full event details\n- 🔗 Correlating events with problems, entities, or remediation steps\n- 🧠 Driving conditional logic based on event metadata\n- 🧩 Supporting investigation, escalation, or audit workflows\n\nThis subworkflow removes the need to manually query or parse event data.\n\n---\n\n### ⚙️ **Parameters**\n\n- **event_id** (Required): 🆔 The event ID to retrieve data for.\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Designed as a **helper / data‑enrichment subworkflow**\n- ✅ Works well as an early step in investigation or remediation workflows\n- ✅ Enables cleaner and more readable parent workflows\n- ✅ Complements problem, entity, and validation subworkflows\n\n---",
   "tasks": {
     "dql-get-event": {
       "name": "dql-get-event",

@@ -1,9 +1,7 @@
 {
   "id": "4486e1fc-6862-4a42-a6e8-39f080f57ff1",
-  "title": "\ud83e\udde9subworkflow - dynatrace close problem",
+  "title": "🧩subworkflow - dynatrace close problem",
   "description": "Subworkflow to close a Davis Problem\n\nParameters:\n\nevent.id = Dyantrace event id of the Davis Problem",
-  "actor": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -14,7 +12,7 @@
     "event.id": "2847618168410183866_1744904520000V2"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \u2705 **Subworkflow to Close a Problem**\n\n\ud83d\udd12 This subworkflow provides a simple and automated way to **close an existing problem** once remediation has been completed successfully.\n\nIt is typically used at the **end of remediation workflows** to explicitly mark a problem as resolved after validation steps have passed.\n\n\u2705 If the problem is closed successfully, the subworkflow completes.  \n\u274c If closing the problem fails, the subworkflow fails\u2014allowing the **parent workflow to retry or take alternative action**.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **event.id** (Required): \ud83c\udd94 The Dynatrace event ID associated with the problem to be closed.\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Commonly used as a **final step** in remediation workflows\n- \u2705 Helps ensure problems are only closed after successful remediation\n- \u2705 Works well in combination with:\n  - Problem validation subworkflows  \n  - Retry-on-error logic  \n  - Escalation or fallback paths  \n\n---",
+  "guide": "## ✅ **Subworkflow to Close a Problem**\n\n🔒 This subworkflow provides a simple and automated way to **close an existing problem** once remediation has been completed successfully.\n\nIt is typically used at the **end of remediation workflows** to explicitly mark a problem as resolved after validation steps have passed.\n\n✅ If the problem is closed successfully, the subworkflow completes.  \n❌ If closing the problem fails, the subworkflow fails—allowing the **parent workflow to retry or take alternative action**.\n\n---\n\n### ⚙️ **Parameters**\n\n- **event.id** (Required): 🆔 The Dynatrace event ID associated with the problem to be closed.\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Commonly used as a **final step** in remediation workflows\n- ✅ Helps ensure problems are only closed after successful remediation\n- ✅ Works well in combination with:\n  - Problem validation subworkflows  \n  - Retry-on-error logic  \n  - Escalation or fallback paths  \n\n---",
   "tasks": {
     "close-problem": {
       "name": "close-problem",

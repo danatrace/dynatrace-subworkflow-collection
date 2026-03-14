@@ -1,9 +1,7 @@
 {
   "id": "74a063e4-576a-4955-b477-1c531bcf7ad1",
-  "title": "\ud83e\udde9subworkflow - dynatrace ingest custom info event",
+  "title": "🧩subworkflow - dynatrace ingest custom info event",
   "description": "Subworkflow to ingest a custom event into dynatrace without needed to know javascript\n\nParameters:\n(Required) Custom Event Json",
-  "actor": "48a76001-d3da-4be6-9928-353148368181",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -21,7 +19,7 @@
     "entitySelector": ""
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83d\udce3 **Subworkflow to Ingest / Create a Custom Event**\n\n\ud83e\udde9 This subworkflow provides a simple and standardized way to **ingest or create a custom event** using a JSON definition\u2014**without requiring JavaScript knowledge**.\n\nIt is commonly used to **emit custom events from automation workflows**, enabling correlation, visibility, and downstream actions based on conditions detected outside of built\u2011in event sources.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83e\udde0 Creating custom events from automation logic or validations  \n- \ud83d\udd17 Enriching observability with events derived from external systems  \n- \ud83d\udea6 Driving conditional workflows based on custom event signals  \n- \ud83d\udcca Improving visibility for non-native or synthesized conditions  \n\nThis approach allows teams to extend event ingestion in a **controlled, repeatable, and automation-friendly way**.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **Custom Event Json** (Required): \ud83e\uddfe The complete JSON definition of the custom event to be ingested.\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed as a **helper / ingestion subworkflow**\n- \u2705 Eliminates the need to write JavaScript for custom event creation\n- \u2705 Enables event-driven automation patterns\n- \u2705 Works well with alerting, remediation, and escalation workflows\n\n---",
+  "guide": "## 📣 **Subworkflow to Ingest / Create a Custom Event**\n\n🧩 This subworkflow provides a simple and standardized way to **ingest or create a custom event** using a JSON definition—**without requiring JavaScript knowledge**.\n\nIt is commonly used to **emit custom events from automation workflows**, enabling correlation, visibility, and downstream actions based on conditions detected outside of built‑in event sources.\n\n---\n\n### 🎯 **Use Case**\n\nTypical use cases include:\n\n- 🧠 Creating custom events from automation logic or validations  \n- 🔗 Enriching observability with events derived from external systems  \n- 🚦 Driving conditional workflows based on custom event signals  \n- 📊 Improving visibility for non-native or synthesized conditions  \n\nThis approach allows teams to extend event ingestion in a **controlled, repeatable, and automation-friendly way**.\n\n---\n\n### ⚙️ **Parameters**\n\n- **Custom Event Json** (Required): 🧾 The complete JSON definition of the custom event to be ingested.\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Designed as a **helper / ingestion subworkflow**\n- ✅ Eliminates the need to write JavaScript for custom event creation\n- ✅ Enables event-driven automation patterns\n- ✅ Works well with alerting, remediation, and escalation workflows\n\n---",
   "tasks": {
     "ingest-event": {
       "name": "ingest-event",

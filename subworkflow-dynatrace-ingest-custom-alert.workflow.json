@@ -1,9 +1,7 @@
 {
   "id": "9a868582-bf92-4d2c-aea5-90898f7e86b8",
-  "title": "\ud83e\udde9subworkflow - dynatrace ingest custom alert",
+  "title": "🧩subworkflow - dynatrace ingest custom alert",
   "description": "Subworkflow to ingest/create a custom alert into dynatrace without needed to know javascript\n\nParameters:\nCustom Alert Json",
-  "actor": "48a76001-d3da-4be6-9928-353148368181",
-  "owner": "bc935a57-c7d3-440e-922c-79a22bf7afd6",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -51,7 +49,7 @@
     }
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83d\udea8 **Subworkflow to Ingest / Create a Custom Alert**\n\n\ud83e\udde9 This subworkflow provides a simple and standardized way to **ingest or create a custom alert** using a JSON definition\u2014**without requiring JavaScript knowledge**.\n\nIt is commonly used to **raise custom alerts from automation workflows**, enabling visibility, correlation, and downstream actions based on conditions detected outside of built\u2011in alerting.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udea6 Raising custom alerts from automation logic or validations  \n- \ud83d\udd17 Integrating external signals or conditions into the alerting pipeline  \n- \ud83e\udde0 Driving conditional workflows based on custom alert states  \n- \ud83d\udce3 Providing visibility for non-native or derived conditions  \n\nThis approach allows teams to extend alerting in a **controlled and repeatable** way.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **Custom Alert Json** (Required): \ud83e\uddfe The full JSON definition of the custom alert to be ingested or created.\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed as a **helper / ingestion subworkflow**\n- \u2705 Eliminates the need to write JavaScript for custom alert creation\n- \u2705 Enables alert-driven automation patterns\n- \u2705 Works well with remediation, escalation, and notification workflows\n\n---",
+  "guide": "## 🚨 **Subworkflow to Ingest / Create a Custom Alert**\n\n🧩 This subworkflow provides a simple and standardized way to **ingest or create a custom alert** using a JSON definition—**without requiring JavaScript knowledge**.\n\nIt is commonly used to **raise custom alerts from automation workflows**, enabling visibility, correlation, and downstream actions based on conditions detected outside of built‑in alerting.\n\n---\n\n### 🎯 **Use Case**\n\nTypical use cases include:\n\n- 🚦 Raising custom alerts from automation logic or validations  \n- 🔗 Integrating external signals or conditions into the alerting pipeline  \n- 🧠 Driving conditional workflows based on custom alert states  \n- 📣 Providing visibility for non-native or derived conditions  \n\nThis approach allows teams to extend alerting in a **controlled and repeatable** way.\n\n---\n\n### ⚙️ **Parameters**\n\n- **Custom Alert Json** (Required): 🧾 The full JSON definition of the custom alert to be ingested or created.\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Designed as a **helper / ingestion subworkflow**\n- ✅ Eliminates the need to write JavaScript for custom alert creation\n- ✅ Enables alert-driven automation patterns\n- ✅ Works well with remediation, escalation, and notification workflows\n\n---",
   "tasks": {
     "ingest-event": {
       "name": "ingest-event",
