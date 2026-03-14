@@ -261,9 +261,9 @@ async function init() {
   countUntested.textContent = payload.counts?.untested ?? "0";
 
   summaryText.textContent =
-    `${payload.counts?.total ?? state.all.length} subworkflows available — ` +
-    `${payload.counts?.tested ?? 0} Tested (top-level) and ${payload.counts?.untested ?? 0} Untested (folder-based). ` +
-    "Click \"Download subworkflow\" on any card to save the JSON file directly to your computer.";  
+    `${payload.counts?.total ?? state.all.length} subworkflows available. ` +
+    `${payload.counts?.tested ?? 0} Tested and ${payload.counts?.untested ?? 0} Untested. ` +
+    "Click \"Download subworkflow\" on any card to save the JSON file.";
 
   updateFolderFilter();
   setupEvents();
