@@ -229,47 +229,6 @@ function getPage(items) {
   return items.slice(start, start + PAGE_SIZE);
 }
 
-function toShortPlainText(value, maxLength = 220) {
-  const text = (value || "")
-    .toString()
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/[*_`~>\-]/g, " ")
-    .replace(/\[[^\]]+\]\([^)]*\)/g, "$1")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  if (!text) {
-    return "No summary available. Click \"View Guide\" for details.";
-  }
-
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  return `${text.slice(0, maxLength).trimEnd()}...`;
-}
-
-function getCardSummary(item) {
-  if (item.guideSummary && item.guideSummary.trim()) {
-    return toShortPlainText(item.guideSummary, 240);
-  }
-
-  if (item.description && item.description.trim()) {
-    return toShortPlainText(item.description, 240);
-  }
-
-  if (item.guideText && item.guideText.trim()) {
-    return toShortPlainText(item.guideText, 240);
-  }
-
-  if (item.guide && item.guide.trim()) {
-    return toShortPlainText(item.guide, 240);
-  }
-
-  return "No summary available. Click \"View Guide\" for details.";
-}
-
 function escapeHtml(value) {
   return (value || "")
     .toString()
@@ -307,8 +266,6 @@ function drawCards(items) {
 
     node.querySelector(".card-title").textContent = item.title || item.path;
     node.querySelector(".card-path").textContent = item.path;
-    const summary = getCardSummary(item);
-    node.querySelector(".card-description").textContent = summary;
 
     const sectionPill = node.querySelector(".section-pill");
     sectionPill.textContent = item.section === "tested" ? "Tested" : "Untested";
@@ -324,16 +281,6 @@ function drawCards(items) {
       }
       updateSelectionUi();
     });
-
-    const tagsContainer = node.querySelector(".tag-list");
-    if (Array.isArray(item.tags) && item.tags.length > 0) {
-      item.tags.slice(0, 8).forEach((tag) => {
-        const tagElement = document.createElement("span");
-        tagElement.className = "tag";
-        tagElement.textContent = tag;
-        tagsContainer.appendChild(tagElement);
-      });
-    }
 
     // Guide button → open modal
     const guideBtn = node.querySelector(".guide-btn");

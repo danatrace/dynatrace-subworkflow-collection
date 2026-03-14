@@ -276,8 +276,7 @@ select {
   border-color: rgba(255, 107, 107, 0.25);
 }
 
-.card-path,
-.card-description {
+.card-path {
   margin: 0;
   color: var(--ink-soft);
   font-size: 0.9rem;
@@ -443,30 +442,11 @@ select {
   padding: 0;
 }
 
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.tag {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.18rem 0.5rem;
-  font-size: 0.74rem;
-  color: var(--ink-muted);
-  background: #f8fafc;
-}
-
 .card-actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
   margin-top: auto;
-}
-
-.tag-list:empty {
-  display: none;
 }
 
 .button {
