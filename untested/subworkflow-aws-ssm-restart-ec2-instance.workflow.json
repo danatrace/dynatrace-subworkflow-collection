@@ -1,6 +1,6 @@
 {
-  "title": "subworkflow - aws restart ec2 instance",
-  "description": "Subworkflow to restart an EC2 instance using AWS Systems Manager\n\nThis subworkflow provides an automated way to restart an EC2 instance with status verification and completion checking.\n\nParameters:\n\ninstanceId: (Required) The ID of the EC2 instance to restart\nawsregion: (Required) The AWS region where the instance resides\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name\n\nWaits for the restart operation to complete and validates success",
+  "title": "🧩subworkflow - aws restart ec2 instance",
+  "description": "Subworkflow to restart an EC2 instance using AWS Systems Manager Automation\n\nThis subworkflow provides an easy way to restart an EC2 instance via the AWS-RestartEC2Instance SSM automation document.\nWaits until the restart has finished and checks if it was successful.\n\nParameters:\n\ninstanceId: (Required) The EC2 instance ID to restart\nawsregion: (Required) The AWS region where the instance resides\nadditionalInstanceIds: (Optional) Additional instance IDs to restart\nforceStop: (Optional) Force stop the instance before restarting (true/false)\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -8,12 +8,14 @@
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
   "input": {
-    "instanceId": "i-1234567890abcdef0",
+    "instanceId": "i-0a1bab006554b236c",
     "awsregion": "us-east-1",
+    "additionalInstanceIds": "",
+    "forceStop": "false",
     "dynatraceawsconnection": "awsplayground"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🔄 **Subworkflow to Restart an EC2 Instance**\n\n♻️ This subworkflow provides an automated way to **restart an EC2 instance** using AWS Systems Manager Automation.\n\nIt triggers the restart operation and **waits for completion**, validating that the restart was successful before returning.\n\n---\n\n### ⚙️ **Parameters**\n\n- **instanceId** (Required): 🆔 The ID of the EC2 instance to restart\n- **awsregion** (Required): 🌍 The AWS region where the instance resides\n- **dynatraceawsconnection** (Required): 🔑 Dynatrace AWS OIDC connection\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 📤 Triggers the AWS-RestartEC2Instance SSM automation document\n- ⏳ Waits for the restart operation to complete\n- ✅ Validates successful completion\n- ❌ Fails if restart fails, enabling restart-on-error in parent workflow\n\n---\n\n### 💡 **Use Cases**\n\n- Instance recovery after issues\n- Clearing instance state\n- Applying system-level changes\n- Remediation workflows\n\n---",
+  "guide": "## 🔄 **Subworkflow to Restart an EC2 Instance**\n\n♻️ This subworkflow provides an **easy and abstracted way** to **restart a running EC2 instance**—without requiring any knowledge of how AWS Systems Manager (SSM) works.\n\nIt executes the restart via the **AWS-RestartEC2Instance** SSM automation document, **waits for the restart to complete**, and **validates whether the restart was successful**.  \n❌ If the restart fails, the subworkflow fails as well, allowing the **parent workflow to restart on error**.\n\n---\n\n### ✅ **Requirements**\n\n⚠️ For this subworkflow to run successfully:\n- The EC2 instance **must be in the running state**\n- The EC2 instance **must be managed by AWS Systems Manager (SSM)**\n\n📖 AWS documentation on configuring SSM-managed instances:  \nhttps://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-ec2.html\n\n---\n\n### ⚙️ **Parameters**\n\n- **instanceId** (Required): 🆔 The EC2 instance ID to restart.  \n- **awsregion** (Required): 🌍 The AWS region where the EC2 instance resides.  \n- **additionalInstanceIds** (Optional): 🆔 Additional instance IDs to restart (comma-separated).  \n- **forceStop** (Optional): 🛑 Force stop the instance before restarting (true/false). Default: false.  \n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### 📘 **AWS SSM Document Used**\n\nThis subworkflow uses the AWS-managed automation document:\n\n**Document Name**: `AWS-RestartEC2Instance`\n\n🔗 AWS Documentation:  \nhttps://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-restartec2instance.html\n\n**What this runbook does:**\n- Restarts one or more EC2 instances\n- Optionally forces a stop before restarting\n- Waits for instance to reach running state\n- Verifies successful restart\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 📤 The subworkflow sends a restart request to the AWS SSM automation document **`AWS-RestartEC2Instance`**\n- ♻️ The specified EC2 instance(s) are restarted\n- ⏳ The subworkflow waits for the restart operation to complete  \n- ✅ If successful, the subworkflow completes and returns the restart status\n- ❌ If the restart fails, the subworkflow fails to enable **restart-on-error** handling in the parent workflow\n\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
@@ -22,19 +24,10 @@
       },
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
-      "position": {
-        "x": 0,
-        "y": 3
-      },
-      "conditions": {
-        "states": {
-          "wait-for-completion": "OK"
-        }
-      },
+      "position": {"x": 0, "y": 3},
+      "conditions": {"states": {"wait-for-completion": "OK"}},
       "description": "Verify restart completed successfully",
-      "predecessors": [
-        "wait-for-completion"
-      ]
+      "predecessors": ["wait-for-completion"]
     },
     "wait-for-completion": {
       "name": "wait-for-completion",
@@ -42,26 +35,13 @@
         "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
         "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
       },
-      "retry": {
-        "count": 99,
-        "delay": 60,
-        "failedLoopIterationsOnly": true
-      },
+      "retry": {"count": 99, "delay": 60, "failedLoopIterationsOnly": true},
       "action": "dynatrace.automations:run-workflow",
       "timeout": 604800,
-      "position": {
-        "x": 0,
-        "y": 2
-      },
-      "conditions": {
-        "states": {
-          "start-automation": "OK"
-        }
-      },
+      "position": {"x": 0, "y": 2},
+      "conditions": {"states": {"start-automation": "OK"}},
       "description": "Wait for restart to complete",
-      "predecessors": [
-        "start-automation"
-      ]
+      "predecessors": ["start-automation"]
     },
     "start-automation": {
       "name": "start-automation",
@@ -72,18 +52,11 @@
         "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
         "DocumentName": "AWS-RestartEC2Instance"
       },
-      "retry": {
-        "count": 5,
-        "delay": 60,
-        "failedLoopIterationsOnly": true
-      },
+      "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,
-      "position": {
-        "x": 0,
-        "y": 1
-      },
-      "description": "Start EC2 instance restart",
+      "position": {"x": 0, "y": 1},
+      "description": "Initiate EC2 instance restart via SSM",
       "predecessors": []
     }
   }

@@ -1,19 +1,19 @@
 {
-  "title": "subworkflow - aws run patch baseline",
-  "description": "Subworkflow to run patch baseline on EC2 instances using AWS Systems Manager\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nawsregion: (Required) AWS region\nbaselineId: (Optional) Patch baseline ID\noperation: (Optional) Operation type - Install, Scan, or Uninstall\ndynatraceawsconnection: (Required) AWS OIDC connection\n\nWaits for patching to complete",
+  "title": "🧩subworkflow - aws ssm run patch baseline",
+  "description": "Subworkflow to run patch baseline compliance on instances\\n\\nParameters:\\n\\ninstanceid: (Required) EC2 instance ID to patch\\nbaselineid: (Optional) Patch baseline ID to use\\nsnapshotid: (Optional) Snapshot ID for patch scan\\noperation: (Optional) Scan or Install (default: Scan)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"instanceId": "i-1234567890abcdef0", "awsregion": "us-east-1", "baselineId": "", "operation": "Install", "dynatraceawsconnection": "awsplayground"},
+  "input": {"instanceId": "i-0123456789abcdef0", "baselineId": "", "snapshotId": "", "operation": "Scan", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🔧 **Run Patch Baseline**\n\nApplies patches using Patch Manager via SSM.",
+  "guide": "## 🔧 **Subworkflow to Run Patch Baseline**\\n\\n✅ This subworkflow **scans and applies patches to EC2 instances** via **AWS-RunPatchBaseline** SSM automation.\\n\\nUseful for keeping instances patched, maintaining compliance, and automating security updates across infrastructure.\\n\\n---\\n\\n### ⚙️ **Parameters**\\n\\n- **instanceId** (Required): 🆔 EC2 instance ID to scan/patch.  \\n- **baselineId** (Optional): 📋 Patch baseline ID (uses default if not specified).  \\n- **snapshotId** (Optional): 📸 Snapshot ID for patch baseline scan results.  \\n- **operation** (Optional): 🔄 Operation type - Scan or Install (default: Scan).  \\n- **awsregion** (Required): 🌍 The AWS region.  \\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\\n\\n---\\n\\n### 📘 **AWS SSM Document**\\n\\n**Document Name**: `AWS-RunPatchBaseline`\\n\\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-runpatchbaseline.html\\n\\n**What this runbook does:**\\n- Scans EC2 instances for missing patches\\n- Reports on patch compliance\\n- Can install patches automatically\\n- Supports multiple operating systems (Windows, Linux)\\n- Works with AWS Systems Manager Patch Manager\\n- Generates detailed patch scan results\\n- Enables patch compliance reporting\\n\\n---\\n\\n### 🔄 **Workflow Logic**\\n\\n1. **Start Automation**: Triggers AWS-RunPatchBaseline SSM document with instance ID and operation\\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\\n3. **Check Status**: Validates the patch baseline execution succeeded via JavaScript verification\\n\\n---\\n\\n### 💡 **Use Cases**\\n\\n- 🛡️ **Security Patching**: Find and install security updates\\n- 📊 **Compliance Scanning**: Assess patch compliance across instances\\n- 🔄 **Automated Patching**: Schedule regular patch cycles\\n- 📋 **Patch Reporting**: Generate patch status reports\\n- 🔐 **CVE Management**: Apply CVE-related patches\\n- 🏢 **Multi-Instance Patching**: Patch fleets of instances\\n\\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "import { execution } from '@dynatrace-sdk/automation-utils';\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`);\n  const configBody = await configGet.json();\n  if (configBody.AutomationExecutionStatus !== \"Success\") throw new Error(\"Patching failed!\");\n  return configBody;\n}"},
+      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Patch baseline execution failed!\");\n  return r;\n}"},
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
       "position": {"x": 0, "y": 3},
@@ -32,7 +32,7 @@
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"]\n}", "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}", "DocumentName": "AWS-RunPatchBaseline"},
+      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"],\n  \"Operation\": [\"{{ input()[\"operation\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-RunPatchBaseline"},
       "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,

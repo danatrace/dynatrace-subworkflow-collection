@@ -1,19 +1,19 @@
 {
-  "title": "subworkflow - aws update cloudformation stack",
-  "description": "Subworkflow to update a CloudFormation stack using AWS Systems Manager\n\nParameters:\n\nstackName: (Required) Name of the stack to update\ntemplateUrl: (Optional) New template URL\nparameters: (Optional) Updated parameters\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) AWS OIDC connection\n\nWaits for stack update to complete",
+  "title": "🧩subworkflow - aws ssm update cloudformation stack",
+  "description": "Subworkflow to update existing CloudFormation stacks\\n\\nParameters:\\n\\nstackName: (Required) CloudFormation stack name or ARN\\ntemplatebody: (Optional) Stack template as JSON string\\ntemplateurl: (Optional) S3 URL of CloudFormation template\\nparameters: (Optional) Stack parameters as JSON\\ncapabilities: (Optional) CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND\\nuseprevioustemplate: (Optional) Use previous template (true/false)\\ntimeoutinminutes: (Optional) Timeout in minutes\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"stackName": "my-stack", "templateUrl": "https://s3.amazonaws.com/bucket/template.json", "parameters": "{}", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "input": {"stackName": "my-stack", "templateBody": "", "templateUrl": "", "parameters": "", "capabilities": "CAPABILITY_IAM", "usePreviousTemplate": "false", "timeoutInMinutes": "10", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🔄 **Update CloudFormation Stack**\n\nUpdates CloudFormation stack via SSM.",
+  "guide": "## 🔄 **Subworkflow to Update CloudFormation Stack**\\n\\n✅ This subworkflow **updates existing CloudFormation stacks** via **AWS-UpdateCloudFormationStack** SSM automation.\\n\\nUseful for infrastructure updates, version upgrades, configuration changes, and stack modifications without downtime.\\n\\n---\\n\\n### ⚙️ **Parameters**\\n\\n- **stackName** (Required): 🆔 CloudFormation stack name or ARN to update.  \\n- **templateBody** (Optional): 📄 Stack template as JSON string for inline template.  \\n- **templateUrl** (Optional): 🔗 S3 URL pointing to CloudFormation template.  \\n- **parameters** (Optional): ⚙️ Stack parameters as comma-separated key=value pairs.  \\n- **capabilities** (Optional): 🔐 IAM capabilities (CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND).  \\n- **usePreviousTemplate** (Optional): ↩️ Use previous template if no new template provided (true/false).  \\n- **timeoutInMinutes** (Optional): ⏱️ Stack update timeout in minutes.  \\n- **awsregion** (Required): 🌍 The AWS region.  \\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\\n\\n---\\n\\n### 📘 **AWS SSM Document**\\n\\n**Document Name**: `AWS-UpdateCloudFormationStack`\\n\\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-updatecloudformationstack.html\\n\\n**What this runbook does:**\\n- Updates an existing CloudFormation stack with new template\\n- Applies changes to AWS resources managed by the stack\\n- Supports creation of new resources and modification of existing ones\\n- Handles stack dependencies and change sets\\n- Supports rollback on failures\\n- IAM capability handling for secure resource creation\\n\\n---\\n\\n### 🔄 **Workflow Logic**\\n\\n1. **Start Automation**: Triggers AWS-UpdateCloudFormationStack SSM document with stack configuration\\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\\n3. **Check Status**: Validates the stack update succeeded via JavaScript verification\\n\\n---\\n\\n### 💡 **Use Cases**\\n\\n- 📦 **Version Upgrades**: Update application versions in infrastructure\\n- 🔧 **Configuration Changes**: Modify resource properties without stack recreation\\n- 🔄 **Scaling Updates**: Change capacity, instance types, or resource counts\\n- 🛠️ **Patch Management**: Apply security patches and updates\\n- 🌐 **Multi-Region Deployments**: Deploy consistent infrastructure versions\\n- 🔀 **Blue-Green Deployments**: Update infrastructure without downtime\\n- 🛡️ **Compliance Updates**: Adjust configurations for security standards\\n\\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "import { execution } from '@dynatrace-sdk/automation-utils';\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`);\n  const configBody = await configGet.json();\n  if (configBody.AutomationExecutionStatus !== \"Success\") throw new Error(\"Stack update failed!\");\n  return configBody;\n}"},
+      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Stack update failed!\");\n  return r;\n}"},
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
       "position": {"x": 0, "y": 3},
@@ -32,7 +32,7 @@
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"StackName\": [\"{{ input()[\"stackName\"] }}\"]\n}", "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}", "DocumentName": "AWS-UpdateStack"},
+      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"StackName\": [\"{{ input()[\"stackName\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-UpdateCloudFormationStack"},
       "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,

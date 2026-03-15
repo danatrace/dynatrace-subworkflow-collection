@@ -1,19 +1,19 @@
 {
-  "title": "subworkflow - aws create snapshot",
-  "description": "Subworkflow to create an EBS or RDS snapshot using AWS Systems Manager\n\nParameters:\n\nresourceId: (Required) The ID of the resource (volume, DB instance)\nresourceType: (Required) Type - ebs-volume or rds-instance\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) AWS OIDC connection\n\nWaits for snapshot creation to complete",
+  "title": "🧩subworkflow - aws ssm create ebs snapshot",
+  "description": "Subworkflow to create EBS volume snapshots\\n\\nParameters:\\n\\nvolumeId: (Required) EBS volume ID\\ndescription: (Optional) Snapshot description\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"resourceId": "vol-12345678", "resourceType": "ebs-volume", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "input": {"volumeId": "vol-0123456789abcdef0", "description": "", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
   "hourlyExecutionLimit": 1000,
-  "guide": "## 📸 **Create Snapshot**\n\nCreates an EBS or RDS snapshot via SSM.",
+  "guide": "## 📸 **Subworkflow to Create EBS Snapshot**\\n\\n✅ This subworkflow **creates point-in-time snapshots of EBS volumes** via **AWS-CreateSnapshot** SSM automation.\\n\\nUseful for data protection, backup strategies, and creating copies of volumes for analysis or replication.\\n\\n---\\n\\n### ⚙️ **Parameters**\\n\\n- **volumeId** (Required): 🆔 The EBS volume ID to snapshot.  \\n- **description** (Optional): 📝 Snapshot description for identification.  \\n- **awsregion** (Required): 🌍 The AWS region.  \\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\\n\\n---\\n\\n### 📘 **AWS SSM Document**\\n\\n**Document Name**: `AWS-CreateSnapshot`\\n\\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-createsnapshot.html\\n\\n**What this runbook does:**\\n- Creates a point-in-time snapshot of an EBS volume\\n- Captures all data on the volume at snapshot time\\n- Snapshots are stored in Amazon S3\\n- Can be used to create new volumes or restore data\\n- Enables disaster recovery and data backup strategies\\n\\n---\\n\\n### 🔄 **Workflow Logic**\\n\\n1. **Start Automation**: Triggers AWS-CreateSnapshot SSM document with specified volume ID\\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\\n3. **Check Status**: Validates the snapshot creation succeeded via JavaScript verification\\n\\n---\\n\\n### 💡 **Use Cases**\\n\\n- 📦 **Data Protection**: Create backups before major changes\\n- 🔄 **Volume Replication**: Snapshot source for creation of new volumes\\n- 📊 **Analysis**: Create snapshots for forensic or performance analysis\\n- 🛡️ **Disaster Recovery**: Regular snapshots for business continuity\\n- 🔀 **Data Migration**: Snapshots for moving data between accounts/regions\\n\\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "import { execution } from '@dynatrace-sdk/automation-utils';\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`);\n  const configBody = await configGet.json();\n  if (configBody.AutomationExecutionStatus !== \"Success\") throw new Error(\"Snapshot creation failed!\");\n  return configBody;\n}"},
+      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Snapshot creation failed!\");\n  return r;\n}"},
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
       "position": {"x": 0, "y": 3},
@@ -32,7 +32,7 @@
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"ResourceId\": [\"{{ input()[\"resourceId\"] }}\"]\n}", "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}", "DocumentName": "{% if input()[\"resourceType\"] == \"rds-instance\" %}AWS-CreateRDSSnapshot{% else %}AWS-CreateSnapshot{% endif %}"},
+      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"VolumeId\": [\"{{ input()[\"volumeId\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-CreateSnapshot"},
       "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,

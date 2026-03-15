@@ -1,19 +1,19 @@
 {
-  "title": "subworkflow - aws change instance state",
-  "description": "Subworkflow to change or assert EC2 instance state\n\nParameters:\n\ninstanceId: (Required) Instance ID\ndesiredState: (Required) Desired state - running, stopped, terminated\nassertState: (Optional) Assert the state rather than change it\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) AWS OIDC connection\n\nChanges or verifies instance state",
+  "title": "🧩subworkflow - aws ssm change instance state",
+  "description": "Subworkflow to change EC2 instance state\\n\\nParameters:\\n\\ninstanceid: (Required) EC2 instance ID\\ndesiredstate: (Required) Target state (running, stopped, restarted, terminated)\\nadditionalinstanceids: (Optional) Additional instance IDs (comma-separated)\\nforcestop: (Optional) Force stop without graceful shutdown (true/false)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"instanceId": "i-1234567890abcdef0", "desiredState": "running", "assertState": "false", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "input": {"instanceId": "i-0123456789abcdef0", "desiredState": "stopped", "additionalInstanceIds": "", "forceStop": "false", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🔀 **Change Instance State**\n\nChanges EC2 instance state via SSM.",
+  "guide": "## 🔄 **Subworkflow to Change Instance State**\\n\\n✅ This subworkflow **changes EC2 instance states** via **AWS-ChangeInstanceState** SSM automation.\\n\\nUseful for instance lifecycle management, coordinating maintenance windows, and automating instance availability without manual intervention.\\n\\n---\\n\\n### ⚙️ **Parameters**\\n\\n- **instanceId** (Required): 🆔 EC2 instance ID to manage.  \\n- **desiredState** (Required): 🔄 Target state - running, stopped, restarted, or terminated.  \\n- **additionalInstanceIds** (Optional): 🆔 Additional instance IDs (comma-separated).  \\n- **forceStop** (Optional): ⚡ Force stop without graceful shutdown (true/false).  \\n- **awsregion** (Required): 🌍 The AWS region.  \\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\\n\\n---\\n\\n### 📘 **AWS SSM Document**\\n\\n**Document Name**: `AWS-ChangeInstanceState`\\n\\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-changeinstancestate.html\\n\\n**What this runbook does:**\\n- Changes EC2 instance states (start, stop, restart, terminate)\\n- Supports graceful and forced shutdown options\\n- Handles multiple instances in batch operations\\n- Manages instance startup and shutdown sequences\\n- Supports state verification and conditional actions\\n- Enables scheduled maintenance and cost control\\n\\n---\\n\\n### 🔄 **Workflow Logic**\\n\\n1. **Start Automation**: Triggers AWS-ChangeInstanceState SSM document with instance ID and desired state\\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\\n3. **Check Status**: Validates the state change succeeded via JavaScript verification\\n\\n---\\n\\n### 💡 **Use Cases**\\n\\n- ⏸️ **Scheduled Maintenance**: Stop instances during off-hours\\n- 💰 **Cost Optimization**: Stop non-production instances when not needed\\n- 🔄 **Restart Cycles**: Restart instances for updates or troubleshooting\\n- 🚀 **Deployment**: Start instances as part of deployment workflows\\n- 🔀 **Batch Operations**: Change state on multiple instances simultaneously\\n- 🛡️ **Disaster Recovery**: Manage failover instance states\\n- 📊 **Capacity Planning**: Control instance provisioning based on demand\\n\\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "import { execution } from '@dynatrace-sdk/automation-utils';\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`);\n  const configBody = await configGet.json();\n  if (configBody.AutomationExecutionStatus !== \"Success\") throw new Error(\"State change failed!\");\n  return configBody;\n}"},
+      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Instance state change failed!\");\n  return r;\n}"},
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
       "position": {"x": 0, "y": 3},
@@ -32,7 +32,7 @@
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"]\n}", "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}", "DocumentName": "AWS-ChangeInstanceState"},
+      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"],\n  \"DesiredState\": [\"{{ input()[\"desiredState\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-ChangeInstanceState"},
       "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,
