@@ -1,0 +1,34 @@
+{
+  "title": "subworkflow - dynatrace query events",
+  "description": "Subworkflow to query deployment and custom events from Dynatrace\n\nThis subworkflow retrieves events like deployments for change correlation and impact analysis.\n\nParameters:\n\nentitySelector: (Optional) Filter events by entity\neventType: (Optional) Filter by event type (DEPLOYMENT, CUSTOM_INFO, etc)\ntimeFrameMinutes: (Optional) Look-back time in minutes - default 1440\nlimit: (Optional) Maximum events to return - default 100\n\nReturns matching events with details",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"query-events\") }}",
+  "type": "STANDARD",
+  "input": {
+    "entitySelector": "",
+    "eventType": "DEPLOYMENT",
+    "timeFrameMinutes": "1440",
+    "limit": "100"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📋 **Subworkflow to Query Events**\n\n🔍 This subworkflow retrieves deployment and custom events for change correlation and impact analysis.\n\nEnables timeline analysis and correlation with problems or metrics.\n\n---\n\n### ⚙️ **Parameters**\n\n- **entitySelector** (Optional): 🔍 Filter events by entity\n- **eventType** (Optional): 📌 Filter by type (DEPLOYMENT, CUSTOM_INFO, etc)\n- **timeFrameMinutes** (Optional): 🕐 Look-back time (default 1440)\n- **limit** (Optional): 📊 Max events to return (default 100)\n\n---\n\n### 📋 **Event Types**\n\n- **DEPLOYMENT**: Application deployment events\n- **CUSTOM_INFO**: Custom informational events\n- **CUSTOM_ALERT**: Custom alert events\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Change correlation\n- ✅ Timeline analysis\n- ✅ Impact assessment\n- ✅ Deployment tracking\n\n---",
+  "tasks": {
+    "query-events": {
+      "name": "query-events",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { eventsClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    const timeFrameMs = parseInt(input.timeFrameMinutes || 1440) * 60 * 1000;\n    const from = Date.now() - timeFrameMs;\n    const to = Date.now();\n    \n    let eventSelector = undefined;\n    let filters = [];\n    \n    if (input.eventType && input.eventType.trim() !== '') {\n      filters.push(`type(\"${input.eventType}\")`);  \n    }\n    if (input.entitySelector && input.entitySelector.trim() !== '') {\n      filters.push(input.entitySelector);\n    }\n    \n    if (filters.length > 0) {\n      eventSelector = filters.join(' AND ');\n    }\n    \n    const response = await eventsClient.getEvents({\n      eventSelector: eventSelector,\n      from: from,\n      to: to,\n      limit: parseInt(input.limit || 100)\n    });\n    \n    const events = response.events || [];\n    \n    console.log(`Retrieved ${events.length} events`);\n    \n    return {\n      totalEvents: events.length,\n      events: events.map(e => ({\n        eventId: e.eventId || 'N/A',\n        eventType: e.eventType || 'UNKNOWN',\n        title: e.title || 'N/A',\n        timestamp: e.timestamp ? new Date(e.timestamp).toISOString() : 'N/A',\n        entityId: e.entityId || 'N/A'\n      }))\n    };\n  } catch (error) {\n    console.error('Error querying events:', error);\n    throw new Error(`Failed to query events: ${error}`);\n  }\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Query events from Dynatrace",
+      "predecessors": []
+    }
+  }
+}

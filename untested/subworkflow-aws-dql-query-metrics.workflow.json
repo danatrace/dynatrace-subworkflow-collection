@@ -1,0 +1,34 @@
+{
+  "title": "subworkflow - aws dql query aws resource metrics",
+  "description": "Subworkflow to query AWS resource metrics using Dynatrace Query Language (DQL)\n\nThis subworkflow enables complex metric queries for AWS resources to analyze performance, capacity, and operational health.\n\nParameters:\n\ndqlQuery: (Required) DQL query to execute for AWS metrics\ndisplay: (Optional) Format of results - default 'table'\njobTimeout: (Optional) Query execution timeout in seconds - default 600\n\nReturns structured metric data from DQL query execution",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"execute-dql-query\") }}",
+  "type": "STANDARD",
+  "input": {
+    "dqlQuery": "fetch dt.entity.ec2.instance | fields entityId, entity.name, cpu, memory",
+    "display": "table",
+    "jobTimeout": "600"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📊 **Subworkflow to DQL Query AWS Resource Metrics**\n\n🔍 This subworkflow executes Dynatrace Query Language (DQL) queries to analyze AWS resource metrics.\n\nEnables sophisticated metric queries for capacity planning, performance analysis, and operational insights.\n\n---\n\n### ⚙️ **Parameters**\n\n- **dqlQuery** (Required): 🔍 DQL query expression\n- **display** (Optional): 📋 Result format  \n  *(Default: `table`)*\n- **jobTimeout** (Optional): ⏱️ Query timeout in seconds  \n  *(Default: 600)*\n\n---\n\n### 📝 **Common DQL Queries for AWS**\n\n**EC2 Instance Metrics:**\n```\nfetch dt.entity.ec2.instance\n| fields entityId, entity.name, cpu, memory\n```\n\n**RDS Database Performance:**\n```\nfetch dt.entity.rds.db.instance\n| filter entity.name == \"my-database\"\n| fields entityId, cpu, network.in, network.out\n```\n\n**High CPU Instances:**\n```\nfetch dt.entity.ec2.instance\n| filter cpu > 80\n| sort cpu desc\n```\n\n---\n\n### 📊 **Available AWS Entities**\n\n| Entity Type | DQL Path | Example Metrics |\n|-------------|----------|----------|\n| **EC2** | `dt.entity.ec2.instance` | cpu, memory, network |\n| **RDS** | `dt.entity.rds.db.instance` | connections, latency, throughput |\n| **ELB** | `dt.entity.load_balancer` | request_count, response_time |\n| **Lambda** | `dt.entity.lambda.function` | invocations, duration, errors |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Capacity analysis\n- ✅ Performance trending\n- ✅ Cost allocation queries\n- ✅ Automated alerting\n\n---",
+  "tasks": {
+    "execute-dql-query": {
+      "name": "execute-dql-query",
+      "input": {
+        "query": "{{ input()[\"dqlQuery\"] }}",
+        "displayFormat": "{{ input()[\"display\"] }}"
+      },
+      "timeout": 600,
+      "action": "dynatrace.automations:execute-dql-query",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Execute DQL query for AWS metrics",
+      "predecessors": []
+    }
+  }
+}

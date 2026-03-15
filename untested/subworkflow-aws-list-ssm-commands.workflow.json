@@ -1,0 +1,41 @@
+{
+  "title": "subworkflow - aws list ssm command invocations",
+  "description": "Subworkflow to list SSM command executions and their invocation status across instances\n\nThis subworkflow retrieves status of commands sent to EC2 instances through Systems Manager.\n\nParameters:\n\ncommandId: (Required) The SSM command ID to check status for\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection\n\nReturns command invocation status and results per instance",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"list-command-invocations\") }}",
+  "type": "STANDARD",
+  "input": {
+    "commandId": "00000000-0000-0000-0000-000000000000",
+    "awsRegion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📋 **Subworkflow to List SSM Command Invocations**\n\n✅ This subworkflow lists the execution status of SSM commands across multiple instances.\n\nProvides per-instance invocation status and command output for verification and troubleshooting.\n\n---\n\n### ⚙️ **Parameters**\n\n- **commandId** (Required): 🆔 SSM command ID to check\n- **awsRegion** (Required): 🌍 AWS region\n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection\n\n---\n\n### 📊 **Per-Instance Status Information**\n\n✅ **Successful Invocations:**\n- Instance ID\n- Invocation status (Success, InProgress, Failed)\n- Command output\n- Execution duration\n\n❌ **Failed Invocations:**\n- Failure reason\n- Error output\n- Exit code\n\n---\n\n### ⏳ **Command Invocation States**\n\n| Status | Meaning | Action |\n|--------|---------|--------|\n| **Pending** | Awaiting execution | Wait |\n| **InProgress** | Running on instance | Wait |\n| **Success** | Completed successfully | Verify output |\n| **Failed** | Execution failed | Investigate |\n| **Cancelled** | Command was cancelled | Check cancellation reason |\n| **TimedOut** | Exceeded timeout | Increase timeout or debug |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Monitoring command execution\n- ✅ Troubleshooting command failures\n- ✅ Validating remediation success\n- ✅ Gathering execution results\n\n---",
+  "tasks": {
+    "list-command-invocations": {
+      "name": "list-command-invocations",
+      "input": {
+        "CommandId": "{{ input()[\"commandId\"] }}",
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 5,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-list-commands",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "List SSM command invocations and status",
+      "predecessors": []
+    }
+  }
+}

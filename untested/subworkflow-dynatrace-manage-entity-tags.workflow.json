@@ -1,29 +1,24 @@
 {
   "title": "subworkflow - dynatrace manage entity tags",
-  "description": "Subworkflow to add, update, or remove tags from Dynatrace entities\n\nThis subworkflow manages entity tagging for organization, cost allocation, and automation targeting.\n\nParameters:\n\nentityId: (Required) The Dynatrace entity ID to tag\naction: (Required) Action to perform (ADD, REMOVE, REPLACE)\ntags: (Required) JSON array of tag objects with 'key' and optional 'value'\n\nExample tag: {\"key\": \"environment\", \"value\": \"production\"}\n\nReturns updated entity with new tag state",
+  "description": "Subworkflow to add, update, or remove tags on Dynatrace entities\n\nThis subworkflow manages entity tags for organization and automation targeting.\n\nParameters:\n\nentityId: (Required) The entity to tag\ntagsJson: (Required) JSON object with tag key-value pairs\ntagAction: (Optional) Action - ADD, REMOVE, or REPLACE (default ADD)\n\nReturns confirmation of tagging operation",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
   "trigger": {},
-  "result": "{{ result(\"manage-tags\") }}",
+  "result": "{{ result(\"apply-tags\") }}",
   "type": "STANDARD",
   "input": {
-    "entityId": "HOST-123",
-    "action": "ADD",
-    "tags": "[{\"key\": \"environment\", \"value\": \"production\"}, {\"key\": \"team\", \"value\": \"platform\"}]"
+    "entityId": "HOST-12345678",
+    "tagsJson": "{\"environment\": \"production\", \"team\": \"platform\"}",
+    "tagAction": "ADD"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🏷️ **Subworkflow to Manage Entity Tags**\n\n🏷️ This subworkflow provides a simple way to **add, update, or remove tags** from Dynatrace entities for **organization, cost allocation, and automation targeting**.\n\nTags enable powerful entity filtering and custom automation rules without requiring JavaScript knowledge.\n\n---\n\n### ⚙️ **Parameters**\n\n- **entityId** (Required): 🆔 The Dynatrace entity ID\n- **action** (Required): 🔧 Action to perform  \n  *(Options: `ADD`, `REMOVE`, `REPLACE`)*\n- **tags** (Required): 🏷️ JSON array of tag objects  \n  *(Format: `[{\"key\": \"name\", \"value\": \"val\"}, ...]`)*\n\n---\n\n### 📝 **Tag Structure**\n\n```json\n{\n  \"key\": \"environment\",\n  \"value\": \"production\"\n}\n```\n\n---\n\n### 💡 **Common Tagging Strategies**\n\n- **Environment**: production, staging, development\n- **Team**: platform, backend, frontend, infra\n- **Cost Center**: project-alpha, project-beta\n- **Compliance**: pci-dss, hipaa, sox\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Entity organization\n- ✅ Cost allocation\n- ✅ Automation targeting\n- ✅ Access control\n\n---",
+  "guide": "## 🏷️ **Subworkflow to Manage Entity Tags**\n\n📝 This subworkflow adds, updates, or removes tags on Dynatrace entities for organization and automation.\n\nEnables cost allocation, automation targeting, and entity categorization.\n\n---\n\n### ⚙️ **Parameters**\n\n- **entityId** (Required): 🆔 Entity to tag (HOST-xxx, SERVICE-xxx, etc)\n- **tagsJson** (Required): 📝 JSON object with tag key-value pairs\n- **tagAction** (Optional): 🔧 Action - ADD, REMOVE, or REPLACE (default ADD)\n\n---\n\n### 🏷️ **Tag Examples**\n\n```json\n{\n  \"environment\": \"production\",\n  \"team\": \"platform\",\n  \"cost-center\": \"engineering\"\n}\n```\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Cost allocation\n- ✅ Organization\n- ✅ Automation targeting\n- ✅ Compliance grouping\n\n---",
   "tasks": {
-    "manage-tags": {
-      "name": "manage-tags",
+    "apply-tags": {
+      "name": "apply-tags",
       "input": {
-        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { entitiesClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  const tags = typeof input.tags === 'string' ? JSON.parse(input.tags) : input.tags;\n  const action = input.action.toUpperCase();\n  \n  try {\n    let tagUpdates = [];\n    \n    if (action === 'ADD' || action === 'REPLACE') {\n      tagUpdates = tags;\n    } else if (action === 'REMOVE') {\n      tagUpdates = tags.map(t => ({ key: t.key, value: null }));\n    }\n    \n    const response = await entitiesClient.updateEntityTags({\n      entityId: input.entityId,\n      body: { tags: tagUpdates }\n    });\n    \n    console.log(`Updated tags for ${input.entityId}`);\n    \n    return {\n      entityId: input.entityId,\n      action: action,\n      appliedTags: tagUpdates,\n      success: true\n    };\n  } catch (error) {\n    console.error('Error managing tags:', error);\n    throw new Error(`Failed to manage tags: ${error}`);\n  }\n}"
-      },
-      "retry": {
-        "count": 3,
-        "delay": 10,
-        "failedLoopIterationsOnly": true
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { entitiesClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    const tagsObj = typeof input.tagsJson === 'string' ? JSON.parse(input.tagsJson) : input.tagsJson;\n    const action = (input.tagAction || 'ADD').toUpperCase();\n    \n    let tags = [];\n    if (action === 'REMOVE') {\n      tags = Object.keys(tagsObj).map(key => ({ key }));\n    } else {\n      tags = Object.entries(tagsObj).map(([key, value]) => ({ key, value: String(value) }));\n    }\n    \n    await entitiesClient.updateEntityTags({\n      id: input.entityId,\n      body: {\n        tags: tags\n      }\n    });\n    \n    console.log(`Tags ${action}ed on entity ${input.entityId}`);\n    \n    return {\n      entityId: input.entityId,\n      action: action,\n      tagCount: tags.length,\n      success: true,\n      message: `Tags ${action}ed successfully`\n    };\n  } catch (error) {\n    console.error('Error applying tags:', error);\n    throw new Error(`Failed to apply tags: ${error}`);\n  }\n}"
       },
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
@@ -31,7 +26,7 @@
         "x": 0,
         "y": 1
       },
-      "description": "Manage tags on Dynatrace entities",
+      "description": "Add or update tags on entity",
       "predecessors": []
     }
   }

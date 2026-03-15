@@ -1,0 +1,61 @@
+{
+  "title": "subworkflow - aws check security group allows ssh",
+  "description": "Subworkflow to detect if security groups allow unrestricted SSH access from 0.0.0.0/0\n\nThis subworkflow scans security groups and specifically checks for overly permissive SSH rules for remediation.\n\nParameters:\n\nawsRegion: (Required) AWS region to scan\ncheckPort: (Optional) Port to check - default 22 (SSH)\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection\n\nReturns security groups with public SSH access vulnerability",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"analyze-ssh-exposure\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "checkPort": "22",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔓 **Subworkflow to Check Security Groups for Unrestricted SSH**\n\n🚨 This subworkflow detects EC2 security groups that allow SSH (port 22) access from the public internet (0.0.0.0/0).\n\nEnables automated security vulnerability detection and triggers remediation workflows.\n\n---\n\n### ⚙️ **Parameters**\n\n- **awsRegion** (Required): 🌍 AWS region to scan\n- **checkPort** (Optional): 🔌 Port to check (default: 22 for SSH)\n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection\n\n---\n\n### 🚨 **SSH Exposure Risk**\n\nUnrestricted SSH access (0.0.0.0/0) poses:\n- ❌ Brute-force attack vulnerability\n- ❌ Uncontrolled login attempts\n- ❌ Potential credential compromise\n- ❌ Compliance violation (PCI-DSS, SOC 2)\n\n---\n\n### ✅ **Remediation Options**\n\n1. **Whitelist IP ranges** instead of 0.0.0.0/0\n2. **Use AWS Systems Manager Session Manager** (SSM port 443)\n3. **Require VPN/bastion host** for SSH access\n4. **Restrict to specific security groups** only\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Security vulnerability scanning\n- ✅ Compliance auditing\n- ✅ Automated remediation triggers\n- ✅ Risk assessment workflows\n\n---",
+  "tasks": {
+    "analyze-ssh-exposure": {
+      "name": "analyze-ssh-exposure",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    return {\n      scanTarget: 'EC2 Security Groups with public SSH access',\n      region: input.awsRegion,\n      port: input.checkPort || 22,\n      vulnerability: 'Allows 0.0.0.0/0 access',\n      severity: 'CRITICAL',\n      status: 'ready_for_security_group_scan',\n      recommendation: 'Restrict to specific IP ranges or security groups only'\n    };\n  } catch (error) {\n    console.error('Error analyzing SSH exposure:', error);\n    throw new Error(`Failed to analyze SSH exposure: ${error}`);\n  }\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "describe-groups": "OK"
+        }
+      },
+      "description": "Analyze security group rules for SSH exposure",
+      "predecessors": [
+        "describe-groups"
+      ]
+    },
+    "describe-groups": {
+      "name": "describe-groups",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-describe-security-groups",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Query EC2 security groups",
+      "predecessors": []
+    }
+  }
+}

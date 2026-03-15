@@ -1,0 +1,34 @@
+{
+  "title": "subworkflow - dynatrace query metrics for entity",
+  "description": "Subworkflow to retrieve timeseries metrics for Dynatrace entities\n\nThis subworkflow queries performance metrics like CPU, memory, response time, and throughput.\n\nParameters:\n\nentityId: (Required) Entity ID to get metrics for\nmetricSelector: (Required) Metric selector expression (e.g., builtin:host.cpu.usage)\ntimeFrameMinutes: (Optional) Time range in minutes - default 60\nresolutionSeconds: (Optional) Data resolution in seconds - default 60\n\nReturns metric values over time",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"query-metrics\") }}",
+  "type": "STANDARD",
+  "input": {
+    "entityId": "HOST-ABC123",
+    "metricSelector": "builtin:host.cpu.usage",
+    "timeFrameMinutes": "60",
+    "resolutionSeconds": "60"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📊 **Subworkflow to Query Metrics for Entity**\n\n📈 This subworkflow retrieves timeseries metric data for Dynatrace entities to analyze performance trends.\n\nEnables capacity planning, performance optimization, and trend analysis.\n\n---\n\n### ⚙️ **Parameters**\n\n- **entityId** (Required): 🆔 Entity ID to query\n- **metricSelector** (Required): 📊 Metric selector  \n  *(Example: `builtin:host.cpu.usage`)*\n- **timeFrameMinutes** (Optional): 🕐 Time range (default 60)\n- **resolutionSeconds** (Optional): 📌 Data resolution (default 60)\n\n---\n\n### 📊 **Common Metrics**\n\n| Metric | Description | Entity |\n|--------|-------------|--------|\n| `builtin:host.cpu.usage` | CPU utilization | HOST |\n| `builtin:host.mem.usage` | Memory usage | HOST |\n| `builtin:service.response.time` | Response time | SERVICE |\n| `builtin:service.request.count` | Request count | SERVICE |\n| `builtin:service.errors` | Error count | SERVICE |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Capacity planning\n- ✅ Performance trending\n- ✅ SLA reporting\n- ✅ Anomaly detection\n\n---",
+  "tasks": {
+    "query-metrics": {
+      "name": "query-metrics",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { metricsClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    const timeFrameMs = parseInt(input.timeFrameMinutes || 60) * 60 * 1000;\n    const from = Date.now() - timeFrameMs;\n    const to = Date.now();\n    const resolution = parseInt(input.resolutionSeconds || 60) * 1000;\n    \n    const response = await metricsClient.queryMetricsData({\n      metricSelector: input.metricSelector,\n      entities: [input.entityId],\n      from: from,\n      to: to,\n      resolution: `${resolution}ms`\n    });\n    \n    const results = response.result || [];\n    const firstResult = results[0] || {};\n    const data = firstResult.data || [];\n    \n    let stats = {\n      dataPoints: data.length,\n      min: null,\n      max: null,\n      avg: null\n    };\n    \n    if (data.length > 0) {\n      const values = data.map(d => d.values[0]).filter(v => v !== null);\n      if (values.length > 0) {\n        stats.min = Math.min(...values);\n        stats.max = Math.max(...values);\n        stats.avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);\n      }\n    }\n    \n    console.log(`Retrieved ${data.length} metric data points`);\n    \n    return {\n      entityId: input.entityId,\n      metricSelector: input.metricSelector,\n      statistics: stats,\n      timeFrame: input.timeFrameMinutes,\n      resolution: input.resolutionSeconds,\n      dataPoints: data.slice(0, 10).map((d, idx) => ({\n        timestamp: new Date(d.timestamp).toISOString(),\n        value: d.values[0]\n      }))\n    };\n  } catch (error) {\n    console.error('Error querying metrics:', error);\n    throw new Error(`Failed to query metrics: ${error}`);\n  }\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Query metrics for entity",
+      "predecessors": []
+    }
+  }
+}

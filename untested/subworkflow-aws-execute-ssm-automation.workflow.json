@@ -1,0 +1,44 @@
+{
+  "title": "subworkflow - aws execute ssm automation document",
+  "description": "Subworkflow to start and monitor SSM automation documents for complex AWS remediation workflows\n\nThis subworkflow initiates SSM automation runbooks and provides status monitoring capabilities.\n\nParameters:\n\nauditDocument: (Required) SSM automation document name (e.g., AWS-ModifyRDSInstance, AWS-StopEC2Instance)\nauditParameters: (Required) JSON object with document input parameters\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection\nassumRoleArn: (Optional) IAM role ARN for automation execution\n\nReturns automation execution ID for tracking",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"start-automation\") }}",
+  "type": "STANDARD",
+  "input": {
+    "auditDocument": "AWS-CreateSnapshot",
+    "auditParameters": "{}",
+    "awsRegion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground",
+    "assumRoleArn": ""
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔄 **Subworkflow to Execute SSM Automation Document**\n\n⚙️ This subworkflow initiates SSM automation runbooks for complex AWS remediation tasks like RDS modifications, snapshot creation, and configuration changes.\n\nProvides execution tracking through automation execution IDs for monitoring and error handling.\n\n---\n\n### ⚙️ **Parameters**\n\n- **auditDocument** (Required): 📋 SSM automation document name\n- **auditParameters** (Required): 📊 JSON object with document parameters\n- **awsRegion** (Required): 🌍 AWS region\n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection\n- **assumRoleArn** (Optional): 🎭 IAM role for automation\n\n---\n\n### 📋 **Common SSM Automation Documents**\n\n| Document | Purpose |\n|----------|----------|\n| **AWS-StopEC2Instance** | Stop EC2 instance safely |\n| **AWS-CreateSnapshot** | Create EBS snapshots |\n| **AWS-ModifyRDSInstance** | Modify RDS properties |\n| **AWS-CopyDBSnapshot** | Copy database snapshots |\n| **AWS-ModifySecurityGroup** | Bulk security group changes |\n\n---\n\n### 📊 **Execution Tracking**\n\nEach automation execution returns:\n- Execution ID for status queries\n- Input parameters used\n- Execution status (InProgress, Success, Failed)\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Complex remediation workflows\n- ✅ Multi-step automation runbooks\n- ✅ Configuration management\n- ✅ Orchestrated remediation\n\n---",
+  "tasks": {
+    "start-automation": {
+      "name": "start-automation",
+      "input": {
+        "DocumentName": "{{ input()[\"auditDocument\"] }}",
+        "Parameters": "{{ input()[\"auditParameters\"] }}",
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 300,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Start SSM automation document execution",
+      "predecessors": []
+    }
+  }
+}

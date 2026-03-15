@@ -1,0 +1,33 @@
+{
+  "title": "subworkflow - dynatrace get recent problems",
+  "description": "Subworkflow to retrieve recent Dynatrace problems with filtering by status and time range\n\nThis subworkflow queries the past problems in your environment with flexible filtering options.\n\nParameters:\n\nproblemStatus: (Optional) Filter by status - OPEN, RESOLVED, or leave empty for all\ntimeFrameMinutes: (Optional) Look-back time in minutes - default 1440 (24 hours)\nmaxResults: (Optional) Maximum results to return - default 50\n\nReturns list of problems with status and details",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"fetch-problems\") }}",
+  "type": "STANDARD",
+  "input": {
+    "problemStatus": "OPEN",
+    "timeFrameMinutes": "1440",
+    "maxResults": "50"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📊 **Subworkflow to Get Recent Dynatrace Problems**\n\n📈 This subworkflow retrieves recent problems from your Dynatrace environment with flexible filtering by status and time range.\n\nEnables problem analysis, trend tracking, and automated response workflows.\n\n---\n\n### ⚙️ **Parameters**\n\n- **problemStatus** (Optional): 📌 Filter by status  \n  *(Values: `OPEN`, `RESOLVED`, or empty for all)*\n- **timeFrameMinutes** (Optional): 🕐 Look-back time in minutes  \n  *(Default: 1440 = 24 hours)*\n- **maxResults** (Optional): 📋 Max number of problems to return  \n  *(Default: 50)*\n\n---\n\n### 📊 **Problem States**\n\n- **OPEN**: Problem is currently active\n- **RESOLVED**: Problem has been resolved\n- **CLOSED**: Problem has been explicitly closed\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Problem monitoring\n- ✅ SLA tracking\n- ✅ Incident management\n- ✅ Automated escalation\n\n---",
+  "tasks": {
+    "fetch-problems": {
+      "name": "fetch-problems",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { problemsClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    const timeFrameMs = parseInt(input.timeFrameMinutes || 1440) * 60 * 1000;\n    const from = Date.now() - timeFrameMs;\n    const to = Date.now();\n    \n    let problemSelector = undefined;\n    if (input.problemStatus && input.problemStatus.trim() !== '') {\n      problemSelector = `status(\"${input.problemStatus}\")`;\n    }\n    \n    const response = await problemsClient.listProblems({\n      problemSelector: problemSelector,\n      from: from,\n      to: to,\n      limit: parseInt(input.maxResults || 50)\n    });\n    \n    const problems = response.problems || [];\n    \n    console.log(`Retrieved ${problems.length} problems`);\n    \n    return {\n      totalProblems: problems.length,\n      problems: problems.map(p => ({\n        problemId: p.problemId,\n        displayId: p.displayId,\n        title: p.title,\n        status: p.status,\n        severity: p.severity,\n        startTime: new Date(p.startTime).toISOString(),\n        endTime: p.endTime ? new Date(p.endTime).toISOString() : null\n      }))\n    };\n  } catch (error) {\n    console.error('Error fetching problems:', error);\n    throw new Error(`Failed to fetch problems: ${error}`);\n  }\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Fetch recent Dynatrace problems",
+      "predecessors": []
+    }
+  }
+}

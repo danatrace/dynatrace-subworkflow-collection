@@ -1,0 +1,41 @@
+{
+  "title": "subworkflow - aws get ssm automation execution status",
+  "description": "Subworkflow to monitor and retrieve SSM automation document execution status\n\nThis subworkflow checks the completion status of SSM automation executions and returns detailed execution information.\n\nParameters:\n\nautomationExecutionId: (Required) The execution ID from a prior SSM automation start\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection\n\nReturns execution status, results, and failure details if applicable",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-automation-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "automationExecutionId": "arn:aws:ssm:us-east-1:123456789012:automation-execution/00000000-0000-0000-0000-000000000000",
+    "awsRegion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📊 **Subworkflow to Get SSM Automation Execution Status**\n\n📋 This subworkflow monitors SSM automation document executions and retrieves detailed status information.\n\nUseful for checking completion, debugging failures, and retrieving execution results.\n\n---\n\n### ⚙️ **Parameters**\n\n- **automationExecutionId** (Required): 🆔 Execution ID from SSM automation start\n- **awsRegion** (Required): 🌍 AWS region\n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection\n\n---\n\n### 📊 **Returned Status Information**\n\n✅ **Success Scenarios:**\n- Execution status (InProgress, Success, Failed)\n- Step outputs and results\n- Execution timeline\n\n❌ **Failure Details:**\n- Failure reason\n- Failed step details  \n- Error messages and codes\n\n---\n\n### ⏳ **Execution States**\n\n| State | Meaning | Next Action |\n|-------|---------|-------------|\n| **InProgress** | Still executing | Wait and recheck |\n| **Success** | Completed successfully | Return results |\n| **Failed** | Execution failed | Return failure info |\n| **TimedOut** | Exceeded timeout | Investigate root cause |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Polling automation status\n- ✅ Waiting on long-running operations\n- ✅ Error investigation\n- ✅ Workflow orchestration\n\n---",
+  "tasks": {
+    "check-automation-status": {
+      "name": "check-automation-status",
+      "input": {
+        "AutomationExecutionId": "{{ input()[\"automationExecutionId\"] }}",
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 5,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-get-automation-execution",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Get SSM automation execution status",
+      "predecessors": []
+    }
+  }
+}

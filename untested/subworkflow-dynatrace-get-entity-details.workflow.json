@@ -1,0 +1,31 @@
+{
+  "title": "subworkflow - dynatrace get entity details",
+  "description": "Subworkflow to retrieve detailed information about a specific Dynatrace entity\n\nThis subworkflow gets entity metadata, relationships, and properties.\n\nParameters:\n\nentityId: (Required) The entity ID to query (HOST-xxx, SERVICE-xxx, APPLICATION-xxx, etc)\n\nReturns entity details including properties and relationships",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"get-entity\") }}",
+  "type": "STANDARD",
+  "input": {
+    "entityId": "SERVICE-ABC123"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔍 **Subworkflow to Get Entity Details**\n\n📋 This subworkflow retrieves detailed information about a specific Dynatrace entity including metadata, tags, and relationships.\n\nEnables topology discovery and dependency analysis.\n\n---\n\n### ⚙️ **Parameters**\n\n- **entityId** (Required): 🆔 Entity ID  \n  *(Examples: HOST-abc123, SERVICE-xyz789, APPLICATION-abc)*\n\n---\n\n### 📋 **Entity Types**\n\n- **HOST**: Physical server or VM\n- **SERVICE**: Software service/application\n- **APPLICATION**: Business application\n- **PROCESS_GROUP**: Process grouping\n- **DATABASE**: Database service\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Topology discovery\n- ✅ Dependency analysis\n- ✅ Entity metadata retrieval\n- ✅ Service mapping\n\n---",
+  "tasks": {
+    "get-entity": {
+      "name": "get-entity",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { entitiesClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    const response = await entitiesClient.getEntity({\n      id: input.entityId,\n      fields: ['properties', 'tags', 'relations']\n    });\n    \n    console.log(`Retrieved entity details for ${input.entityId}`);\n    \n    return {\n      entityId: response.entityId,\n      displayName: response.displayName || 'N/A',\n      entityType: response.entityType || 'UNKNOWN',\n      lastSeenTms: response.lastSeenTms ? new Date(response.lastSeenTms).toISOString() : 'N/A',\n      firstSeenTms: response.firstSeenTms ? new Date(response.firstSeenTms).toISOString() : 'N/A',\n      toRelationships: response.toRelationships ? response.toRelationships.length : 0,\n      fromRelationships: response.fromRelationships ? response.fromRelationships.length : 0,\n      tags: response.tags ? response.tags.length : 0,\n      properties: response.properties || {}\n    };\n  } catch (error) {\n    console.error('Error getting entity details:', error);\n    throw new Error(`Failed to get entity details: ${error}`);\n  }\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Get detailed entity information",
+      "predecessors": []
+    }
+  }
+}

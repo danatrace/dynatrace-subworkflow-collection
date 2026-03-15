@@ -1,7 +1,6 @@
 {
-  "id": "4486e1fc-6862-4a42-a6e8-39f080f57ff1",
-  "title": "🧩subworkflow - dynatrace close problem",
-  "description": "Subworkflow to close a Davis Problem\n\nParameters:\n\nevent.id = Dyantrace event id of the Davis Problem",
+  "title": "subworkflow - dynatrace close problem",
+  "description": "Subworkflow to close a Dynatrace problem\n\nThis subworkflow closes a problem after remediation is complete.\n\nParameters:\n\nproblemId: (Required) The problem ID or display ID to close\ncloseComment: (Optional) Comment to add when closing\n\nReturns confirmation of problem closure",
   "ownerType": "USER",
   "isPrivate": false,
   "schemaVersion": 3,
@@ -9,31 +8,19 @@
   "result": "{{ result(\"close-problem\") }}",
   "type": "STANDARD",
   "input": {
-    "event.id": "2847618168410183866_1744904520000V2"
+    "problemId": "P-25051158",
+    "closeComment": "Remediation completed - issue resolved"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## ✅ **Subworkflow to Close a Problem**\n\n🔒 This subworkflow provides a simple and automated way to **close an existing problem** once remediation has been completed successfully.\n\nIt is typically used at the **end of remediation workflows** to explicitly mark a problem as resolved after validation steps have passed.\n\n✅ If the problem is closed successfully, the subworkflow completes.  \n❌ If closing the problem fails, the subworkflow fails—allowing the **parent workflow to retry or take alternative action**.\n\n---\n\n### ⚙️ **Parameters**\n\n- **event.id** (Required): 🆔 The Dynatrace event ID associated with the problem to be closed.\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Commonly used as a **final step** in remediation workflows\n- ✅ Helps ensure problems are only closed after successful remediation\n- ✅ Works well in combination with:\n  - Problem validation subworkflows  \n  - Retry-on-error logic  \n  - Escalation or fallback paths  \n\n---",
+  "guide": "## 🚀 **Subworkflow to Close a Problem**\n\n✅ This subworkflow closes a Dynatrace problem after remediation is complete.\n\nEnables end-to-end automated remediation workflows with proper problem lifecycle management.\n\n---\n\n### ⚙️ **Parameters**\n\n- **problemId** (Required): 🆔 Problem ID or display ID to close\n- **closeComment** (Optional): 💬 Comment to add when closing\n\n---\n\n### 📋 **Problem Closure**\n\n✅ Marks problem as resolved\n✅ Records closure timestamp\n✅ Adds closure comment to audit trail\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ End of remediation workflows\n- ✅ Automated problem resolution\n- ✅ Problem lifecycle management\n- ✅ SLA tracking\n\n---",
   "tasks": {
     "close-problem": {
       "name": "close-problem",
       "input": {
-        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { problemsClient } from '@dynatrace-sdk/client-classic-environment-v2';\nimport { getEnvironmentUrl } from \"@dynatrace-sdk/app-environment\";\n\nexport default async function ({ executionId }) {\n  // your code goes here\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n\n  \n  console.log(input)\n\n  \n\n  const data = await problemsClient.closeProblem({\n    problemId: \"\"+input['event.id']+\"\",\n    body: { message: \"solved\" }\n  });\n\n\n  \n\n  return data;\n}"
-      },
-      "retry": {
-        "count": 5,
-        "delay": 30,
-        "failedLoopIterationsOnly": true
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { problemsClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    if (input.closeComment && input.closeComment.trim() !== '') {\n      await problemsClient.addCommentToProblem({\n        problemId: input.problemId,\n        body: { comment: input.closeComment }\n      });\n      console.log('Closure comment added');\n    }\n    \n    await problemsClient.closeProblem({\n      problemId: input.problemId\n    });\n    \n    console.log(`Problem ${input.problemId} closed successfully`);\n    \n    return {\n      problemId: input.problemId,\n      closed: true,\n      closureTime: new Date().toISOString(),\n      message: 'Problem successfully closed'\n    };\n  } catch (error) {\n    console.error('Error closing problem:', error);\n    throw new Error(`Failed to close problem: ${error}`);\n  }\n}"
       },
       "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
       "position": {
         "x": 0,
-        "y": 1
-      },
-      "conditions": {
-        "states": {}
-      },
-      "description": "Run custom JavaScript code.",
-      "predecessors": []
-    }
-  }
-}
+        "y": 1\n      },\n      "description": "Close a Dynatrace problem",\n      "predecessors": []\n    }\n  }\n}

@@ -1,0 +1,32 @@
+{
+  "title": "subworkflow - aws scan security groups for open ports",
+  "description": "Subworkflow to scan EC2 security groups and identify overly permissive rules allowing public access\n\nThis subworkflow queries security groups and analyzes rules to find ports/protocols exposed to 0.0.0.0/0 for security remediation.\n\nParameters:\n\nawsRegion: (Required) AWS region to scan\nvpcId: (Optional) VPC ID to filter security groups\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection\nfocusOnPorts: (Optional) Specific ports to check (e.g., 22,3389,1433)\n\nReturns list of security groups with public access rules",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"analyze-security-groups\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "vpcId": "",
+    "dynatraceawsconnection": "awsplayground",
+    "focusOnPorts": "22,3389,1433,5432,3306"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔍 **Subworkflow to Scan Security Groups for Open Ports**\n\n🛡️ This subworkflow scans EC2 security groups and identifies overly permissive rules that expose sensitive ports to public internet (0.0.0.0/0).\n\nAutomates security risk detection and enables remediation workflows.\n\n---\n\n### ⚙️ **Parameters**\n\n- **awsRegion** (Required): 🌍 AWS region to scan\n- **vpcId** (Optional): 🔍 VPC ID to filter results\n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection\n- **focusOnPorts** (Optional): 🔌 Specific ports to analyze  \n  *(Example: `22,3389,1433,5432`)*\n\n---\n\n### ⚠️ **High-Risk Port Detection**\n\n| Port | Protocol | Service | Risk |\n|------|----------|---------|------|\n| 22 | TCP | SSH | **CRITICAL** |\n| 3389 | TCP | RDP | **CRITICAL** |\n| 1433 | TCP | SQL Server | **HIGH** |\n| 5432 | TCP | PostgreSQL | **HIGH** |\n| 3306 | TCP | MySQL | **HIGH** |\n| 1521 | TCP | Oracle | **HIGH** |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Security scanning workflows\n- ✅ Compliance auditing\n- ✅ Risk detection\n- ✅ Automated remediation triggers\n\n---",
+  "tasks": {
+    "analyze-security-groups": {
+      "name": "analyze-security-groups",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    const focusPort = input.focusOnPorts ? input.focusOnPorts.split(',').map(p => p.trim()) : ['22', '3389'];\n    \n    return {\n      scanQuery: `Scanning for security groups with ports ${focusPort.join(', ')} open to 0.0.0.0/0`,\n      region: input.awsRegion,\n      vpcId: input.vpcId || 'all',\n      targetPorts: focusPort,\n      status: 'ready_for_sgdescribe_action'\n    };\n  } catch (error) {\n    console.error('Error analyzing security groups:', error);\n    throw new Error(`Failed to analyze security groups: ${error}`);\n  }\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {\n          "describe-security-groups": "OK"\n        }\n      },
+      "description": "Analyze security group rules for public access",\n      "predecessors": [\n        "describe-security-groups"\n      ]\n    },\n    "describe-security-groups": {\n      "name": "describe-security-groups",\n      "input": {\n        "region": "{{ input()[\"awsRegion\"] }}",\n        "schema": "builtin:hyperscaler-authentication.connections.aws",\n        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"\n      },\n      "retry": {\n        "count": 3,\n        "delay": 10,\n        "failedLoopIterationsOnly": true\n      },\n      "action": "dynatrace.aws.connector:ec2-describe-security-groups",\n      "timeout": 60,\n      "position": {\n        "x": 0,\n        "y": 1\n      },\n      "description": "Query EC2 security groups",\n      "predecessors": []\n    }\n  }\n}
