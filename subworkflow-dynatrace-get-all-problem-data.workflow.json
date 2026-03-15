@@ -1,0 +1,39 @@
+{
+  "id": "67df876f-6e4a-4942-b565-7f40c502daec",
+  "title": "🧩subworkflow - dynatrace get all problem data",
+  "description": "Subworkflow to get all data of a Davis Problem.\n\nThe Davis Problem trigger does not contain all necessary information\nfrom a Problem card, for example the Impact field and affected users\nwhich is important to determine the Priority of a Problem, to then\nset a Priority in tracking tools like Jira and Service now. \nThis Sub Workflow makes it easy to get that addtional information\nwithout needing to know Javascript.\n\nThe Subworkflow also contains setting the priority for a Jira\nissue from the Data of the Problem card. This might not\nbe the same for every customer, but easy adjustable in the \nsection \"// calculate jira impact level\" in the get-problem-info\ntask.\n\nParameters:\n\nevent.id: (Required) Dyantrace event id",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"get-problem-info\") }}",
+  "type": "STANDARD",
+  "input": {
+    "event.id": "2847618168410183866_1744904520000V2"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🧠 **Subworkflow to Get All Data of a Problem**\n\n🔎 This subworkflow provides an easy way to **retrieve complete problem details** that are **not included in the standard problem trigger**.\n\nImportant information—such as **impact**, **affected users**, and other contextual fields—is often required to correctly determine the **priority of a problem** and to synchronize that priority with external tracking systems like **Jira** or **ServiceNow**.\n\nThis subworkflow makes it simple to access that additional data **without requiring JavaScript knowledge**.\n\n---\n\n### 🎯 **Use Case**\n\nA common use case is **enriching problem data before creating or updating tickets** in tracking tools.\n\nIn addition, this subworkflow includes logic to **set the priority of a Jira issue** based on the data retrieved from the problem card.\n\n⚙️ This logic may vary between environments, but it can be easily adjusted in the  \n`// calculate jira impact level` section of the **get‑problem‑info** task.\n\n---\n\n### ⚙️ **Parameters**\n\n- **event.id** (Required): 🆔 The Dynatrace event ID associated with the problem.\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Designed as a **data‑enrichment subworkflow**\n- ✅ Provides access to full problem context beyond trigger payloads\n- ✅ Enables accurate prioritization in Jira, ServiceNow, and other tools\n- ✅ Commonly used early in remediation or escalation workflows\n\n---",
+  "tasks": {
+    "get-problem-info": {
+      "name": "get-problem-info",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { problemsClient } from '@dynatrace-sdk/client-classic-environment-v2';\nimport { getEnvironmentUrl } from \"@dynatrace-sdk/app-environment\";\n\nexport default async function ({ executionId }) {\n  // your code goes here\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n\n  \n  console.log(input)\n  console.log(input.display_id)\n  \n\n  const data = await problemsClient.getProblem({\n    problemId: \"\"+input['event.id']+\"\"\n  });\n  //console.log(data)\n  // Leave comment\n\n\n  // calculate jira impact level\n  let impact = \"Lowest\"; // possible jira impact values Lowest, Low, Medium, High, Highest\n  let affected_users: number = 0;\n\n    // calculate amount of impacted users\n  for (let impacts of data.impactAnalysis.impacts) {\n      \n  affected_users = affected_users + impacts.estimatedAffectedUsers\n  console.log(affected_users);\n    \n    \n  }\n  \n  // if impactLevel equals APPLICATION and severityLevel equals AVAILABILITY and no affected users set priority to high\n  if (data.impactLevel == \"APPLICATION\" && data.severityLevel == \"AVAILABILITY\" && affected_users == 0) {\n  impact = \"High\";    \n  }\n  // if impactLevel equals APPLICATION and severityLevel equals AVAILABILITY and affected users set priority to highest\n  if (data.impactLevel == \"APPLICATION\" && data.severityLevel == \"AVAILABILITY\" &&  affected_users > 0) {\n  impact = \"Highest\";     \n  }\n\n  if (data.impactLevel == \"APPLICATION\" && data.severityLevel == \"RESOURCE_CONTENTION\" &&  affected_users > 0) {\n  impact = \"Highest\";     \n  }\n\n  if (data.impactLevel == \"APPLICATION\" && data.severityLevel == \"RESOURCE_CONTENTION\" && affected_users == 0) {\n  impact = \"High\";     \n  }\n  \n  \n  \n  \n  // with a focus on Business Resilience we always chose the highest priority if end users are affected\n  if (affected_users > 0) {\n  impact = \"Highest\";     \n  }\n\n  // add jira impact to problem details\n  data[\"jira_impact\"] = impact;\n  \n  console.log(\"Problem Impact Level: \"+data.impactLevel);\n  console.log(\"Problem Severity Level: \"+data.severityLevel);\n  console.log(\"Number of affected users: \"+affected_users);\n  console.log(\"Setting Jira Impact to: \"+impact);\n  \n\n  return data;\n}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": []
+    }
+  }
+}

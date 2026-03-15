@@ -1,0 +1,72 @@
+{
+  "id": "9a868582-bf92-4d2c-aea5-90898f7e86b8",
+  "title": "🧩subworkflow - dynatrace ingest custom alert",
+  "description": "Subworkflow to ingest/create a custom alert into dynatrace without needed to know javascript\n\nParameters:\nCustom Alert Json",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"ingest-event\") }}",
+  "type": "STANDARD",
+  "input": {
+    "title": "Security group 5.2 EC2 security groups should not allow ingress from 0.0.0.0/0 to remote server administration ports",
+    "properties": {
+      "region": "us-east-1",
+      "source": "aws.securityhub",
+      "account": "589650258462",
+      "version": "0",
+      "object.id": "arn:aws:ec2:us-east-1:589650258462:security-group/sg-067c64eafd2851f4c",
+      "aws.region": "us-east-1",
+      "event.kind": "SECURITY_EVENT",
+      "event.name": "Compliance finding event",
+      "finding.id": "arn:aws:securityhub:us-east-1:589650258462:subscription/cis-aws-foundations-benchmark/v/3.0.0/5.2/finding/325d0d40-09a2-4211-883a-b1952df68dba",
+      "detail-type": "Security Hub Findings - Imported",
+      "object.name": "arn:aws:ec2:us-east-1:589650258462:security-group/sg-067c64eafd2851f4c",
+      "object.type": "AwsEc2SecurityGroup",
+      "product.name": "Security Hub",
+      "connection_id": "vu9U3hXa3q0AAAABAClhcHA6ZHluYXRyYWNlLmF3cy5zZWN1cml0eWh1Yjpjb25uZWN0aW9ucwAGdGVuYW50AAZ0ZW5hbnQAJGMzZjY1YTUwLTA2YTktM2NkNC1hODJhLTA0OTNhM2Y1NzJjOb7vVN4V2t6t",
+      "event.version": "1.308",
+      "finding.score": "0",
+      "finding.title": "5.2 EC2 security groups should not allow ingress from 0.0.0.0/0 to remote server administration ports",
+      "aws.account.id": "589650258462",
+      "event.category": "COMPLIANCE",
+      "event.provider": "AWS Security Hub",
+      "finding.status": "FAILED",
+      "product.vendor": "AWS",
+      "aws.account.name": "AWS Sandbox Environments",
+      "finding.severity": "INFORMATIONAL",
+      "event.description": "A compliance control EC2.53 on an AwsEc2SecurityGroup object arn:aws:ec2:us-east-1:589650258462:security-group/sg-067c64eafd2851f4c had FAILED status.",
+      "security_group_id": "sg-067c64eafd2851f4c",
+      "compliance.control": "EC2.53",
+      "affected_entity_ids": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroup:groupId=sg-067c64eafd2851f4c",
+      "finding.description": "Public access to remote server administration ports, such as 22 and 3389, increases resource attack surface and unnecessarily raises the risk of resource compromise.",
+      "finding.time.created": "2025-07-09T09:46:54.123000000Z",
+      "affected_entity_types": "AWS Security Group",
+      "dt.openpipeline.source": "/platform/ingest/v1/events.security",
+      "dt.security.risk.level": "NONE",
+      "dt.security.risk.score": 0,
+      "aws.link.to.security.group": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroup:groupId=sg-067c64eafd2851f4c"
+    }
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🚨 **Subworkflow to Ingest / Create a Custom Alert**\n\n🧩 This subworkflow provides a simple and standardized way to **ingest or create a custom alert** using a JSON definition—**without requiring JavaScript knowledge**.\n\nIt is commonly used to **raise custom alerts from automation workflows**, enabling visibility, correlation, and downstream actions based on conditions detected outside of built‑in alerting.\n\n---\n\n### 🎯 **Use Case**\n\nTypical use cases include:\n\n- 🚦 Raising custom alerts from automation logic or validations  \n- 🔗 Integrating external signals or conditions into the alerting pipeline  \n- 🧠 Driving conditional workflows based on custom alert states  \n- 📣 Providing visibility for non-native or derived conditions  \n\nThis approach allows teams to extend alerting in a **controlled and repeatable** way.\n\n---\n\n### ⚙️ **Parameters**\n\n- **Custom Alert Json** (Required): 🧾 The full JSON definition of the custom alert to be ingested or created.\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Designed as a **helper / ingestion subworkflow**\n- ✅ Eliminates the need to write JavaScript for custom alert creation\n- ✅ Enables alert-driven automation patterns\n- ✅ Works well with remediation, escalation, and notification workflows\n\n---",
+  "tasks": {
+    "ingest-event": {
+      "name": "ingest-event",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { EventIngest, EventIngestEventType, eventsClient } from '@dynatrace-sdk/client-classic-environment-v2';\nimport { getEnvironmentUrl } from \"@dynatrace-sdk/app-environment\";\n\nexport default async function ({ executionId }) {\n\n  \n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n\n  //console.log(input)\n\n  const xevent: EventIngest = {\n    eventType: EventIngestEventType.CustomAlert,\n    title: input.title,\n    properties: input.properties,\n  };\n  //console.log(xevent)\n  const result = await eventsClient.createEvent({ body: xevent })\n  console.log(result.eventIngestResults[0].correlationId)\n  let final: string | undefined | null;\n  while (final  === undefined  || final  === null || final  === \"\") {\n      const data = await eventsClient.getEvents({\n        eventSelector: \"correlationId(\\\"\"+result.eventIngestResults[0].correlationId+\"\\\")\"\n      });\n      final = data.events[0]\n  }\n  //console.log(data)\n  //console.log(data.events[0])\n  console.log(final)\n  return final;\n\n   \n\n  \n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "custom": "",
+        "states": {}
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": []
+    }
+  }
+}

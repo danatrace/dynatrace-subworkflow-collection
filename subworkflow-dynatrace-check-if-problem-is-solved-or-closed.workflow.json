@@ -1,0 +1,36 @@
+{
+  "id": "d31cdf5e-f1ca-4583-a850-67af54e3dde7",
+  "title": "🧩subworkflow - dynatrace check if problem is solved or closed",
+  "description": "Subworkflow to Check if a Davis Problem is Solved or Closed\n\nUse Case:\nWhen executing multiple remediation steps in a workflow, this subworkflow can be used to validate whether a specific \nstep has resolved the problem. If the problem is still open, the subworkflow will fail.\n\nYou can configure the \"retry on error\" setting in the parent workflow to retry this subworkflow for a specific duration—for example,\nrun for 10 minutes and check periodically if the problem has been resolved.\n\nIf the problem is not resolved within the defined time window, you can:\n\n* Add another remediation step.\n* Escalate the issue to a human operator.\n\nThis approach enables automated, iterative problem resolution while maintaining control over escalation and fallback strategies.\n\nParameters:\n\ndynatrace_problem_display_id: (Required) Davis Problem id (for example P-25051158)",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-if-problem-solved\") }}",
+  "type": "STANDARD",
+  "input": {
+    "dynatrace_problem_display_id": "P-25051158"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## ✅ **Subworkflow to Check if a Problem Is Solved or Closed**\n\n🧠 This subworkflow is used to **validate whether a specific remediation step has resolved a problem**.\n\nIt is especially useful in workflows that execute **multiple remediation actions**, where you want to verify after each step whether the problem has been **solved or closed** before proceeding further.\n\n✅ If the problem is solved or closed, the subworkflow completes successfully.  \n❌ If the problem is still open, the subworkflow fails—allowing the **parent workflow to retry or take alternative action**.\n\n---\n\n### 🎯 **Use Case**\n\nWhen executing iterative remediation steps, this subworkflow enables **automated decision-making** based on the current state of a problem.\n\nYou can configure **retry-on-error** behavior in the parent workflow to:\n- 🔁 Retry this subworkflow for a defined duration (for example, every minute for 10 minutes)\n- ⏳ Periodically re-check whether the problem has been resolved\n\nIf the problem is **not resolved within the defined time window**, you can:\n\n- ➕ Trigger an additional remediation step  \n- 👤 Escalate the issue to a human operator  \n\nThis approach supports **automated, iterative problem resolution** while maintaining full control over escalation and fallback strategies.\n\n---\n\n### ⚙️ **Parameters**\n\n- **problem_display_id** (Required): 🆔 The problem display ID  \n  *(for example: `P-25051158`)*\n\n---\n\n### 🧩 **Usage Context**\n\n- ✅ Designed as a **control and validation subworkflow**\n- ✅ Commonly used between remediation steps\n- ✅ Enables retry-based logic instead of hard-coded delays\n- ✅ Works seamlessly with **restart-on-error** patterns in parent workflows\n\n---",
+  "tasks": {
+    "check-if-problem-solved": {
+      "name": "check-if-problem-solved",
+      "input": {
+        "query": "fetch events, from: now()-7d\n| filter matchesPhrase(display_id,\"{{input()[\"dynatrace_problem_display_id\"] }}\" ) and matchesValue(event.status_transition, \"RESOLVED\" ) or matchesPhrase(display_id,\"{{input()[\"dynatrace_problem_display_id\"] }}\" ) and matchesValue(event.status_transition, \"CLOSED\" )",
+        "failOnEmptyResult": true
+      },
+      "action": "dynatrace.automations:execute-dql-query",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "custom": "",
+        "states": {}
+      },
+      "description": "Make use of Dynatrace Grail data in your workflow.",
+      "predecessors": []
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "id": "9dfec335-3f95-422c-b950-946ffc352182",
-  "title": "🧩subworkflow - dynatrace set all workflows of owner to live (deployed)",
+  "title": "🧩subworkflow - set all workflows of owner to live (deployed)",
   "description": "subworkflow that sets all workflows of the owner of the \"subworkflow - set all workflows of owner to draft\" workflow to live (Deployed)\n\nWhen workflow is started it takes the owner of this workflow, searches for all workflows of that owner and deploys them to live.\n\nThis workflow does not need input parameters",
   "ownerType": "USER",
   "isPrivate": true,
