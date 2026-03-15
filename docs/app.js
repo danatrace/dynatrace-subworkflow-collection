@@ -34,7 +34,6 @@ const state = {
   all: [],
   activeSection: "tested",
   search: "",
-  folder: "all",
   page: 1,
   selectedPaths: new Set(),
 };
@@ -45,7 +44,6 @@ const countUntested = document.getElementById("count-untested");
 const resultCount = document.getElementById("result-count");
 const pageInfo = document.getElementById("page-info");
 const catalog = document.getElementById("catalog");
-const folderFilter = document.getElementById("folder-filter");
 const searchInput = document.getElementById("search-input");
 const prevPageButton = document.getElementById("prev-page");
 const nextPageButton = document.getElementById("next-page");
@@ -206,10 +204,6 @@ function filterWorkflows() {
 
   return state.all.filter((item) => {
     if (item.section !== state.activeSection) {
-      return false;
-    }
-
-    if (state.folder !== "all" && item.folder !== state.folder) {
       return false;
     }
 
@@ -425,33 +419,6 @@ function drawCards(items) {
   updateSelectionUi();
 }
 
-function updateFolderFilter() {
-  const folders = [...new Set(state.all.filter((item) => item.section === state.activeSection).map((item) => item.folder))].sort();
-  const previous = state.folder;
-
-  folderFilter.innerHTML = "";
-
-  const allOption = document.createElement("option");
-  allOption.value = "all";
-  allOption.textContent = "All folders";
-  folderFilter.appendChild(allOption);
-
-  for (const folder of folders) {
-    const option = document.createElement("option");
-    option.value = folder;
-    option.textContent = folder;
-    folderFilter.appendChild(option);
-  }
-
-  if (folders.includes(previous)) {
-    state.folder = previous;
-  } else {
-    state.folder = "all";
-  }
-
-  folderFilter.value = state.folder;
-}
-
 function render() {
   const filtered = filterWorkflows();
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -493,7 +460,6 @@ function setupEvents() {
       tab.classList.toggle("active", active);
       tab.setAttribute("aria-selected", active ? "true" : "false");
     });
-    updateFolderFilter();
     render();
   }
 
@@ -532,12 +498,6 @@ function setupEvents() {
 
   searchInput.addEventListener("input", (event) => {
     state.search = event.target.value;
-    state.page = 1;
-    render();
-  });
-
-  folderFilter.addEventListener("change", (event) => {
-    state.folder = event.target.value;
     state.page = 1;
     render();
   });
@@ -596,7 +556,6 @@ async function init() {
     `${payload.counts?.tested ?? 0} Tested and ${payload.counts?.untested ?? 0} Untested. ` +
     "Click \"Download subworkflow\" on any card to save the JSON file.";
 
-  updateFolderFilter();
   setupEvents();
   render();
 }
