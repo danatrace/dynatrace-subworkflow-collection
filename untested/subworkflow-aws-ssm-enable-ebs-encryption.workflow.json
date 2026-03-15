@@ -7,36 +7,84 @@
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"snapshotId": "snap-0123456789abcdef0", "kmsKeyId": "", "availabilityZone": "us-east-1a", "encrypted": "true", "volumeType": "gp3", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "input": {
+    "snapshotId": "snap-0123456789abcdef0",
+    "kmsKeyId": "",
+    "availabilityZone": "us-east-1a",
+    "encrypted": "true",
+    "volumeType": "gp3",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🔐 **Subworkflow to Enable EBS Encryption**\\n\\n✅ This subworkflow **enables encryption on EBS volumes** via **AWS-EnableEBSEncryption** SSM automation.\\n\\nUseful for compliance requirements, data protection, and securing storage across infrastructure without downtime.\\n\\n---\\n\\n### ⚙️ **Parameters**\\n\\n- **snapshotId** (Required): 🆔 Source EBS snapshot ID to create encrypted volume from.  \\n- **kmsKeyId** (Optional): 🔑 KMS key ID for encryption (uses default AWS key if not specified).  \\n- **availabilityZone** (Required): 🌍 Availability zone for the encrypted volume.  \\n- **encrypted** (Optional): 🔐 Enable encryption (true/false, default: true).  \\n- **volumeType** (Optional): 📦 EBS volume type (gp2, gp3, io1, io2, st1, sc1).  \\n- **awsregion** (Required): 🌍 The AWS region.  \\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\\n\\n---\\n\\n### 📘 **AWS SSM Document**\\n\\n**Document Name**: `AWS-EnableEBSEncryption`\\n\\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-enable-encryption.html\\n\\n**What this runbook does:**\\n- Creates encrypted volume from unencrypted snapshot\\n- Supports custom KMS keys for encryption\\n- Maintains data integrity during encryption\\n- Works with all EBS volume types\\n- Enables compliance with encryption policies\\n- Supports AWS KMS customer-managed keys\\n\\n---\\n\\n### 🔄 **Workflow Logic**\\n\\n1. **Start Automation**: Triggers AWS-EnableEBSEncryption SSM document with snapshot and encryption settings\\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\\n3. **Check Status**: Validates the encryption setup succeeded via JavaScript verification\\n\\n---\\n\\n### 💡 **Use Cases**\\n\\n- 🔐 **Compliance**: Meet encryption requirements (HIPAA, PCI-DSS, etc)\\n- 🛡️ **Security**: Encrypt unencrypted volumes\\n- 🔑 **KMS Key Management**: Use organization-specific KMS keys\\n- 📊 **Data Protection**: Encrypt production data at rest\\n- 🔄 **Volume Replication**: Encrypt volumes during migration\\n- 📈 **Performance**: Optimize with encrypted high-IOPS volumes (io2)\\n\\n---",
+  "guide": "## 🔐 **Subworkflow to Enable EBS Encryption**\n\n✅ This subworkflow **enables encryption on EBS volumes** via **AWS-EnableEBSEncryption** SSM automation.\n\nUseful for compliance requirements, data protection, and securing storage across infrastructure without downtime.\n\n---\n\n### ⚙️ **Parameters**\n\n- **snapshotId** (Required): 🆔 Source EBS snapshot ID to create encrypted volume from.  \n- **kmsKeyId** (Optional): 🔑 KMS key ID for encryption (uses default AWS key if not specified).  \n- **availabilityZone** (Required): 🌍 Availability zone for the encrypted volume.  \n- **encrypted** (Optional): 🔐 Enable encryption (true/false, default: true).  \n- **volumeType** (Optional): 📦 EBS volume type (gp2, gp3, io1, io2, st1, sc1).  \n- **awsregion** (Required): 🌍 The AWS region.  \n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 📘 **AWS SSM Document**\n\n**Document Name**: `AWS-EnableEBSEncryption`\n\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-enable-encryption.html\n\n**What this runbook does:**\n- Creates encrypted volume from unencrypted snapshot\n- Supports custom KMS keys for encryption\n- Maintains data integrity during encryption\n- Works with all EBS volume types\n- Enables compliance with encryption policies\n- Supports AWS KMS customer-managed keys\n\n---\n\n### 🔄 **Workflow Logic**\n\n1. **Start Automation**: Triggers AWS-EnableEBSEncryption SSM document with snapshot and encryption settings\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\n3. **Check Status**: Validates the encryption setup succeeded via JavaScript verification\n\n---\n\n### 💡 **Use Cases**\n\n- 🔐 **Compliance**: Meet encryption requirements (HIPAA, PCI-DSS, etc)\n- 🛡️ **Security**: Encrypt unencrypted volumes\n- 🔑 **KMS Key Management**: Use organization-specific KMS keys\n- 📊 **Data Protection**: Encrypt production data at rest\n- 🔄 **Volume Replication**: Encrypt volumes during migration\n- 📈 **Performance**: Optimize with encrypted high-IOPS volumes (io2)\n\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"EBS encryption failed!\");\n  return r;\n}"},
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"EBS encryption failed!\");\n  return r;\n}"
+      },
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
-      "position": {"x": 0, "y": 3},
-      "conditions": {"states": {"wait-for-completion": "OK"}},
-      "predecessors": ["wait-for-completion"]
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-completion": "OK"
+        }
+      },
+      "predecessors": [
+        "wait-for-completion"
+      ]
     },
     "wait-for-completion": {
       "name": "wait-for-completion",
-      "input": {"workflowId": "20661ec0-29d5-471f-9973-29679d5fe908", "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"},
-      "retry": {"count": 99, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.automations:run-workflow",
       "timeout": 604800,
-      "position": {"x": 0, "y": 2},
-      "conditions": {"states": {"start-automation": "OK"}},
-      "predecessors": ["start-automation"]
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "start-automation": "OK"
+        }
+      },
+      "predecessors": [
+        "start-automation"
+      ]
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"SnapshotId\": [\"{{ input()[\"snapshotId\"] }}\"],\n  \"AvailabilityZone\": [\"{{ input()[\"availabilityZone\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-EnableEBSEncryption"},
-      "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"SnapshotId\": [\"{{ input()[\"snapshotId\"] }}\"],\n  \"AvailabilityZone\": [\"{{ input()[\"availabilityZone\"] }}\"]\n}",
+        "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}",
+        "DocumentName": "AWS-EnableEBSEncryption"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,
-      "position": {"x": 0, "y": 1},
+      "position": {
+        "x": 0,
+        "y": 1
+      },
       "predecessors": []
     }
   }

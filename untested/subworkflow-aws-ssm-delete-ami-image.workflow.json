@@ -7,36 +7,82 @@
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"imageId": "ami-0123456789abcdef0", "imageIds": "", "snapshotIds": "", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "input": {
+    "imageId": "ami-0123456789abcdef0",
+    "imageIds": "",
+    "snapshotIds": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🗑️ **Subworkflow to Delete AMI Image**\\n\\n⚠️ This subworkflow **deletes AMI images and associated snapshots** via **AWS-DeleteImage** SSM automation.\\n\\n**WARNING: This action removes AMI images from your account. Ensure they are no longer needed before deletion.**\\n\\nUseful for cleaning up old AMI versions, managing image inventory, and reducing storage costs.\\n\\n---\\n\\n### ⚙️ **Parameters**\\n\\n- **imageId** (Required): 🆔 Primary AMI ID to delete.  \\n- **imageIds** (Optional): 🆔 Additional AMI IDs (comma-separated).  \\n- **snapshotIds** (Optional): 📸 Associated snapshot IDs to delete (comma-separated).  \\n- **awsregion** (Required): 🌍 The AWS region.  \\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\\n\\n---\\n\\n### 📘 **AWS SSM Document**\\n\\n**Document Name**: `AWS-DeleteImage`\\n\\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-deleteimage.html\\n\\n**What this runbook does:**\\n- Deregisters AMI images from your account\\n- Deletes associated EBS snapshots\\n- Removes both public and private AMIs\\n- Prevents accidental reuse of old images\\n- Frees up storage space and reduces costs\\n- Cleans up image inventory\\n\\n---\\n\\n### 🔄 **Workflow Logic**\\n\\n1. **Start Automation**: Triggers AWS-DeleteImage SSM document with image IDs and snapshot IDs\\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\\n3. **Check Status**: Validates the image deletion succeeded via JavaScript verification\\n\\n---\\n\\n### 💡 **Use Cases**\\n\\n- 🧹 **Cleanup**: Remove outdated AMI versions\\n- 📊 **Inventory Management**: Clean up unused images\\n- 💰 **Cost Reduction**: Remove associated EBS snapshots to reduce storage costs\\n- 🔒 **Security**: Delete images no longer needed for security compliance\\n- 🔄 **Image Rotation**: Manage AMI lifecycle and retention\\n- 📈 **Space Management**: Reclaim storage from old images\\n\\n---",
+  "guide": "## 🗑️ **Subworkflow to Delete AMI Image**\n\n⚠️ This subworkflow **deletes AMI images and associated snapshots** via **AWS-DeleteImage** SSM automation.\n\n**WARNING: This action removes AMI images from your account. Ensure they are no longer needed before deletion.**\n\nUseful for cleaning up old AMI versions, managing image inventory, and reducing storage costs.\n\n---\n\n### ⚙️ **Parameters**\n\n- **imageId** (Required): 🆔 Primary AMI ID to delete.  \n- **imageIds** (Optional): 🆔 Additional AMI IDs (comma-separated).  \n- **snapshotIds** (Optional): 📸 Associated snapshot IDs to delete (comma-separated).  \n- **awsregion** (Required): 🌍 The AWS region.  \n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 📘 **AWS SSM Document**\n\n**Document Name**: `AWS-DeleteImage`\n\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-deleteimage.html\n\n**What this runbook does:**\n- Deregisters AMI images from your account\n- Deletes associated EBS snapshots\n- Removes both public and private AMIs\n- Prevents accidental reuse of old images\n- Frees up storage space and reduces costs\n- Cleans up image inventory\n\n---\n\n### 🔄 **Workflow Logic**\n\n1. **Start Automation**: Triggers AWS-DeleteImage SSM document with image IDs and snapshot IDs\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\n3. **Check Status**: Validates the image deletion succeeded via JavaScript verification\n\n---\n\n### 💡 **Use Cases**\n\n- 🧹 **Cleanup**: Remove outdated AMI versions\n- 📊 **Inventory Management**: Clean up unused images\n- 💰 **Cost Reduction**: Remove associated EBS snapshots to reduce storage costs\n- 🔒 **Security**: Delete images no longer needed for security compliance\n- 🔄 **Image Rotation**: Manage AMI lifecycle and retention\n- 📈 **Space Management**: Reclaim storage from old images\n\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"AMI image deletion failed!\");\n  return r;\n}"},
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"AMI image deletion failed!\");\n  return r;\n}"
+      },
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
-      "position": {"x": 0, "y": 3},
-      "conditions": {"states": {"wait-for-completion": "OK"}},
-      "predecessors": ["wait-for-completion"]
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-completion": "OK"
+        }
+      },
+      "predecessors": [
+        "wait-for-completion"
+      ]
     },
     "wait-for-completion": {
       "name": "wait-for-completion",
-      "input": {"workflowId": "20661ec0-29d5-471f-9973-29679d5fe908", "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"},
-      "retry": {"count": 99, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.automations:run-workflow",
       "timeout": 604800,
-      "position": {"x": 0, "y": 2},
-      "conditions": {"states": {"start-automation": "OK"}},
-      "predecessors": ["start-automation"]
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "start-automation": "OK"
+        }
+      },
+      "predecessors": [
+        "start-automation"
+      ]
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"ImageId\": [\"{{ input()[\"imageId\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-DeleteImage"},
-      "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"ImageId\": [\"{{ input()[\"imageId\"] }}\"]\n}",
+        "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}",
+        "DocumentName": "AWS-DeleteImage"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,
-      "position": {"x": 0, "y": 1},
+      "position": {
+        "x": 0,
+        "y": 1
+      },
       "predecessors": []
     }
   }

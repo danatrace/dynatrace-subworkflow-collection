@@ -7,36 +7,85 @@
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"sourceImageId": "ami-12345678", "sourceRegion": "us-east-1", "targetRegion": "us-west-2", "imageName": "", "imageDescription": "", "encrypted": "false", "kmsKeyId": "", "dynatraceawsconnection": "awsplayground"},
+  "input": {
+    "sourceImageId": "ami-12345678",
+    "sourceRegion": "us-east-1",
+    "targetRegion": "us-west-2",
+    "imageName": "",
+    "imageDescription": "",
+    "encrypted": "false",
+    "kmsKeyId": "",
+    "dynatraceawsconnection": "awsplayground"
+  },
   "hourlyExecutionLimit": 1000,
   "guide": "## 📋 **Subworkflow to Copy AMI Image**\n\n🔀 This subworkflow **copies or encrypts an AMI across AWS regions** via **AWS-CopyImage** SSM automation.\n\nUseful for DR, multi-region deployments, and encrypting unencrypted images.\n\n---\n\n### ⚙️ **Parameters**\n\n- **sourceImageId** (Required): 🆔 Source AMI ID to copy.  \n- **sourceRegion** (Required): 🌍 Source AWS region.  \n- **targetRegion** (Required): 🌍 Target AWS region.  \n- **imageName** (Optional): 📝 Name for copied AMI.  \n- **imageDescription** (Optional): 📋 Description.  \n- **encrypted** (Optional): 🔐 Encrypt the copied AMI (true/false).  \n- **kmsKeyId** (Optional): 🔑 KMS key ID for encryption.  \n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection.\n\n---\n\n### 📘 **AWS SSM Document**\n\n**Document Name**: `AWS-CopyImage`\n\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-copyimage.html\n\n**What this runbook does:**\n- Copies an AMI to a different region\n- Optionally encrypts the copied AMI\n- Copies all snapshots associated with the AMI\n- Enables multi-region deployment\n\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Copy failed!\");\n  return r;\n}"},
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Copy failed!\");\n  return r;\n}"
+      },
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
-      "position": {"x": 0, "y": 3},
-      "conditions": {"states": {"wait-for-completion": "OK"}},
-      "predecessors": ["wait-for-completion"]
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-completion": "OK"
+        }
+      },
+      "predecessors": [
+        "wait-for-completion"
+      ]
     },
     "wait-for-completion": {
       "name": "wait-for-completion",
-      "input": {"workflowId": "20661ec0-29d5-471f-9973-29679d5fe908", "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"targetRegion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"},
-      "retry": {"count": 99, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"targetRegion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.automations:run-workflow",
       "timeout": 604800,
-      "position": {"x": 0, "y": 2},
-      "conditions": {"states": {"start-automation": "OK"}},
-      "predecessors": ["start-automation"]
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "start-automation": "OK"
+        }
+      },
+      "predecessors": [
+        "start-automation"
+      ]
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"sourceRegion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"SourceImageId\": [\"{{ input()[\"sourceImageId\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-CopyImage"},
-      "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "region": "{{ input()[\"sourceRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"SourceImageId\": [\"{{ input()[\"sourceImageId\"] }}\"]\n}",
+        "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}",
+        "DocumentName": "AWS-CopyImage"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,
-      "position": {"x": 0, "y": 1},
+      "position": {
+        "x": 0,
+        "y": 1
+      },
       "predecessors": []
     }
   }

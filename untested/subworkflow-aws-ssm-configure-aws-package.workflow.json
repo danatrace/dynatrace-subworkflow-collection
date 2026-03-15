@@ -7,36 +7,85 @@
   "trigger": {},
   "result": "{{ result(\"check-status\") }}",
   "type": "STANDARD",
-  "input": {"instanceId": "i-0123456789abcdef0", "action": "Install", "name": "AWS-ConfigureAWSPackage", "version": "", "sourceInfo": "", "additionalArguments": "", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "input": {
+    "instanceId": "i-0123456789abcdef0",
+    "action": "Install",
+    "name": "AWS-ConfigureAWSPackage",
+    "version": "",
+    "sourceInfo": "",
+    "additionalArguments": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
   "hourlyExecutionLimit": 1000,
-  "guide": "## 📦 **Subworkflow to Configure AWS Package**\\n\\n✅ This subworkflow **installs and configures AWS packages on EC2 instances** via **AWS-ConfigureAWSPackage** SSM automation.\\n\\nUseful for deploying agents, utilities, and AWS tools across infrastructure, managing package versions, and keeping instances up-to-date.\\n\\n---\\n\\n### ⚙️ **Parameters**\\n\\n- **instanceId** (Required): 🆔 EC2 instance ID for package installation.  \\n- **action** (Required): 🔄 Action type - Install, Update, or Uninstall.  \\n- **name** (Required): 📋 Document name or package identifier.  \\n- **version** (Optional): 📌 Package version (latest if not specified).  \\n- **sourceInfo** (Optional): 🔗 Source information for the package.  \\n- **additionalArguments** (Optional): ⚙️ Additional configuration arguments.  \\n- **awsregion** (Required): 🌍 The AWS region.  \\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\\n\\n---\\n\\n### 📘 **AWS SSM Document**\\n\\n**Document Name**: `AWS-ConfigureAWSPackage`\\n\\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-configureawspackage.html\\n\\n**What this runbook does:**\\n- Installs, updates, or uninstalls AWS packages\\n- Supports CloudWatch agent, EC2 agent, and other AWS tools\\n- Manages package versions and dependencies\\n- Works with both Windows and Linux instances\\n- Enables centralized agent management\\n- Supports custom package sources\\n\\n---\\n\\n### 🔄 **Workflow Logic**\\n\\n1. **Start Automation**: Triggers AWS-ConfigureAWSPackage SSM document with instance ID and action\\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\\n3. **Check Status**: Validates the package configuration succeeded via JavaScript verification\\n\\n---\\n\\n### 💡 **Use Cases**\\n\\n- 🔍 **CloudWatch Agent**: Deploy monitoring across instances\\n- 🛠️ **Tools Installation**: Deploy AWS CLI, Systems Manager agent\\n- 📊 **Version Management**: Keep packages at specific versions\\n- 🔄 **Fleet Updates**: Update packages across many instances\\n- 🔧 **Configuration Management**: Apply package-specific settings\\n- 🛡️ **Security Updates**: Update security-related packages\\n\\n---",
+  "guide": "## 📦 **Subworkflow to Configure AWS Package**\n\n✅ This subworkflow **installs and configures AWS packages on EC2 instances** via **AWS-ConfigureAWSPackage** SSM automation.\n\nUseful for deploying agents, utilities, and AWS tools across infrastructure, managing package versions, and keeping instances up-to-date.\n\n---\n\n### ⚙️ **Parameters**\n\n- **instanceId** (Required): 🆔 EC2 instance ID for package installation.  \n- **action** (Required): 🔄 Action type - Install, Update, or Uninstall.  \n- **name** (Required): 📋 Document name or package identifier.  \n- **version** (Optional): 📌 Package version (latest if not specified).  \n- **sourceInfo** (Optional): 🔗 Source information for the package.  \n- **additionalArguments** (Optional): ⚙️ Additional configuration arguments.  \n- **awsregion** (Required): 🌍 The AWS region.  \n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 📘 **AWS SSM Document**\n\n**Document Name**: `AWS-ConfigureAWSPackage`\n\n🔗 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-configureawspackage.html\n\n**What this runbook does:**\n- Installs, updates, or uninstalls AWS packages\n- Supports CloudWatch agent, EC2 agent, and other AWS tools\n- Manages package versions and dependencies\n- Works with both Windows and Linux instances\n- Enables centralized agent management\n- Supports custom package sources\n\n---\n\n### 🔄 **Workflow Logic**\n\n1. **Start Automation**: Triggers AWS-ConfigureAWSPackage SSM document with instance ID and action\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\n3. **Check Status**: Validates the package configuration succeeded via JavaScript verification\n\n---\n\n### 💡 **Use Cases**\n\n- 🔍 **CloudWatch Agent**: Deploy monitoring across instances\n- 🛠️ **Tools Installation**: Deploy AWS CLI, Systems Manager agent\n- 📊 **Version Management**: Keep packages at specific versions\n- 🔄 **Fleet Updates**: Update packages across many instances\n- 🔧 **Configuration Management**: Apply package-specific settings\n- 🛡️ **Security Updates**: Update security-related packages\n\n---",
   "tasks": {
     "check-status": {
       "name": "check-status",
-      "input": {"script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Package configuration failed!\");\n  return r;\n}"},
+      "input": {
+        "script": "export default async function ({ execution_id }) {\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\n  if (r.AutomationExecutionStatus !== \"Success\") throw new Error(\"Package configuration failed!\");\n  return r;\n}"
+      },
       "action": "dynatrace.automations:run-javascript",
       "timeout": 30,
-      "position": {"x": 0, "y": 3},
-      "conditions": {"states": {"wait-for-completion": "OK"}},
-      "predecessors": ["wait-for-completion"]
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-completion": "OK"
+        }
+      },
+      "predecessors": [
+        "wait-for-completion"
+      ]
     },
     "wait-for-completion": {
       "name": "wait-for-completion",
-      "input": {"workflowId": "20661ec0-29d5-471f-9973-29679d5fe908", "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"},
-      "retry": {"count": 99, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.automations:run-workflow",
       "timeout": 604800,
-      "position": {"x": 0, "y": 2},
-      "conditions": {"states": {"start-automation": "OK"}},
-      "predecessors": ["start-automation"]
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "start-automation": "OK"
+        }
+      },
+      "predecessors": [
+        "start-automation"
+      ]
     },
     "start-automation": {
       "name": "start-automation",
-      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"],\n  \"Action\": [\"{{ input()[\"action\"] }}\"],\n  \"Name\": [\"{{ input()[\"name\"] }}\"]\n}", "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}", "DocumentName": "AWS-ConfigureAWSPackage"},
-      "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"],\n  \"Action\": [\"{{ input()[\"action\"] }}\"],\n  \"Name\": [\"{{ input()[\"name\"] }}\"]\n}",
+        "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', aws) }}",
+        "DocumentName": "AWS-ConfigureAWSPackage"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
       "action": "dynatrace.aws.connector:ssm-start-automation-execution",
       "timeout": 604800,
-      "position": {"x": 0, "y": 1},
+      "position": {
+        "x": 0,
+        "y": 1
+      },
       "predecessors": []
     }
   }
