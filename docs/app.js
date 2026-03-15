@@ -1,6 +1,15 @@
 const PAGE_SIZE = 36;
 
 const DOWNLOAD_COUNTS_KEY = "coe_download_counts";
+const UNTESTED_UNLOCKED_KEY = "coe_untested_unlocked";
+
+function isUntestedUnlocked() {
+  return sessionStorage.getItem(UNTESTED_UNLOCKED_KEY) === "1";
+}
+
+function setUntestedUnlocked() {
+  sessionStorage.setItem(UNTESTED_UNLOCKED_KEY, "1");
+}
 
 function getDownloadCounts() {
   try {
@@ -431,6 +440,38 @@ function render() {
 }
 
 function setupEvents() {
+  // Password modal gate
+  const passwordModal = document.getElementById("password-modal");
+  const passwordInput = document.getElementById("password-input");
+  const passwordError = document.getElementById("password-error");
+  const passwordSubmit = document.getElementById("password-submit");
+
+  function activateSection(section) {
+    state.activeSection = section;
+    state.page = 1;
+    tabButtons.forEach((tab) => {
+      const active = tab.dataset.section === section;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    updateFolderFilter();
+    render();
+  }
+
+  passwordSubmit.addEventListener("click", () => {
+    if (passwordInput.value === "Dynatrace123!") {
+      setUntestedUnlocked();
+      passwordModal.hidden = true;
+      passwordInput.value = "";
+      passwordError.style.display = "none";
+      activateSection("untested");
+    } else {
+      passwordError.style.display = "";
+      passwordInput.value = "";
+      passwordInput.focus();
+    }
+  });
+
   tabButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const section = button.dataset.section;
@@ -438,17 +479,15 @@ function setupEvents() {
         return;
       }
 
-      state.activeSection = section;
-      state.page = 1;
+      if (section === "untested" && !isUntestedUnlocked()) {
+        passwordModal.hidden = false;
+        passwordInput.value = "";
+        passwordError.style.display = "none";
+        passwordInput.focus();
+        return;
+      }
 
-      tabButtons.forEach((tab) => {
-        const active = tab.dataset.section === section;
-        tab.classList.toggle("active", active);
-        tab.setAttribute("aria-selected", active ? "true" : "false");
-      });
-
-      updateFolderFilter();
-      render();
+      activateSection(section);
     });
   });
 

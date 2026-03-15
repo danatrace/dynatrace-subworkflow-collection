@@ -88,6 +88,24 @@
       </div>
     </div>
 
+    <!-- Password gate modal for Untested tab -->
+    <div id="password-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="password-modal-title" hidden>
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header">
+          <h2 id="password-modal-title" class="modal-title">🔒 Untested Subworkflows</h2>
+        </div>
+        <div class="modal-body">
+          <p style="margin:0 0 1rem;color:var(--ink-soft)">These subworkflows have not been fully validated. Enter the password to access them.</p>
+          <label style="display:grid;gap:0.3rem;margin-bottom:0.75rem">
+            Password
+            <input id="password-input" type="password" placeholder="Enter password" autocomplete="current-password" />
+          </label>
+          <p id="password-error" style="color:var(--danger);margin:0 0 0.75rem;display:none">Incorrect password. Please try again.</p>
+          <button id="password-submit" class="button button-primary" type="button" style="width:100%">Unlock</button>
+        </div>
+      </div>
+    </div>
+
     <div id="terraform-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="terraform-title" hidden>
       <div class="modal">
         <div class="modal-header">
@@ -125,6 +143,11 @@
       });
       document.getElementById('terraform-close').addEventListener('click', () => {
         document.getElementById('terraform-modal').hidden = true;
+      });
+
+      // Password modal — submit on Enter key
+      document.getElementById('password-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('password-submit').click();
       });
     </script>
   </body>
