@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-15T09:07:53.511837+00:00",
+  "generatedAt": "2026-03-15T09:08:16.774030+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
@@ -402,7 +402,7 @@
       "tags": []
     },
     {
-      "title": "\ud83e\udde9subworkflow - open ai Text and Prompting",
+      "title": "\ud83e\udde9subworkflow - openai Text and Prompting",
       "path": "subworkflow-open-ai-text-and-prompting.workflow.json",
       "section": "tested",
       "folder": "top-level",
