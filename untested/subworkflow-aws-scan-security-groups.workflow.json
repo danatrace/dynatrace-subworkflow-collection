@@ -14,7 +14,7 @@
     "focusOnPorts": "22,3389,1433,5432,3306"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🔍 **Subworkflow to Scan Security Groups for Open Ports**\n\n🛡️ This subworkflow scans EC2 security groups and identifies overly permissive rules that expose sensitive ports to public internet (0.0.0.0/0).\n\nAutomates security risk detection and enables remediation workflows.\n\n---\n\n### ⚙️ **Parameters**\n\n- **awsRegion** (Required): 🌍 AWS region to scan\n- **vpcId** (Optional): 🔍 VPC ID to filter results\n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection\n- **focusOnPorts** (Optional): 🔌 Specific ports to analyze  \n  *(Example: `22,3389,1433,5432`)*\n\n---\n\n### ⚠️ **High-Risk Port Detection**\n\n| Port | Protocol | Service | Risk |\n|------|----------|---------|------|\n| 22 | TCP | SSH | **CRITICAL** |\n| 3389 | TCP | RDP | **CRITICAL** |\n| 1433 | TCP | SQL Server | **HIGH** |\n| 5432 | TCP | PostgreSQL | **HIGH** |\n| 3306 | TCP | MySQL | **HIGH** |\n| 1521 | TCP | Oracle | **HIGH** |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Security scanning workflows\n- ✅ Compliance auditing\n- ✅ Risk detection\n- ✅ Automated remediation triggers\n\n---",
+  "guide": "## 🔍 **Subworkflow to Scan Security Groups for Open Ports**\n\n🛡️ This subworkflow scans EC2 security groups and identifies overly permissive rules that expose sensitive ports to public internet (0.0.0.0/0).\n\nAutomates security risk detection and enables remediation workflows.\n\n---\n\n### ⚙️ **Parameters**\n\n- **awsRegion** (Required): 🌍 AWS region to scan\n- **vpcId** (Optional): 🔍 VPC ID to filter results\n- **dynatraceawsconnection** (Required): 🔑 AWS OIDC connection\n- **focusOnPorts** (Optional): 🔌 Specific ports to analyze\n  *(Example: `22,3389,1433,5432`)*\n\n---\n\n### ⚠️ **High-Risk Port Detection**\n\n| Port | Protocol | Service | Risk |\n|------|----------|---------|------|\n| 22 | TCP | SSH | CRITICAL |\n| 3389 | TCP | RDP | CRITICAL |\n| 1433 | TCP | SQL Server | HIGH |\n| 5432 | TCP | PostgreSQL | HIGH |\n| 3306 | TCP | MySQL | HIGH |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Security scanning workflows\n- ✅ Compliance auditing\n- ✅ Risk detection\n- ✅ Automated remediation triggers\n\n---",
   "tasks": {
     "analyze-security-groups": {
       "name": "analyze-security-groups",
@@ -28,5 +28,35 @@
         "y": 2
       },
       "conditions": {
-        "states": {\n          "describe-security-groups": "OK"\n        }\n      },
-      "description": "Analyze security group rules for public access",\n      "predecessors": [\n        "describe-security-groups"\n      ]\n    },\n    "describe-security-groups": {\n      "name": "describe-security-groups",\n      "input": {\n        "region": "{{ input()[\"awsRegion\"] }}",\n        "schema": "builtin:hyperscaler-authentication.connections.aws",\n        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"\n      },\n      "retry": {\n        "count": 3,\n        "delay": 10,\n        "failedLoopIterationsOnly": true\n      },\n      "action": "dynatrace.aws.connector:ec2-describe-security-groups",\n      "timeout": 60,\n      "position": {\n        "x": 0,\n        "y": 1\n      },\n      "description": "Query EC2 security groups",\n      "predecessors": []\n    }\n  }\n}
+        "states": {
+          "describe-security-groups": "OK"
+        }
+      },
+      "description": "Analyze security group rules for public access",
+      "predecessors": [
+        "describe-security-groups"
+      ]
+    },
+    "describe-security-groups": {
+      "name": "describe-security-groups",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-describe-security-groups",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Query EC2 security groups",
+      "predecessors": []
+    }
+  }
+}
