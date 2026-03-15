@@ -1,0 +1,43 @@
+{
+  "title": "subworkflow - aws create cloudformation stack",
+  "description": "Subworkflow to create a CloudFormation stack using AWS Systems Manager\n\nParameters:\n\nstackName: (Required) Name for the new stack\ntemplateUrl: (Required) S3 URL or template body\nparameters: (Optional) JSON parameters for the template\ntimeoutInMinutes: (Optional) Stack creation timeout\ncapabilities: (Optional) CAPABILITY_IAM or CAPABILITY_NAMED_IAM\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) AWS OIDC connection\n\nWaits for stack creation to complete",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {"stackName": "my-stack", "templateUrl": "https://s3.amazonaws.com/bucket/template.json", "parameters": "{}", "timeoutInMinutes": "30", "capabilities": "CAPABILITY_IAM", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📦 **Create CloudFormation Stack**\n\nCreates CloudFormation stack via SSM.",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {"script": "import { execution } from '@dynatrace-sdk/automation-utils';\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`);\n  const configBody = await configGet.json();\n  if (configBody.AutomationExecutionStatus !== \"Success\") throw new Error(\"Stack creation failed!\");\n  return configBody;\n}"},
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {"x": 0, "y": 3},
+      "conditions": {"states": {"wait-for-completion": "OK"}},
+      "predecessors": ["wait-for-completion"]
+    },
+    "wait-for-completion": {
+      "name": "wait-for-completion",
+      "input": {"workflowId": "20661ec0-29d5-471f-9973-29679d5fe908", "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"},
+      "retry": {"count": 99, "delay": 60, "failedLoopIterationsOnly": true},
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {"x": 0, "y": 2},
+      "conditions": {"states": {"start-automation": "OK"}},
+      "predecessors": ["start-automation"]
+    },
+    "start-automation": {
+      "name": "start-automation",
+      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"StackName\": [\"{{ input()[\"stackName\"] }}\"]\n}", "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}", "DocumentName": "AWS-CreateStack"},
+      "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {"x": 0, "y": 1},
+      "predecessors": []
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "title": "subworkflow - aws run ec2 instances",
+  "description": "Subworkflow to launch new EC2 instances using AWS Systems Manager\n\nParameters:\n\namiId: (Required) AMI ID to use\ninstanceType: (Required) Instance type (t2.micro, t3.small, etc.)\nsubnetId: (Optional) VPC subnet ID\nsecurityGroupIds: (Optional) Security group IDs\ntagSpecifications: (Optional) Tags for the instances\ncount: (Optional) Number of instances to launch (default 1)\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) AWS OIDC connection\n\nWaits for instances to launch",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {"amiId": "ami-12345678", "instanceType": "t3.micro", "subnetId": "", "securityGroupIds": "[]", "tagSpecifications": "{}", "count": "1", "awsregion": "us-east-1", "dynatraceawsconnection": "awsplayground"},
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🚀 **Run EC2 Instances**\n\nLaunches new EC2 instances via SSM.",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {"script": "import { execution } from '@dynatrace-sdk/automation-utils';\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`);\n  const configBody = await configGet.json();\n  if (configBody.AutomationExecutionStatus !== \"Success\") throw new Error(\"Instance launch failed!\");\n  return configBody;\n}"},
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {"x": 0, "y": 3},
+      "conditions": {"states": {"wait-for-completion": "OK"}},
+      "predecessors": ["wait-for-completion"]
+    },
+    "wait-for-completion": {
+      "name": "wait-for-completion",
+      "input": {"workflowId": "20661ec0-29d5-471f-9973-29679d5fe908", "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"},
+      "retry": {"count": 99, "delay": 60, "failedLoopIterationsOnly": true},
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {"x": 0, "y": 2},
+      "conditions": {"states": {"start-automation": "OK"}},
+      "predecessors": ["start-automation"]
+    },
+    "start-automation": {
+      "name": "start-automation",
+      "input": {"region": "{{ input()[\"awsregion\"] }}", "schema": "builtin:hyperscaler-authentication.connections.aws", "Parameters": "{\n  \"ImageId\": [\"{{ input()[\"amiId\"] }}\"]\n}", "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}", "DocumentName": "AWS-RunInstances"},
+      "retry": {"count": 5, "delay": 60, "failedLoopIterationsOnly": true},
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {"x": 0, "y": 1},
+      "predecessors": []
+    }
+  }
+}
