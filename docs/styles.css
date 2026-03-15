@@ -490,8 +490,6 @@ select {
   gap: 0.5rem;
   flex-wrap: wrap;
   margin-top: auto;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--line);
 }
 
 .button {
