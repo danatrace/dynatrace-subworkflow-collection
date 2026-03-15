@@ -1,6 +1,6 @@
 {
   "id": "c15fcbc9-9f7d-4d7d-a273-ed62073d19b6",
-  "title": "🧩subworkflow - open ai Text and Prompting",
+  "title": "🧩subworkflow - openai Text and Prompting",
   "description": "This is a Subworkflow to Text and prompt open ai\n\nUse Case, write a Business Letter to a group of\nusers that where affected by problems detected\nthrough Dynatrace\n\nTo get this subworkflow running you will have to create a credential vault entry with the open-ai token\nand set it in the ask-open-ai task under authentication!\n\n\n\nParameters:\ninput: (Required) Prompt to send to open ai\nmodel: (Required) Ai model to be used for example (gpt-4.1)",
   "ownerType": "USER",
   "isPrivate": true,
