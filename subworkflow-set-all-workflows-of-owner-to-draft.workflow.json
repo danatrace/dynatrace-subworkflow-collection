@@ -1,6 +1,6 @@
 {
   "id": "5615f430-6a12-4a4e-85da-bad59967934e",
-  "title": "🧩subworkflow - set all workflows of owner to draft",
+  "title": "🧩subworkflow - dynatrace set all workflows of owner to draft",
   "description": "subworkflow that sets all workflows of the owner of the \"subworkflow - set all workflows of owner to draft\" workflow to draft\n\nWhen workflow is started it takes the owner of this workflow, searches for all workflows of that owner and turns them into drafts.\n\nThis workflow does not need input parameters",
   "ownerType": "USER",
   "isPrivate": true,
