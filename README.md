@@ -1,10 +1,8 @@
 # 🚀 Top-Level Subworkflow Catalog
 
-This README catalogs only subworkflow JSON files in the repository root level.
+This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 > ⚠️ **Disclaimer:** Usage is at your own risk. All workflow and subworkflow templates should be tested thoroughly according to workflow automation standards before applying them to production environments.
-
-Excluded from this list: all subworkflow files inside folders such as `need to be tested`, `azure`, `dynatrace internal`, `kubernetes`, `ebs`, `experimental`, `orchestration`, `bedrock`, and `github`.
 
 ## 📊 Inventory Summary
 
