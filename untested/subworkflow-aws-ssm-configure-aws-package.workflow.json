@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm configure aws package",
+  "title": "subworkflow - aws ssm configure aws package",
   "description": "Subworkflow to configure and install AWS packages on instances\\n\\nParameters:\\n\\ninstanceid: (Required) EC2 instance ID\\naaction: (Required) Install, Update or Uninstall\\nname: (Required) Document name for the package\\nversion: (Optional) Package version (latest by default)\\nsourceinfo: (Optional) Source information for the package\\nadditionalarguments: (Optional) Additional arguments for package configuration\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

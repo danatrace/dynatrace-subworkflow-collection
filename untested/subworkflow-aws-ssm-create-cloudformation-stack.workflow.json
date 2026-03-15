@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm create cloudformation stack",
+  "title": "subworkflow - aws ssm create cloudformation stack",
   "description": "Subworkflow to create new CloudFormation stacks\\n\\nParameters:\\n\\nstackname: (Required) Name for the new CloudFormation stack\\ntemplatebody: (Optional) Stack template as JSON string\\ntemplateurl: (Optional) S3 URL of CloudFormation template\\nparameters: (Optional) Stack parameters as JSON\\ncapabilities: (Optional) CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND\\ntimeoutinminutes: (Optional) Creation timeout in minutes\\nonFailure: (Optional) Failure behavior (DELETE, ROLLBACK, DO_NOTHING)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

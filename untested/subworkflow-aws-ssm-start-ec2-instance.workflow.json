@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws start ec2 instance",
+  "title": "subworkflow - aws start ec2 instance",
   "description": "Subworkflow to start a stopped EC2 instance\n\nParameters:\n\ninstanceId: (Required) The EC2 instance ID to start\nawsregion: (Required) The AWS region\nadditionalInstanceIds: (Optional) Additional instances to start\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm delete ami image",
+  "title": "subworkflow - aws ssm delete ami image",
   "description": "Subworkflow to delete AMI images and snapshots\\n\\nParameters:\\n\\nimageid: (Required) AMI ID to delete\\nimageids: (Optional) Additional AMI IDs (comma-separated)\\nsnapshotids: (Optional) Associated snapshot IDs to delete (comma-separated)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

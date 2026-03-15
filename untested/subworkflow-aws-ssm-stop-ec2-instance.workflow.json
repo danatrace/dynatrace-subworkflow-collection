@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws stop ec2 instance",
+  "title": "subworkflow - aws stop ec2 instance",
   "description": "Subworkflow to stop an EC2 instance using AWS Systems Manager Automation\n\nParameters:\n\ninstanceId: (Required) The EC2 instance ID to stop\nawsregion: (Required) The AWS region\nforce: (Optional) Force stop without graceful shutdown (true/false)\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm create ebs snapshot",
+  "title": "subworkflow - aws ssm create ebs snapshot",
   "description": "Subworkflow to create EBS volume snapshots\\n\\nParameters:\\n\\nvolumeId: (Required) EBS volume ID\\ndescription: (Optional) Snapshot description\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

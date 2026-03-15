@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws copy ami image",
+  "title": "subworkflow - aws copy ami image",
   "description": "Subworkflow to copy or encrypt an AMI across regions\n\nParameters:\n\nsourceImageId: (Required) Source AMI ID\nsourceRegion: (Required) Source region\ntargetRegion: (Required) Target region\nimageName: (Optional) Name for copied AMI\nimageDescription: (Optional) Description\nencrypted: (Optional) Encrypt the AMI (true/false)\nkmsKeyId: (Optional) KMS key for encryption\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

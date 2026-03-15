@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws create ami image",
+  "title": "subworkflow - aws create ami image",
   "description": "Subworkflow to create an AMI from an EC2 instance\n\nParameters:\n\ninstanceId: (Required) The instance ID to create AMI from\nimageName: (Required) Name for the AMI\nimageDescription: (Optional) Description for the AMI\nnoReboot: (Optional) Create AMI without rebooting instance\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

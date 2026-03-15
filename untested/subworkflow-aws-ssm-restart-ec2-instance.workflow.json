@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws restart ec2 instance",
+  "title": "subworkflow - aws restart ec2 instance",
   "description": "Subworkflow to restart an EC2 instance using AWS Systems Manager Automation\n\nThis subworkflow provides an easy way to restart an EC2 instance via the AWS-RestartEC2Instance SSM automation document.\nWaits until the restart has finished and checks if it was successful.\n\nParameters:\n\ninstanceId: (Required) The EC2 instance ID to restart\nawsregion: (Required) The AWS region where the instance resides\nadditionalInstanceIds: (Optional) Additional instance IDs to restart\nforceStop: (Optional) Force stop the instance before restarting (true/false)\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
   "ownerType": "USER",
   "isPrivate": false,

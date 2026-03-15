@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws run ec2 instances",
+  "title": "subworkflow - aws run ec2 instances",
   "description": "Subworkflow to launch new EC2 instances\n\nParameters:\n\nimageId: (Required) AMI ID to use\ninstanceType: (Required) Instance type (t2.micro, t3.small, etc)\nminCount: (Required) Minimum instances to launch\nmaxCount: (Required) Maximum instances to launch\nsubnetId: (Optional) VPC subnet ID\nsecurityGroupIds: (Optional) Security group IDs (JSON array)\nkeyName: (Optional) EC2 key pair name\nuserData: (Optional) User data script (base64 encoded)\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

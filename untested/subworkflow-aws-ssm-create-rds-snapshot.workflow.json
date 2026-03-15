@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm create rds snapshot",
+  "title": "subworkflow - aws ssm create rds snapshot",
   "description": "Subworkflow to create RDS database snapshots\\n\\nParameters:\\n\\ndbInstanceIdentifier: (Required) RDS DB instance identifier\\ndBSnapshotIdentifier: (Optional) Snapshot identifier for the backup\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

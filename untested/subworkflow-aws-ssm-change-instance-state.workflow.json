@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm change instance state",
+  "title": "subworkflow - aws ssm change instance state",
   "description": "Subworkflow to change EC2 instance state\\n\\nParameters:\\n\\ninstanceid: (Required) EC2 instance ID\\ndesiredstate: (Required) Target state (running, stopped, restarted, terminated)\\nadditionalinstanceids: (Optional) Additional instance IDs (comma-separated)\\nforcestop: (Optional) Force stop without graceful shutdown (true/false)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm enable ebs encryption",
+  "title": "subworkflow - aws ssm enable ebs encryption",
   "description": "Subworkflow to enable encryption on EBS volumes\\n\\nParameters:\\n\\nsnapshotid: (Required) EBS snapshot ID to encrypt\\nkmskeyid: (Optional) KMS key ID for encryption\\navailabilityzone: (Required) Target availability zone\\nencrypted: (Optional) Encryption enabled (true/false)\\nvolumetype: (Optional) EBS volume type (gp2, gp3, io1, io2, st1, sc1)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

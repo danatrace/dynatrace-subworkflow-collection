@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm update cloudformation stack",
+  "title": "subworkflow - aws ssm update cloudformation stack",
   "description": "Subworkflow to update existing CloudFormation stacks\\n\\nParameters:\\n\\nstackName: (Required) CloudFormation stack name or ARN\\ntemplatebody: (Optional) Stack template as JSON string\\ntemplateurl: (Optional) S3 URL of CloudFormation template\\nparameters: (Optional) Stack parameters as JSON\\ncapabilities: (Optional) CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND\\nuseprevioustemplate: (Optional) Use previous template (true/false)\\ntimeoutinminutes: (Optional) Timeout in minutes\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

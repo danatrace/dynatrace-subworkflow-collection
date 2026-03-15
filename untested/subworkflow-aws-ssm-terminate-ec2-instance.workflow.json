@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws terminate ec2 instance",
+  "title": "subworkflow - aws terminate ec2 instance",
   "description": "Subworkflow to terminate EC2 instances\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID to terminate\nadditionalInstanceIds: (Optional) Additional instance IDs\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

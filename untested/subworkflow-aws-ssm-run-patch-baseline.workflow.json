@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm run patch baseline",
+  "title": "subworkflow - aws ssm run patch baseline",
   "description": "Subworkflow to run patch baseline compliance on instances\\n\\nParameters:\\n\\ninstanceid: (Required) EC2 instance ID to patch\\nbaselineid: (Optional) Patch baseline ID to use\\nsnapshotid: (Optional) Snapshot ID for patch scan\\noperation: (Optional) Scan or Install (default: Scan)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,

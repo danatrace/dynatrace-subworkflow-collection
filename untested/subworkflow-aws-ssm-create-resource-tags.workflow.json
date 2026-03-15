@@ -1,5 +1,5 @@
 {
-  "title": "🧩subworkflow - aws ssm create resource tags",
+  "title": "subworkflow - aws ssm create resource tags",
   "description": "Subworkflow to add and manage tags on AWS resources\\n\\nParameters:\\n\\nresourceid: (Required) Resource ID to tag\\nresourcetype: (Required) Resource type (instance, volume, snapshot, etc)\\ntags: (Required) Tags as key-value pairs\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
   "ownerType": "USER",
   "isPrivate": false,
