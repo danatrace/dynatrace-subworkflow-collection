@@ -1,0 +1,39 @@
+{
+  "title": "subworkflow - dynatrace bulk entity selector query",
+  "description": "Subworkflow to query multiple entities using DQL entity selectors\n\nThis subworkflow performs flexible entity queries using Dynatrace entity selectors for bulk operations.\n\nParameters:\n\nentitySelector: (Required) DQL entity selector expression\nfieldsToReturn: (Optional) Comma-separated field names to return\nlimt: (Optional) Maximum entities to return - default 100\nsorting: (Optional) Sort field and direction (fieldname(asc/desc))\n\nReturns matching entities with specified fields",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"query-entities\") }}",
+  "type": "STANDARD",
+  "input": {
+    "entitySelector": "type(\\\"SERVICE\\\"),tag(\\\"environment\\\")",
+    "fieldsToReturn": "entityId,displayName,firstSeenTms,lastSeenTms",
+    "limit": "100",
+    "sorting": "displayName(asc)"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔍 **Subworkflow to Bulk Entity Selector Query**\n\n🎯 This subworkflow performs **flexible entity queries** using Dynatrace entity selector expressions for bulk operations.\n\nEnables discovering entities by type, tags, properties, and relationships.\n\n---\n\n### ⚙️ **Parameters**\n\n- **entitySelector** (Required): 🔍 DQL entity selector expression\n- **fieldsToReturn** (Optional): 📋 Comma-separated field list\n- **limit** (Optional): 📊 Max entities to return  \n  *(Default: `100`)*\n- **sorting** (Optional): 📈 Sort expression  \n  *(Format: `fieldname(asc/desc)`)*\n\n---\n\n### 🔍 **Entity Selector Examples**\n\n```\ntype(\\\"HOST\\\"),tag(\\\"environment\\\",\\\"production\\\")\ntype(\\\"SERVICE\\\"),tag(\\\"team\\\",\\\"platform\\\")\ntype(\\\"APPLICATION\\\"),entityName.startsWith(\\\"api-\\\")\n```\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Bulk tagging\n- ✅ Inventory queries\n- ✅ Report generation\n- ✅ Automated discovery\n\n---",
+  "tasks": {
+    "query-entities": {
+      "name": "query-entities",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { entitiesClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  try {\n    const response = await entitiesClient.listEntities({\n      entitySelector: input.entitySelector,\n      fields: input.fieldsToReturn ? input.fieldsToReturn.split(',').map(f => f.trim()) : undefined,\n      pageSize: parseInt(input.limit)\n    });\n    \n    // Apply sorting if specified\n    let entities = response.entities || [];\n    if (input.sorting) {\n      const [field, direction] = input.sorting.split('(');\n      const dir = direction.replace(')', '');\n      entities.sort((a, b) => {\n        const aVal = a[field];\n        const bVal = b[field];\n        if (aVal < bVal) return dir === 'asc' ? -1 : 1;\n        if (aVal > bVal) return dir === 'asc' ? 1 : -1;\n        return 0;\n      });\n    }\n    \n    console.log(`Found ${entities.length} entities matching selector`);\n    \n    return {\n      entityCount: entities.length,\n      selector: input.entitySelector,\n      entities: entities.slice(0, parseInt(input.limit)),\n      hasMore: entities.length > parseInt(input.limit)\n    };\n  } catch (error) {\n    console.error('Error querying entities:', error);\n    throw new Error(`Failed to query entities: ${error}`);\n  }\n}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Query entities using selector expression",
+      "predecessors": []
+    }
+  }
+}

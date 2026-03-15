@@ -1,0 +1,39 @@
+{
+  "title": "subworkflow - dynatrace get metrics for entity",
+  "description": "Subworkflow to retrieve timeseries metrics for a Dynatrace entity\n\nThis subworkflow retrieves metrics data for a specific entity with customizable time range and metric selectors.\n\nParameters:\n\nentityId: (Required) The Dynatrace entity ID (e.g., HOST-123, APPLICATION-456)\nmetricSelector: (Required) The metric selector string (e.g., 'builtin:host.cpu.user')\nresolution: (Optional) Data point resolution in seconds - default 300\ntimeFrameMinutes: (Optional) Look-back time in minutes - default 60\n\nReturns metric values with timestamps",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"query-metrics\") }}",
+  "type": "STANDARD",
+  "input": {
+    "entityId": "HOST-123",
+    "metricSelector": "builtin:host.cpu.user",
+    "resolution": "300",
+    "timeFrameMinutes": "60"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📈 **Subworkflow to Get Metrics for Entity**\n\n🔢 This subworkflow retrieves timeseries metric data for a specific Dynatrace entity with flexible **time range and metric selector options**.\n\nEnables building custom dashboards, SLA reports, and performance trend analysis without JavaScript knowledge.\n\n---\n\n### ⚙️ **Parameters**\n\n- **entityId** (Required): 🆔 The Dynatrace entity ID  \n  *(Example: `HOST-123`, `APPLICATION-456`, `SERVICE-789`)*\n- **metricSelector** (Required): 📊 Metric selector  \n  *(Example: `builtin:host.cpu.user`)*\n- **resolution** (Optional): ⏱️ Data point resolution in seconds  \n  *(Default: `300` = 5 minutes)*\n- **timeFrameMinutes** (Optional): 🕐 Look-back time in minutes  \n  *(Default: `60`)*\n\n---\n\n### 📊 **Common Metrics**\n\n- **Host**: `builtin:host.cpu.user`, `builtin:host.memory.usage`\n- **Application**: `builtin:app.requests`, `builtin:app.errors`\n- **Service**: `builtin:service.response.time`\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Performance trending\n- ✅ SLA compliance reports\n- ✅ Capacity planning\n- ✅ Anomaly detection\n\n---",
+  "tasks": {
+    "query-metrics": {
+      "name": "query-metrics",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nimport { metricsClient } from '@dynatrace-sdk/client-classic-environment-v2';\n\nexport default async function ({ executionId }) {\n  const { input } = await fetch(`/platform/automation/v1/executions/${executionId}`).then((res) => res.json());\n  \n  const timeFrameMs = parseInt(input.timeFrameMinutes) * 60 * 1000;\n  const now = Date.now();\n  const from = now - timeFrameMs;\n  const to = now;\n  \n  try {\n    const response = await metricsClient.queryMetricsData({\n      metricSelector: `${input.metricSelector}`,\n      from: from,\n      to: to,\n      resolution: `${input.resolution}s`,\n      entityFilter: `type(\\\"${input.entityId.split('-')[0]}\\\"),entityId(\\\"${input.entityId}\\\")`\n    });\n    \n    console.log(`Retrieved metrics for ${input.entityId}`);\n    \n    return {\n      entityId: input.entityId,\n      metricSelector: input.metricSelector,\n      timeFrameMinutes: input.timeFrameMinutes,\n      dataPoints: response.result[0]?.data || [],\n      nextPageKey: response.nextPageKey || null\n    };\n  } catch (error) {\n    console.error('Error querying metrics:', error);\n    throw new Error(`Failed to query metrics: ${error}`);\n  }\n}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Query metrics for an entity",
+      "predecessors": []
+    }
+  }
+}
