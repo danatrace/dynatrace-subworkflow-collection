@@ -209,7 +209,7 @@ function filterWorkflows() {
       return false;
     }
 
-    if (state.tag !== "all" && !(item.tags || []).includes(state.tag)) {
+    if (state.tag !== "all" && getCategoryFromTitle(item.title) !== state.tag) {
       return false;
     }
 
@@ -429,7 +429,8 @@ function updateTagFilter() {
   const tags = [...new Set(
     state.all
       .filter((item) => item.section === state.activeSection)
-      .flatMap((item) => item.tags || [])
+      .map((item) => getCategoryFromTitle(item.title))
+      .filter(Boolean)
   )].sort();
 
   const previous = state.tag;
