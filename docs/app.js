@@ -34,6 +34,7 @@ const state = {
   all: [],
   activeSection: "tested",
   search: "",
+  tag: "all",
   page: 1,
   selectedPaths: new Set(),
 };
@@ -44,6 +45,7 @@ const countUntested = document.getElementById("count-untested");
 const resultCount = document.getElementById("result-count");
 const pageInfo = document.getElementById("page-info");
 const catalog = document.getElementById("catalog");
+const tagFilter = document.getElementById("tag-filter");
 const searchInput = document.getElementById("search-input");
 const prevPageButton = document.getElementById("prev-page");
 const nextPageButton = document.getElementById("next-page");
@@ -204,6 +206,10 @@ function filterWorkflows() {
 
   return state.all.filter((item) => {
     if (item.section !== state.activeSection) {
+      return false;
+    }
+
+    if (state.tag !== "all" && !(item.tags || []).includes(state.tag)) {
       return false;
     }
 
@@ -419,6 +425,32 @@ function drawCards(items) {
   updateSelectionUi();
 }
 
+function updateTagFilter() {
+  const tags = [...new Set(
+    state.all
+      .filter((item) => item.section === state.activeSection)
+      .flatMap((item) => item.tags || [])
+  )].sort();
+
+  const previous = state.tag;
+  tagFilter.innerHTML = "";
+
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = "All tags";
+  tagFilter.appendChild(allOption);
+
+  for (const t of tags) {
+    const option = document.createElement("option");
+    option.value = t;
+    option.textContent = t;
+    tagFilter.appendChild(option);
+  }
+
+  state.tag = tags.includes(previous) ? previous : "all";
+  tagFilter.value = state.tag;
+}
+
 function render() {
   const filtered = filterWorkflows();
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -460,6 +492,7 @@ function setupEvents() {
       tab.classList.toggle("active", active);
       tab.setAttribute("aria-selected", active ? "true" : "false");
     });
+    updateTagFilter();
     render();
   }
 
@@ -498,6 +531,12 @@ function setupEvents() {
 
   searchInput.addEventListener("input", (event) => {
     state.search = event.target.value;
+    state.page = 1;
+    render();
+  });
+
+  tagFilter.addEventListener("change", (event) => {
+    state.tag = event.target.value;
     state.page = 1;
     render();
   });
@@ -557,6 +596,7 @@ async function init() {
     "Click \"Download subworkflow\" on any card to save the JSON file.";
 
   setupEvents();
+  updateTagFilter();
   render();
 }
 
