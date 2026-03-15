@@ -256,24 +256,25 @@ select {
   line-height: 1.35;
 }
 
+.category-tag {
+  align-self: flex-start;
+  font-size: 0.73rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line);
+  background: var(--category-bg, #eef4ff);
+  color: var(--category-fg, #3656b1);
+  border-color: var(--category-border, #c9d8ff);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .section-pill {
   align-self: flex-start;
   font-size: 0.73rem;
   border-radius: 999px;
   padding: 0.2rem 0.5rem;
-
-  .category-tag {
-    align-self: flex-start;
-    font-size: 0.73rem;
-    font-weight: 600;
-    border-radius: 999px;
-    padding: 0.2rem 0.5rem;
-    background: #f0f4ff;
-    color: #3b5bdb;
-    border: 1px solid rgba(59, 91, 219, 0.2);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
   border: 1px solid var(--line);
 }
 

@@ -325,6 +325,20 @@ function getCategoryFromTitle(title) {
   return match ? match[1].toLowerCase() : "";
 }
 
+function getCategoryColor(category) {
+  let hash = 0;
+  for (let i = 0; i < category.length; i += 1) {
+    hash = ((hash << 5) - hash + category.charCodeAt(i)) | 0;
+  }
+
+  const hue = Math.abs(hash) % 360;
+  return {
+    bg: `hsl(${hue} 85% 95%)`,
+    fg: `hsl(${hue} 70% 32%)`,
+    border: `hsl(${hue} 60% 80%)`,
+  };
+}
+
 function drawCards(items) {
   const fragment = document.createDocumentFragment();
 
@@ -342,6 +356,10 @@ function drawCards(items) {
     if (category) {
       categoryTag.textContent = category;
       categoryTag.dataset.category = category;
+      const colors = getCategoryColor(category);
+      categoryTag.style.setProperty("--category-bg", colors.bg);
+      categoryTag.style.setProperty("--category-fg", colors.fg);
+      categoryTag.style.setProperty("--category-border", colors.border);
     } else {
       categoryTag.hidden = true;
     }
