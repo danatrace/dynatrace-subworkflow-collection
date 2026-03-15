@@ -1,0 +1,93 @@
+{
+  "title": "subworkflow - aws remediate high rds connection count",
+  "description": "Subworkflow to remediate high RDS database connection count and connection pool exhaustion\n\nThis subworkflow provides an automated way to handle connection pool exhaustion by identifying and terminating idle connections, increasing connection limits, or scaling the RDS instance.\n\nParameters:\n\ndbInstanceIdentifier: (Required) The identifier of the RDS database instance\nactionType: (Required) Action to take - INCREASE_CONNECTIONS, RESTART, or SCALE_UP\nnewMaxConnections: (Optional) New maximum connections value (if actionType is INCREASE_CONNECTIONS)\ndbInstanceClass: (Optional) New instance class for scaling (if actionType is SCALE_UP, e.g., db.t3.large)\napplyImmediately: (Optional) Apply changes immediately (true/false)\nawsregion: (Required) The AWS region where the RDS instance resides\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nNote: High connection counts can indicate connection leaks, insufficient pool size, or the need for instance scaling.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "dbInstanceIdentifier": "my-database",
+    "actionType": "SCALE_UP",
+    "newMaxConnections": "500",
+    "dbInstanceClass": "db.t3.medium",
+    "applyImmediately": "false",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔌 **Subworkflow to Remediate High RDS Connection Count**\n\n⚠️ This subworkflow provides an automated way to **handle connection pool exhaustion** on RDS instances by taking corrective actions such as increasing connection limits, restarting the instance, or scaling up.\n\nHigh connection counts often indicate connection leaks, insufficient pool sizing, or the need for instance scaling.\n\n---\n\n### ⚙️ **Parameters**\n\n- **dbInstanceIdentifier** (Required): 🆔 The RDS database instance identifier.\n- **actionType** (Required): 🔧 Remediation action to take  \n  *(Options: `INCREASE_CONNECTIONS`, `RESTART`, `SCALE_UP`)*\n- **newMaxConnections** (Optional): 📊 New maximum connections value  \n  *(Use if actionType is `INCREASE_CONNECTIONS`)*\n- **dbInstanceClass** (Optional): 🖥️ Target instance class for scaling  \n  *(Example: `db.t3.large`, `db.m5.xlarge`)*\n- **applyImmediately** (Optional): ⚡ Apply changes immediately or during maintenance  \n  *(Default: `false`)*\n- **awsregion** (Required): 🌍 AWS region where the instance resides.\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 🔍 **Diagnosis: High Connection Count**\n\n**Indicators of Connection Pool Exhaustion:**\n- 🚫 **Too many connections** application error\n- ⏳ **Connection timeouts**\n- 📊 **Database Connections metric** at limit\n- 🔄 **Connection churn** (open/close rapidly)\n\n**Root Causes:**\n- 🐛 Connection leaks in application\n- 🧩 Insufficient connection pool size\n- 🚀 Spike in application load\n- 🔌 Idle connections not being recycled\n\n---\n\n### 💡 **Remediation Strategy**\n\n| **Action** | **Timeline** | **Impact** | **When to Use** |\n|---|---|---|---|\n| **Increase Connections** | Immediate | Low downtime | Temporary overflow |\n| **Restart Instance** | 1–5 min | Brief outage | Clear connection leak |\n| **Scale Up** | 5–15 min | Minimal | Sustained load increase |\n| **Modify Max Connections** | Immediate | None | Parameter adjustment |\n\n---\n\n### 📈 **Connection Pooling Best Practices**\n\n✅ **Application-Level**:\n- Use connection pooling (HikariCP, pgBouncer)\n- Set appropriate pool size\n- Monitor connection lifecycle\n\n✅ **Database-Level**:\n- Set `max_connections` appropriately\n- Monitor **DatabaseConnections** CloudWatch metric\n- Use parameter groups for instance class\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Remediation for connection exhaust alerts\n- ✅ Response to ToManyConnections errors\n- ✅ Auto-scaling under load spikes\n- ✅ Connection leak detection and recovery\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"RDS remediation has Failed!\");\n        throw new Error(\"RDS remediation has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Verify RDS connection remediation",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Wait for RDS remediation to complete",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"DBInstanceIdentifier\": [\"{{ input()[\"dbInstanceIdentifier\"] }}\"],\n  \"ActionType\": [\"{{ input()[\"actionType\"] }}\"],\n  \"NewMaxConnections\": [\"{{ input()[\"newMaxConnections\"] }}\"],\n  \"DBInstanceClass\": [\"{{ input()[\"dbInstanceClass\"] }}\"],\n  \"ApplyImmediately\": [\"{{ input()[\"applyImmediately\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-RemediateRDSConnection"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Start RDS connection remediation via SSM",
+      "predecessors": []
+    }
+  }
+}

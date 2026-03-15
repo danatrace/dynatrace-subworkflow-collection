@@ -1,0 +1,64 @@
+{
+  "title": "subworkflow - aws scale lambda function memory and timeout",
+  "description": "Subworkflow to scale Lambda function memory and timeout configuration\n\nThis subworkflow provides an automated way to increase Lambda function memory allocation and timeout duration when performance issues are detected.\n\nParameters:\n\nfunctionName: (Required) The name or ARN of the Lambda function to modify\nmemorySize: (Required) New memory allocation in MB (128 to 10240, in 1 MB increments)\ntimeout: (Required) New timeout duration in seconds (1 to 900 seconds)\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\nawsregion: (Required) The AWS region where the Lambda function resides\n\nNote: Memory adjustment affects Lambda billing and performance. Timeout adjustment prevents premature function termination.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "functionName": "my-function",
+    "memorySize": "512",
+    "timeout": "300",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## ⚡ **Subworkflow to Scale Lambda Function Memory and Timeout**\n\n🚀 This subworkflow provides an automated way to **increase Lambda function memory allocation and timeout duration** when performance degradation or timeout errors are detected.\n\nMemory scaling directly impacts CPU performance and function execution speed, making this a critical remediation action.\n\n---\n\n### ⚙️ **Parameters**\n\n- **functionName** (Required): 🔤 The name or ARN of the Lambda function to modify.\n- **memorySize** (Required): 💾 Memory allocation in **MB**  \n  *(Range: 128–10,240 MB in 1 MB increments)*\n- **timeout** (Required): ⏱️ Timeout duration in **seconds**  \n  *(Range: 1–900 seconds)*\n- **awsregion** (Required): 🌍 The AWS region where the Lambda function resides.\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 💡 **Impact of Memory Scaling**\n\n- 📊 **Memory** → Directly increases CPU allocation (proportional scaling)\n- 💰 **Billing** → Higher memory = higher cost (but faster execution)\n- ⚡ **Performance** → Larger memory allows longer-running functions to complete faster\n- 🔄 **Concurrency** → Account concurrency limits apply to execution duration\n\n---\n\n### ⏳ **Timeout Considerations**\n\n- 🕐 **Default Timeout**: 3 seconds\n- 📈 **Maximum Timeout**: 15 minutes (900 seconds)\n- ⚠️ **Premature Termination**: Functions timing out should be scaled\n- 🔄 **Retry Logic**: Parent workflows should handle timeout errors\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Remediation for Lambda timeout errors\n- ✅ Performance scaling for long-running functions\n- ✅ Automatic response to degradation metrics\n- ✅ Integrates with Dynatrace Lambda monitoring\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/update-lambda-config/result`);\n  const configBody = await configGet.json();\n  \n  if (!configBody.FunctionArn) {\n    console.log(\"Lambda configuration update failed!\");\n    throw new Error(\"Lambda configuration update failed!\");\n  }\n  \n  console.log(\"Lambda function updated successfully\");\n  console.log(\"New Memory: \" + configBody.MemorySize + \" MB\");\n  console.log(\"New Timeout: \" + configBody.Timeout + \" seconds\");\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "update-lambda-config": "OK"
+        }
+      },
+      "description": "Verify Lambda configuration update",
+      "predecessors": [
+        "update-lambda-config"
+      ]
+    },
+    "update-lambda-config": {
+      "name": "update-lambda-config",
+      "input": {
+        "FunctionName": "{{ input()[\"functionName\"] }}",
+        "MemorySize": "{{ input()[\"memorySize\"] }}",
+        "Timeout": "{{ input()[\"timeout\"] }}",
+        "region": "{{ input()[\"awsregion\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:lambda-update-function-configuration",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Update Lambda function memory and timeout",
+      "predecessors": []
+    }
+  }
+}

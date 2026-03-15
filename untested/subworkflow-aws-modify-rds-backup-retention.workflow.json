@@ -1,0 +1,92 @@
+{
+  "title": "subworkflow - aws modify rds backup retention",
+  "description": "Subworkflow to modify RDS database backup retention period\n\nThis subworkflow provides an automated way to increase or modify the backup retention period for RDS instances to improve data protection and meet compliance requirements.\n\nParameters:\n\ndbInstanceIdentifier: (Required) The identifier of the RDS database instance\nbackupRetentionPeriod: (Required) Number of days to retain backups (1-35 days)\npreferredBackupWindow: (Optional) The daily time window for automated backups (UTC format, e.g., 03:00-04:00)\nproductionBackups: (Optional) Whether this is a production database (true/false)\nawsregion: (Required) The AWS region where the RDS instance resides\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nNote: Increasing backup retention provides better disaster recovery capabilities but increases storage costs.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "dbInstanceIdentifier": "my-database",
+    "backupRetentionPeriod": "30",
+    "preferredBackupWindow": "03:00-04:00",
+    "productionBackups": "true",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔐 **Subworkflow to Modify RDS Backup Retention**\n\n💾 This subworkflow provides an automated way to **increase or modify the backup retention period** for RDS database instances to improve data protection and disaster recovery capabilities.\n\nExtended backup retention is essential for compliance requirements and business continuity planning.\n\n---\n\n### ⚙️ **Parameters**\n\n- **dbInstanceIdentifier** (Required): 🆔 The identifier of the RDS database instance.\n- **backupRetentionPeriod** (Required): 📅 Number of days to retain backups  \n  *(Range: 1–35 days)*\n- **preferredBackupWindow** (Optional): 🕐 Daily time window for automated backups  \n  *(Format: `HH:MM-HH:MM` in UTC, e.g., `03:00-04:00`)*\n- **productionBackups** (Optional): 🏢 Whether this is a production database  \n  *(Impacts scheduling and prioritization)*\n- **awsregion** (Required): 🌍 The AWS region where the RDS instance resides.\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 💡 **Backup Retention Strategy**\n\n| **Scenario** | **Recommended Retention** | **Rationale** |\n|---|---|---|\n| **Development** | 1–7 days | Lower cost, shorter RTO |\n| **Staging** | 7–14 days | Testing scenarios |\n| **Production** | 30–35 days | Compliance, disaster recovery |\n| **Critical Apps** | 35 days | Maximum protection |\n\n---\n\n### 💰 **Cost Impact**\n\n- **Storage**: Backup storage is charged separately\n- **Retention**: Longer retention = higher cost\n- **Optimization**: Review retention vs. business requirements\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Compliance remediation (GDPR, HIPAA, PCI-DSS)\n- ✅ Disaster recovery planning\n- ✅ RTO/RPO objective enforcement\n- ✅ Automated response to backup policy violations\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Verify backup retention modification",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Wait for backup retention change to complete",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"DBInstanceIdentifier\": [\"{{ input()[\"dbInstanceIdentifier\"] }}\"],\n  \"BackupRetentionPeriod\": [\"{{ input()[\"backupRetentionPeriod\"] }}\"],\n  \"PreferredBackupWindow\": [\"{{ input()[\"preferredBackupWindow\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-ModifyRDSBackupRetention"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Initiate RDS backup retention modification via SSM",
+      "predecessors": []
+    }
+  }
+}

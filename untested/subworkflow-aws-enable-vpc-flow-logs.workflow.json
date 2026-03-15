@@ -1,0 +1,68 @@
+{
+  "title": "subworkflow - aws enable vpc flow logs",
+  "description": "Subworkflow to enable VPC Flow Logs for network traffic monitoring\n\nThis subworkflow provides an automated way to enable VPC Flow Logs to CloudWatch for enhanced network visibility and security auditing.\n\nParameters:\n\nvpcId: (Required) The ID of the VPC to enable flow logs for\ntrafficType: (Required) The type of traffic to log - ACCEPT, REJECT, or ALL\nlogGroupName: (Required) The CloudWatch Logs group name to store flow logs\niamRoleArn: (Required) The ARN of the IAM role with permissions to write to CloudWatch\nawsregion: (Required) The AWS region where the VPC resides\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nNote: VPC Flow Logs are critical for security auditing, troubleshooting, and compliance requirements.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "vpcId": "vpc-12345678",
+    "trafficType": "ALL",
+    "logGroupName": "/aws/vpc/flowlogs",
+    "iamRoleArn": "arn:aws:iam::123456789012:role/vpc-flow-logs",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📡 **Subworkflow to Enable VPC Flow Logs**\n\n🔍 This subworkflow provides an automated way to **enable VPC Flow Logs** to CloudWatch for comprehensive network traffic monitoring and security auditing.\n\nVPC Flow Logs are essential for compliance, troubleshooting, and detecting anomalous network activity.\n\n---\n\n### ⚙️ **Parameters**\n\n- **vpcId** (Required): 🆔 The ID of the VPC to enable flow logs for.\n- **trafficType** (Required): 📊 The type of traffic to log  \n  *(Options: `ACCEPT`, `REJECT`, or `ALL`)*\n- **logGroupName** (Required): 📝 CloudWatch Logs group name to store flow logs  \n  *(Recommendation: `/aws/vpc/flowlogs`)*\n- **iamRoleArn** (Required): 🎭 ARN of the IAM role with CloudWatch Logs write permissions.\n- **awsregion** (Required): 🌍 The AWS region where the VPC resides.\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 📊 **What VPC Flow Logs Capture**\n\nVPC Flow Logs record:\n- 🌐 **Source and destination IP addresses**\n- 🔌 **Port numbers and protocols**\n- ✅ **Accepted and rejected connections** (based on traffic type)\n- 📈 **Packet and byte counts**\n- ⏱️ **Timestamps for each flow**\n\n---\n\n### 🛡️ **Compliance and Security Benefits**\n\n- ✅ **Compliance**: Required for PCI-DSS, HIPAA, SOC 2\n- 🔍 **Troubleshooting**: Diagnose connectivity issues\n- 🚨 **Threat Detection**: Identify anomalous traffic patterns\n- 📋 **Audit Trail**: Maintain records for investigations\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Compliance remediation\n- ✅ Security hardening\n- ✅ Network troubleshooting automation\n- ✅ Audit trail establishment\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/create-flow-logs/result`);\n  const configBody = await configGet.json();\n  \n  if (!configBody.FlowLogIds || configBody.FlowLogIds.length === 0) {\n    console.log(\"VPC Flow Logs creation failed!\");\n    throw new Error(\"VPC Flow Logs creation failed!\");\n  }\n  \n  console.log(\"VPC Flow Logs enabled successfully\");\n  console.log(\"Flow Log ID: \" + configBody.FlowLogIds[0]);\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "create-flow-logs": "OK"
+        }
+      },
+      "description": "Verify VPC Flow Logs creation",
+      "predecessors": [
+        "create-flow-logs"
+      ]
+    },
+    "create-flow-logs": {
+      "name": "create-flow-logs",
+      "input": {
+        "ResourceIds": "[\"{{ input()[\"vpcId\"] }}\"]",
+        "ResourceType": "VPC",
+        "TrafficType": "{{ input()[\"trafficType\"] }}",
+        "LogDestinationType": "cloud-watch-logs",
+        "LogGroupName": "{{ input()[\"logGroupName\"] }}",
+        "DeliverLogsPermissionIam": "{{ input()[\"iamRoleArn\"] }}",
+        "region": "{{ input()[\"awsregion\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-create-flow-logs",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Create VPC Flow Logs to CloudWatch",
+      "predecessors": []
+    }
+  }
+}

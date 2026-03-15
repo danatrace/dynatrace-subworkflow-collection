@@ -1,0 +1,92 @@
+{
+  "title": "subworkflow - aws enable ebs encryption",
+  "description": "Subworkflow to enable encryption on EBS volumes\n\nThis subworkflow provides an automated way to enable encryption on existing EBS volumes by creating encrypted snapshots and volumes.\n\nParameters:\n\nvolumeId: (Required) The ID of the EBS volume to encrypt\nawsregion: (Required) The AWS region where the volume resides\ninstanceId: (Required) The EC2 instance ID the volume is attached to\ndeviceName: (Required) The device name of the volume on the instance (e.g., /dev/sda1, /dev/sdf)\nkmsKeyId: (Optional) The KMS key ID to use for encryption. If not specified, the default AWS managed key is used\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nNote: This operation requires the EC2 instance to be stopped during the volume replacement.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "volumeId": "vol-12345678",
+    "awsregion": "us-east-1",
+    "instanceId": "i-1234567890abcdef0",
+    "deviceName": "/dev/sda1",
+    "kmsKeyId": "",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🔐 **Subworkflow to Enable EBS Volume Encryption**\n\n🛡️ This subworkflow provides an automated way to **enable encryption on existing EBS volumes** using AWS Systems Manager automation.\n\nEncryption protects sensitive data at rest and is a critical security remediation when unencrypted volumes are detected.\n\n---\n\n### ⚙️ **Parameters**\n\n- **volumeId** (Required): 🆔 The ID of the EBS volume to encrypt.\n- **awsregion** (Required): 🌍 The AWS region where the volume resides.\n- **instanceId** (Required): 🧾 The EC2 instance ID that the volume is attached to.\n- **deviceName** (Required): 📝 The device name of the volume (e.g., `/dev/sda1`, `/dev/sdf`).\n- **kmsKeyId** (Optional): 🔑 The KMS key ID for encryption  \n  *(If not specified, the default AWS-managed key is used)*\n- **dynatraceawsconnection** (Required): 🔐 The Dynatrace AWS OIDC connection.\n\n---\n\n### ⚠️ **Important Notes**\n\n- ⏸️ The EC2 instance **must be stopped** during volume replacement\n- 📸 A snapshot is created from the original volume\n- 🔄 A new encrypted volume is created from the snapshot\n- ↔️ The original volume is detached and replaced\n- ✅ The instance can be restarted after completion\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Security remediation for unencrypted volumes\n- ✅ Compliance enforcement (encryption at rest)\n- ✅ Automated response to security findings\n- ✅ Integrates with Dynatrace security events\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Verify encryption status",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Wait for EBS encryption operation to complete",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"VolumeId\": [\"{{ input()[\"volumeId\"] }}\"],\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"],\n  \"DeviceName\": [\"{{ input()[\"deviceName\"] }}\"],\n  \"KMSKeyId\": [\"{{ input()[\"kmsKeyId\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-CreateEncryptedEBSSnapshot"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Start EBS encryption process via SSM",
+      "predecessors": []
+    }
+  }
+}

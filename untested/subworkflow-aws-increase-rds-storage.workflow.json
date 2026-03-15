@@ -1,0 +1,91 @@
+{
+  "title": "subworkflow - aws increase rds storage",
+  "description": "Subworkflow to increase RDS instance storage allocation\n\nThis subworkflow provides an easy way to trigger the increase of storage allocation for an RDS database instance.\n\nParameters:\n\ndbInstanceIdentifier: (Required) The identifier of the RDS database instance\nawsregion: (Required) The AWS region where the RDS instance resides\nnewStorageSize: (Required) The new storage allocation in GiB (must be greater than current size)\napplyImmediately: (Optional) Whether to apply the change immediately (true) or during maintenance window (false). Default is false\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nNote: Storage allocation can typically be increased without downtime when ApplyImmediately is set to true.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "type": "STANDARD",
+  "input": {
+    "dbInstanceIdentifier": "my-database",
+    "awsregion": "us-east-1",
+    "newStorageSize": "200",
+    "applyImmediately": "true",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 💾 **Subworkflow to Increase RDS Storage**\n\n📈 This subworkflow provides a simple and reliable way to **increase storage allocation for an RDS database instance** when your database is running low on disk space.\n\nThis is a common remediation scenario where monitoring detects high disk usage and triggers automated scaling.\n\n---\n\n### ⚙️ **Parameters**\n\n- **dbInstanceIdentifier** (Required): 🆔 The identifier of the RDS database instance to modify.\n- **awsregion** (Required): 🌍 The AWS region where the RDS instance resides.\n- **newStorageSize** (Required): 💾 The new storage allocation in **GiB**  \n  *(Must be greater than the current storage size)*\n- **applyImmediately** (Optional): ⚡ Whether to apply the change immediately (`true`) or during the maintenance window (`false`)  \n  *(Default: `false`)*\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection used for authentication.\n\n---\n\n### ⏳ **Execution Behavior**\n\n⏱️ The subworkflow triggers the storage modification and **waits until the operation completes**.  \n✅ If successful, the RDS instance will have the new storage allocation.  \n❌ If the operation fails, the subworkflow fails to allow **restart-on-error** handling in the parent workflow.\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Commonly used for **self-healing remediation workflows**\n- ✅ Triggered when monitoring detects high disk usage on RDS instances\n- ✅ Can apply immediately or during maintenance window\n- ✅ Integrates securely using the **Dynatrace AWS OIDC connection**\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-ssm-execution-completed": "OK"
+        }
+      },
+      "description": "Check SSM execution status",
+      "predecessors": [
+        "wait-for-ssm-execution-completed"
+      ]
+    },
+    "wait-for-ssm-execution-completed": {
+      "name": "wait-for-ssm-execution-completed",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "systems_manager_start_automation_execution_1": "OK"
+        }
+      },
+      "description": "Wait for RDS storage modification to complete",
+      "predecessors": [
+        "systems_manager_start_automation_execution_1"
+      ]
+    },
+    "systems_manager_start_automation_execution_1": {
+      "name": "systems_manager_start_automation_execution_1",
+      "input": {
+        "region": "{{ input()[\"awsregion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{ \n  \"DBInstanceIdentifier\": [\"{{ input()[\"dbInstanceIdentifier\"] }}\"],\n  \"NewStorageSize\": [\"{{ input()[\"newStorageSize\"] }}\"],\n  \"ApplyImmediately\": [\"{{ input()[\"applyImmediately\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-ModifyRDSInstance"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Initiate RDS storage increase via SSM document",
+      "predecessors": []
+    }
+  }
+}

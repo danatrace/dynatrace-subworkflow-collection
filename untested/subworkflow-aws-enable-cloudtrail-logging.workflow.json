@@ -1,0 +1,68 @@
+{
+  "title": "subworkflow - aws enable cloudtrail logging",
+  "description": "Subworkflow to enable AWS CloudTrail logging for API activity monitoring\n\nThis subworkflow provides an automated way to enable or configure CloudTrail logging to S3 for comprehensive audit logging of AWS API calls and account activities.\n\nParameters:\n\ntrailName: (Required) The name of the CloudTrail trail to create or modify\ns3BucketName: (Required) The S3 bucket name where CloudTrail logs will be stored\nisMultiRegionTrail: (Required) Whether to log from all regions or single region (true/false)\nenableLogFileValidation: (Optional) Enable CloudTrail log file validation (true/false)\nkmsKeyId: (Optional) KMS key ID for log file encryption\nawsregion: (Required) The AWS region\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nNote: CloudTrail is critical for security, compliance (SOC 2, PCI-DSS, HIPAA), and forensic analysis.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "trailName": "organization-trail",
+    "s3BucketName": "my-cloudtrail-logs",
+    "isMultiRegionTrail": "true",
+    "enableLogFileValidation": "true",
+    "kmsKeyId": "",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📋 **Subworkflow to Enable AWS CloudTrail Logging**\n\n🔍 This subworkflow provides an automated way to **enable or configure AWS CloudTrail** for comprehensive audit logging of all API calls, user activities, and account management actions.\n\nCloudTrail is essential for security monitoring, compliance requirements, and forensic investigations.\n\n---\n\n### ⚙️ **Parameters**\n\n- **trailName** (Required): 🏷️ The name of the CloudTrail trail.\n- **s3BucketName** (Required): 🪣 S3 bucket name for storing CloudTrail logs.\n- **isMultiRegionTrail** (Required): 🌍 Enable logging across all regions  \n  *(Recommended: `true` for organization-wide tracking)*\n- **enableLogFileValidation** (Optional): ✅ Enable log file integrity validation  \n  *(Helps detect tampering)*\n- **kmsKeyId** (Optional): 🔐 KMS key ID for encrypting logs at rest.\n- **awsregion** (Required): 🌍 AWS region for the trail.\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### 📊 **What CloudTrail Logs**\n\nCloudTrail records:\n- 👤 **User identity** (who made the call)\n- 🕐 **Timestamp** (when the action occurred)\n- 📍 **Source IP** (where the request came from)\n- 🔧 **API action** (what was called)\n- 📝 **Request parameters** (configuration details)\n- 📤 **Response elements** (results of the action)\n\n---\n\n### 🛡️ **Compliance Requirements**\n\n✅ **Required for:**\n- PCI-DSS: Audit all access to sensitive data\n- HIPAA: Maintain audit logs of ePHI access\n- SOC 2: Document all system access and changes\n- GDPR: Track data access and modification\n- CIS AWS Foundations: CloudTrail controls\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Compliance remediation\n- ✅ Security posture hardening\n- ✅ Incident investigation and forensics\n- ✅ Change tracking and auditability\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/create-trail/result`);\n  const configBody = await configGet.json();\n  \n  if (!configBody.TrailArn) {\n    console.log(\"CloudTrail creation failed!\");\n    throw new Error(\"CloudTrail creation failed!\");\n  }\n  \n  console.log(\"CloudTrail enabled successfully\");\n  console.log(\"Trail ARN: \" + configBody.TrailArn);\n  console.log(\"S3 Bucket: \" + configBody.S3BucketName);\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "create-trail": "OK"
+        }
+      },
+      "description": "Verify CloudTrail creation",
+      "predecessors": [
+        "create-trail"
+      ]
+    },
+    "create-trail": {
+      "name": "create-trail",
+      "input": {
+        "Name": "{{ input()[\"trailName\"] }}",
+        "S3BucketName": "{{ input()[\"s3BucketName\"] }}",
+        "IsMultiRegionTrail": "{{ input()[\"isMultiRegionTrail\"] }}",
+        "EnableLogFileValidation": "{{ input()[\"enableLogFileValidation\"] }}",
+        "KMSKeyId": "{{ input()[\"kmsKeyId\"] }}",
+        "region": "{{ input()[\"awsregion\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:cloudtrail-create-trail",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Create or enable CloudTrail logging",
+      "predecessors": []
+    }
+  }
+}

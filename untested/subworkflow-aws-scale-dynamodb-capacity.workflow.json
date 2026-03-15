@@ -1,0 +1,64 @@
+{
+  "title": "subworkflow - aws scale dynamodb capacity",
+  "description": "Subworkflow to auto-scale DynamoDB table read and write capacity\n\nThis subworkflow provides an automated way to increase DynamoDB table provisioned capacity when throughput limits are reached or throttling occurs.\n\nParameters:\n\ntableName: (Required) The name of the DynamoDB table to modify\nreadCapacityUnits: (Required) New read capacity units per second\nwriteCapacityUnits: (Required) New write capacity units per second\nawsregion: (Required) The AWS region where the DynamoDB table resides\nglobalSecondaryIndexes: (Optional) JSON array of GSI names to update (optional)\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nNote: DynamoDB scaling can be adjusted every 4 hours. Global tables require coordinating updates across regions.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "tableName": "my-table",
+    "readCapacityUnits": "200",
+    "writeCapacityUnits": "200",
+    "awsregion": "us-east-1",
+    "globalSecondaryIndexes": "[]",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 📊 **Subworkflow to Scale DynamoDB Capacity**\n\n⚡ This subworkflow provides an automated way to **increase provisioned capacity** for DynamoDB tables when throttling occurs or throughput limits are reached.\n\nDynamoDB scaling is critical for handling sudden traffic spikes and preventing application errors.\n\n---\n\n### ⚙️ **Parameters**\n\n- **tableName** (Required): 🏷️ The name of the DynamoDB table to modify.\n- **readCapacityUnits** (Required): 📖 New read capacity  \n  *(Units per second, range: 1–40,000)*\n- **writeCapacityUnits** (Required): ✍️ New write capacity  \n  *(Units per second, range: 1–40,000)*\n- **awsregion** (Required): 🌍 AWS region where the table resides.\n- **globalSecondaryIndexes** (Optional): 🔄 JSON array of GSI names to auto-scale  \n  *(Updates GSIs proportionally)*\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### ⏱️ **Scaling Constraints**\n\n- **Frequency**: Can adjust capacity every **4 hours**\n- **Limits**: Max 40,000 RCU and 40,000 WCU per table\n- **On-Demand**: Alternative to provisioned mode (auto-scaling)\n- **Cost Impact**: Higher capacity = higher monthly cost\n\n---\n\n### 🧠 **Throttling Indicators**\n\nScale when you observe:\n- 🚫 **ProvisionedThroughputExceededException**\n- 📉 **UserErrors** with HTTP 400 status\n- ⏱️ **IteratorAgeMilliseconds** increasing in Streams\n- 🐢 **Query/Scan latency** degrading\n\n---\n\n### 💡 **Capacity Planning Strategy**\n\n| **Use Case** | **RCU:WCU Ratio** | **Notes** |\n|---|---|---|\n| **Read-heavy** (analytics) | 10:1 | Cache writes, async processing |\n| **Write-heavy** (logging) | 1:10 | Buffer writes, batch operations |\n| **Balanced** (OLTP) | 1:1 | Equal read/write patterns |\n| **Time-series** (metrics) | 1:5 | Write-optimized workloads |\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Remediation for DynamoDB throttling\n- ✅ Auto-scaling in response to demand surges\n- ✅ Prevents **ProvisionedThroughputExceededException**\n- ✅ Maintains application SLOs during traffic spikes\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/update-table-capacity/result`);\n  const configBody = await configGet.json();\n  \n  if (!configBody.TableDescription || !configBody.TableDescription.ProvisionedThroughput) {\n    console.log(\"DynamoDB capacity update failed!\");\n    throw new Error(\"DynamoDB capacity update failed!\");\n  }\n  \n  const throughput = configBody.TableDescription.ProvisionedThroughput;\n  console.log(\"DynamoDB table scaled successfully\");\n  console.log(\"New RCU: \" + throughput.ReadCapacityUnits);\n  console.log(\"New WCU: \" + throughput.WriteCapacityUnits);\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "update-table-capacity": "OK"
+        }
+      },
+      "description": "Verify DynamoDB capacity update",
+      "predecessors": [
+        "update-table-capacity"
+      ]
+    },
+    "update-table-capacity": {
+      "name": "update-table-capacity",
+      "input": {
+        "TableName": "{{ input()[\"tableName\"] }}",
+        "ProvisionedThroughput": "{ \\\"ReadCapacityUnits\\\": {{ input()[\"readCapacityUnits\"] }}, \\\"WriteCapacityUnits\\\": {{ input()[\"writeCapacityUnits\"] }} }",
+        "region": "{{ input()[\"awsregion\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:dynamodb-update-table",
+      "timeout": 300,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Update DynamoDB table provisioned capacity",
+      "predecessors": []
+    }
+  }
+}

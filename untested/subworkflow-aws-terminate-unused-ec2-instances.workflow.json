@@ -1,0 +1,62 @@
+{
+  "title": "subworkflow - aws terminate unused ec2 instances",
+  "description": "Subworkflow to terminate unused or underutilized EC2 instances\n\nThis subworkflow provides a controlled way to terminate EC2 instances that are no longer needed or underutilized to reduce costs and improve resource efficiency.\n\nParameters:\n\ninstanceIds: (Required) Comma-separated list or JSON array of EC2 instance IDs to terminate\nawsregion: (Required) The AWS region where instances reside\nrequireConfirmation: (Optional) Set to true to require explicit confirmation before termination\npreserveInstances: (Optional) JSON array of instance IDs to preserve if they match the criteria\ndynatraceawsconnection: (Required) The connection name of the Dynatrace OIDC Connection\n\nWarning: This action is destructive. Ensure proper validation before terminating instances. Consider stopping instead of terminating for recovery.",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "instanceIds": "[\"i-1234567890abcdef0\",\"i-0987654321abcdef0\"]",
+    "awsregion": "us-east-1",
+    "requireConfirmation": "true",
+    "preserveInstances": "[]",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## 🗑️ **Subworkflow to Terminate Unused EC2 Instances**\n\n💰 This subworkflow provides a controlled way to **terminate EC2 instances** that are no longer needed or significantly underutilized, reducing AWS costs and improving resource efficiency.\n\n⚠️ **Termination is destructive**—ensure proper validation and consider stopping instances instead for recovery options.\n\n---\n\n### ⚙️ **Parameters**\n\n- **instanceIds** (Required): 🆔 Instance IDs to terminate  \n  *(Format: JSON array or comma-separated string)*\n- **awsregion** (Required): 🌍 AWS region where instances reside.\n- **requireConfirmation** (Optional): ✋ Require explicit confirmation before termination  \n  *(Recommended: `true` for safety)*\n- **preserveInstances** (Optional): 🛡️ JSON array of instance IDs to preserve  \n  *(Protects critical instances from accidental termination)*\n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection.\n\n---\n\n### ⚠️ **Termination vs. Stopping**\n\n| **Action** | **Reversible** | **Billing** | **EBS Volumes** | **Use Case** |\n|---|---|---|---|---|\n| **Terminate** | ❌ No | 💸 Stops | 🗑️ May delete | Permanent decommissioning |\n| **Stop** | ✅ Yes | 🟡 EBS only | 📦 Retained | Temporary shutdown |\n| **Reboot** | ✅ Yes | 💰 Running | 📦 Unchanged | Maintenance/troubleshooting |\n\n---\n\n### 💡 **Cost Savings Opportunity**\n\nIdentify unused instances by checking:\n- 📊 **CPU Utilization**: < 5% for extended periods\n- 💾 **Memory Usage**: < 10% sustained\n- 🌐 **Network Traffic**: < 100 KBps\n- 📝 **No logs**: Last access > 30 days ago\n\n---\n\n### 🛡️ **Safety Precautions**\n\n✅ **Before Terminating:**\n1. Verify instance is not critical\n2. Check for attached EBS volumes\n3. Ensure backups exist\n4. Verify no dependencies\n5. Consider using `preserveInstances` allowlist\n\n---\n\n### 🧠 **Usage Context**\n\n- ✅ Cost optimization workflows\n- ✅ Cleanup of dev/test environments\n- ✅ Automated decommissioning\n- ✅ Response to capacity optimization alerts\n\n---",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/terminate-instances/result`);\n  const configBody = await configGet.json();\n  \n  if (!configBody.TerminatingInstances || configBody.TerminatingInstances.length === 0) {\n    console.log(\"EC2 instance termination failed!\");\n    throw new Error(\"EC2 instance termination failed!\");\n  }\n  \n  console.log(\"EC2 instances termination initiated\");\n  configBody.TerminatingInstances.forEach(inst => {\n    console.log(\"Instance \" + inst.InstanceId + \" state: \" + inst.CurrentState.Name);\n  });\n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "terminate-instances": "OK"
+        }
+      },
+      "description": "Verify EC2 instance termination",
+      "predecessors": [
+        "terminate-instances"
+      ]
+    },
+    "terminate-instances": {
+      "name": "terminate-instances",
+      "input": {
+        "InstanceIds": "{{ input()[\"instanceIds\"] }}",
+        "region": "{{ input()[\"awsregion\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-terminate-instances",
+      "timeout": 120,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Terminate specified EC2 instances",
+      "predecessors": []
+    }
+  }
+}
