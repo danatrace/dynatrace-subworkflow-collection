@@ -63,13 +63,12 @@ def collect_workflows() -> list[dict]:
         if relative_path.startswith(".git/"):
             continue
 
-        section = "tested" if "/" not in relative_path else "untested"
-        folder = "top-level" if section == "tested" else relative_path.split("/")[0]
-
         with path.open("r", encoding="utf-8") as file_handle:
             payload = json.load(file_handle)
 
         title = payload.get("title") or path.stem
+        section = "tested" if "🧩" in title else "untested"
+        folder = "top-level" if "/" not in relative_path else relative_path.split("/")[0]
         guide = payload.get("guide") if isinstance(payload.get("guide"), str) else ""
         normalized_guide = normalize_guide_text(guide)
         guide_summary = first_nonempty_block(normalized_guide)
