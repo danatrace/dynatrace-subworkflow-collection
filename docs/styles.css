@@ -261,6 +261,19 @@ select {
   font-size: 0.73rem;
   border-radius: 999px;
   padding: 0.2rem 0.5rem;
+
+  .category-tag {
+    align-self: flex-start;
+    font-size: 0.73rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem;
+    background: #f0f4ff;
+    color: #3b5bdb;
+    border: 1px solid rgba(59, 91, 219, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
   border: 1px solid var(--line);
 }
 

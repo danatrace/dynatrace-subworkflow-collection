@@ -320,6 +320,11 @@ function renderCardPreviewMarkdown(markdownText) {
   return `<p>${escapeHtml(source).replace(/\n/g, "<br>")}</p>`;
 }
 
+function getCategoryFromTitle(title) {
+  const match = (title || "").replace(/[^\x20-\x7E]/g, "").trim().match(/^subworkflow\s*-\s*(\S+)/i);
+  return match ? match[1].toLowerCase() : "";
+}
+
 function drawCards(items) {
   const fragment = document.createDocumentFragment();
 
@@ -332,6 +337,15 @@ function drawCards(items) {
     );
 
     const sectionPill = node.querySelector(".section-pill");
+    const categoryTag = node.querySelector(".category-tag");
+    const category = getCategoryFromTitle(item.title);
+    if (category) {
+      categoryTag.textContent = category;
+      categoryTag.dataset.category = category;
+    } else {
+      categoryTag.hidden = true;
+    }
+
     sectionPill.textContent = item.section === "tested" ? "Tested" : "Untested";
     sectionPill.dataset.section = item.section;
 
