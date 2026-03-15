@@ -445,6 +445,13 @@ function setupEvents() {
   const passwordInput = document.getElementById("password-input");
   const passwordError = document.getElementById("password-error");
   const passwordSubmit = document.getElementById("password-submit");
+  const passwordModalClose = document.getElementById("password-modal-close");
+
+  passwordModalClose.addEventListener("click", () => {
+    passwordModal.hidden = true;
+    passwordInput.value = "";
+    passwordError.style.display = "none";
+  });
 
   function activateSection(section) {
     state.activeSection = section;
