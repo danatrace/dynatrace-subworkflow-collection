@@ -1,0 +1,89 @@
+{
+  "title": "subworkflow - aws ssm bedrock remediate create agent",
+  "description": "Create a Bedrock Agent for remediation baseline",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 3,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "agentName": "remediation-agent",
+    "foundationModel": "anthropic.claude-3-haiku-20240307-v1:0",
+    "instruction": "You are a remediation assistant.",
+    "awsregion": "us-east-1",
+    "dynatraceawsconnection": "awsplayground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "Uses AWS-ExecuteAwsApi to call bedrock-agent:CreateAgent.",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "export default async function ({ execution_id }) {\\n  const r = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(d => d.json());\\n  if (r.AutomationExecutionStatus !== \\\"Success\\\") throw new Error(\\\"Create Bedrock agent failed\\\");\\n  return r;\\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-completion": "OK"
+        }
+      },
+      "predecessors": [
+        "wait-for-completion"
+      ]
+    },
+    "wait-for-completion": {
+      "name": "wait-for-completion",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "start-automation": "OK"
+        }
+      },
+      "predecessors": [
+        "start-automation"
+      ]
+    },
+    "start-automation": {
+      "name": "start-automation",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\\n  \"Service\": [\"bedrock-agent\"],\\n  \"Api\": [\"CreateAgent\"],\\n  \"agentName\": [\"{{ input()[\\\"agentName\\\"] }}\"],\\n  \"foundationModel\": [\"{{ input()[\\\"foundationModel\\\"] }}\"],\\n  \"instruction\": [\"{{ input()[\\\"instruction\\\"] }}\"]\\n}",
+        "connection": "{% set aws = input()[\"dynatraceawsconnection\"] %}\n{{ connection(\"builtin:hyperscaler-authentication.connections.aws\", aws) }}",
+        "DocumentName": "AWS-ExecuteAwsApi"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "predecessors": []
+    }
+  }
+}
