@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-15T09:08:16.774030+00:00",
+  "generatedAt": "2026-03-15T09:08:39.228617+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
@@ -415,7 +415,7 @@
       "tags": []
     },
     {
-      "title": "\ud83e\udde9subworkflow - set all workflows of owner to draft",
+      "title": "\ud83e\udde9subworkflow - dynatrace set all workflows of owner to draft",
       "path": "subworkflow-set-all-workflows-of-owner-to-draft.workflow.json",
       "section": "tested",
       "folder": "top-level",
