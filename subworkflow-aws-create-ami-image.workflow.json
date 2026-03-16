@@ -1,0 +1,94 @@
+{
+  "id": "f305b9e3-06f9-457e-9741-7eb934fe1005",
+  "title": "🧩subworkflow - aws create ami image",
+  "description": "Subworkflow to create an AMI from an EC2 instance\n\nParameters:\n\ninstanceId: (Required) The instance ID to create AMI from\nimageName: (Required) Name for the AMI\nimageDescription: (Optional) Description for the AMI\nnoReboot: (Optional) Create AMI without rebooting instance\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{ result(\"check-status\") }}",
+  "type": "STANDARD",
+  "input": {
+    "noReboot": "true",
+    "awsregion": "us-east-1",
+    "imageName": "test-dynatrace-wf",
+    "instanceId": "i-0141d0169e394a450",
+    "imageDescription": "test-dynatrace-wf",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\uddbc\ufe0f **Subworkflow to Create an AMI Image**\n\n\ud83d\udcf8 This subworkflow **creates an Amazon Machine Image (AMI) from a running EC2 instance** via the **AWS-CreateImage** SSM automation document.\n\nUseful for backups, creating standardized images, and version control of instance configurations.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **instanceId** (Required): \ud83c\udd94 The instance ID to create AMI from.  \n- **imageName** (Required): \ud83d\udcdd Name for the new AMI.  \n- **imageDescription** (Optional): \ud83d\udccb Description for the AMI.  \n- **noReboot** (Optional): \u26a1 Create AMI without rebooting (true/false). Default: false.  \n- **awsregion** (Required): \ud83c\udf0d The AWS region.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 Dynatrace AWS OIDC connection.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document**\n\n**Document Name**: `AWS-CreateImage`\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-createimage.html\n\n**What this runbook does:**\n- Creates an AMI from a running EC2 instance\n- Optionally reboots instance during creation\n- Captures the instance configuration and attached volumes\n- Produces a reusable image for launching new instances\n\n---\n\n\ud83d\udd17 Dependencies\nThis subworkflow depends on the following subworkflow:\n\n[\ud83e\udde9 subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)",
+  "tasks": {
+    "check-status": {
+      "name": "check-status",
+      "input": {
+        "script": "import { execution } from '@dynatrace-sdk/automation-utils';\nexport default async function ({ execution_id }) {\n  const result = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-completion/result`).then(r => r.json());\n  if (result.AutomationExecutionStatus !== \"Success\") throw new Error(\"AMI creation failed!\");\n  return result;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "timeout": 30,
+      "position": {
+        "x": 0,
+        "y": 3
+      },
+      "conditions": {
+        "states": {
+          "wait-for-completion": "OK"
+        }
+      },
+      "description": "fail subworkflow if SSM Execution was not successful",
+      "predecessors": [
+        "wait-for-completion"
+      ]
+    },
+    "start-automation": {
+      "name": "start-automation",
+      "input": {
+        "region": "{{ input()[\"awsregion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\n  \"InstanceId\": [\"{{ input()[\"instanceId\"] }}\"]\n}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "DocumentName": "AWS-CreateImage"
+      },
+      "retry": {
+        "count": 5,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "trigger AWS-CreateImage SSM runbook",
+      "predecessors": []
+    },
+    "wait-for-completion": {
+      "name": "wait-for-completion",
+      "input": {
+        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
+        "workflowInput": "{\n  \"AutomationExecutionId\": \"{{ result(\"start-automation\").AutomationExecutionId }}\",\n  \"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 60,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 604800,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "start-automation": "OK"
+        }
+      },
+      "description": "loop until SSM runbook execution has finished",
+      "predecessors": [
+        "start-automation"
+      ]
+    }
+  }
+}
