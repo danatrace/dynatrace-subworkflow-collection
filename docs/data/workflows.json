@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-03-16T05:54:42.930717+00:00",
+  "generatedAt": "2026-03-16T05:55:15.704255+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 111,
+    "total": 110,
     "tested": 34,
-    "untested": 77
+    "untested": 76
   },
   "workflows": [
     {
@@ -763,19 +763,6 @@
       "description": "Subworkflow to copy or encrypt an AMI across regions\n\nParameters:\n\nsourceImageId: (Required) Source AMI ID\nsourceRegion: (Required) Source region\ntargetRegion: (Required) Target region\nimageName: (Optional) Name for copied AMI\nimageDescription: (Optional) Description\nencrypted: (Optional) Encrypt the AMI (true/false)\nkmsKeyId: (Optional) KMS key for encryption\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/untested/subworkflow-aws-ssm-copy-ami-image.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/untested/subworkflow-aws-ssm-copy-ami-image.workflow.json",
-      "tags": []
-    },
-    {
-      "title": "subworkflow - aws create ami image",
-      "path": "untested/subworkflow-aws-ssm-create-ami-image.workflow.json",
-      "section": "untested",
-      "folder": "untested",
-      "guide": "## \ud83d\uddbc\ufe0f **Subworkflow to Create an AMI Image**\n\n\ud83d\udcf8 This subworkflow **creates an Amazon Machine Image (AMI) from a running EC2 instance** via the **AWS-CreateImage** SSM automation document.\n\nUseful for backups, creating standardized images, and version control of instance configurations.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **instanceId** (Required): \ud83c\udd94 The instance ID to create AMI from.  \n- **imageName** (Required): \ud83d\udcdd Name for the new AMI.  \n- **imageDescription** (Optional): \ud83d\udccb Description for the AMI.  \n- **noReboot** (Optional): \u26a1 Create AMI without rebooting (true/false). Default: false.  \n- **awsregion** (Required): \ud83c\udf0d The AWS region.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 Dynatrace AWS OIDC connection.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document**\n\n**Document Name**: `AWS-CreateImage`\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-createimage.html\n\n**What this runbook does:**\n- Creates an AMI from a running EC2 instance\n- Optionally reboots instance during creation\n- Captures the instance configuration and attached volumes\n- Produces a reusable image for launching new instances\n\n---",
-      "guideText": "\ud83d\uddbc\ufe0f Subworkflow to Create an AMI Image\n\n\ud83d\udcf8 This subworkflow creates an Amazon Machine Image (AMI) from a running EC2 instance via the AWS-CreateImage SSM automation document.\n\nUseful for backups, creating standardized images, and version control of instance configurations.\n\n---\n\u2699\ufe0f Parameters\n- instanceId (Required): \ud83c\udd94 The instance ID to create AMI from.  \n- imageName (Required): \ud83d\udcdd Name for the new AMI.  \n- imageDescription (Optional): \ud83d\udccb Description for the AMI.  \n- noReboot (Optional): \u26a1 Create AMI without rebooting (true/false). Default: false.  \n- awsregion (Required): \ud83c\udf0d The AWS region.  \n- dynatraceawsconnection (Required): \ud83d\udd11 Dynatrace AWS OIDC connection.\n\n---\n\ud83d\udcd8 AWS SSM Document\n\nDocument Name: AWS-CreateImage\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-createimage.html\n\nWhat this runbook does:\n- Creates an AMI from a running EC2 instance\n- Optionally reboots instance during creation\n- Captures the instance configuration and attached volumes\n- Produces a reusable image for launching new instances\n\n---",
-      "guideSummary": "\ud83d\uddbc\ufe0f Subworkflow to Create an AMI Image",
-      "description": "Subworkflow to create an AMI from an EC2 instance\n\nParameters:\n\ninstanceId: (Required) The instance ID to create AMI from\nimageName: (Required) Name for the AMI\nimageDescription: (Optional) Description for the AMI\nnoReboot: (Optional) Create AMI without rebooting instance\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
-      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/untested/subworkflow-aws-ssm-create-ami-image.workflow.json",
-      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/untested/subworkflow-aws-ssm-create-ami-image.workflow.json",
       "tags": []
     },
     {
