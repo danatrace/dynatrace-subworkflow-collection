@@ -1,47 +1,26 @@
 {
   "id": "406ff583-76b0-462f-bfc0-398ec2ef3609",
   "title": "🛠️dynatrace create coe subworkflows",
-  "description": "Subworkflow to create a workflow.\n\nThis Subworkflow is used to create a workflow.\nCan be used to store workflows and one button\nworkflow import through a workflow, in addition\nto complex subworkflow dependencies. \n\nParameters:\n\n(Required) The entire workflow json",
+  "description": "",
   "ownerType": "USER",
   "isPrivate": true,
   "schemaVersion": 4,
   "trigger": {},
-  "result": "{{ result(\"create-workflow\") }}",
+  "result": "",
   "type": "STANDARD",
-  "input": {
-    "type": "STANDARD",
-    "input": {},
-    "tasks": {
-      "test": {
-        "name": "test",
-        "input": {
-          "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function () {\n  // your code goes here\n  // e.g. get the current execution\n  const ex = await execution();\n  console.log('Automated script execution on behalf of', ex.trigger);\n\n  return { triggeredBy: ex.trigger };\n}"
-        },
-        "action": "dynatrace.automations:run-javascript",
-        "position": {
-          "x": 0,
-          "y": 1
-        },
-        "description": "Run custom JavaScript code.",
-        "predecessors": []
-      }
-    },
-    "title": "test_xc",
-    "result": null,
-    "trigger": {},
-    "isPrivate": true,
-    "ownerType": "USER",
-    "description": "",
-    "schemaVersion": 3,
-    "hourlyExecutionLimit": 1000
-  },
+  "input": {},
   "hourlyExecutionLimit": 1000,
-  "guide": "## \ud83e\udde9 **Subworkflow to Create a Workflow**\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to **create a workflow from a JSON definition**.\n\nIt is commonly used to **store workflows as code** and enable **one\u2011button workflow imports** through automation\u2014making it easier to manage workflows with **complex subworkflow dependencies**.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udce6 Storing workflows in version control and importing them on demand  \n- \u25b6\ufe0f Enabling **one\u2011click workflow deployment** through another workflow  \n- \ud83e\uddf1 Managing **complex workflow and subworkflow dependency chains**  \n- \ud83d\udd01 Promoting workflows across environments in a standardized way  \n\nThis approach supports **workflow\u2011as\u2011code** and helps teams scale automation safely and consistently.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **workflowjson** (Required): \ud83e\uddfe The **complete JSON definition** of the workflow to be created.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow submits the provided workflow JSON definition\n- \ud83d\udee0\ufe0f A new workflow is created based on the supplied configuration\n- \u2705 If creation is successful, the subworkflow completes\n- \u274c If creation fails, the subworkflow fails\u2014allowing the **parent workflow to retry or take alternative action**\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **workflow lifecycle automation**\n- \u2705 Enables repeatable and controlled workflow creation\n- \u2705 Ideal for enablement, templates, and automation catalogs\n- \u2705 Works well with Git\u2011based workflow storage and CI/CD patterns\n\n---",
+  "guide": "## **\ud83e\udde9dynatrace create coe subworkflows**\n\n\u2699\ufe0f This workflow provides a simple and automated way to **create all coe subworkflows in your tenant**.\n\n* All created subworkflows are created in the tenant **under the actor user executing the workflow**, so the actor user becomes the **owner and actor** of each created subworkflow.\n \n* If a subworkflow already exists, it is **skipped** and not recreated.\n \n* Simply run the workflow to create subworkflows in your tenant. \n* User that runs the workflow must have workflow write permissions\n\n\n---\n\n\n### \ud83d\udcda **Subworkflow that will be created**\n\n- \ud83e\udde9subworkflow - dynatrace get all problem data\n- \ud83e\udde9subworkflow - aws get host data of ec2 instance (gen2 aws connector)\n- \ud83e\udde9subworkflow - dynatrace check if problem is solved or closed\n- \ud83e\udde9subworkflow - aws create cloudformation stack\n- \ud83e\udde9subworkflow - aws update cloudformation stack\n- \ud83e\udde9subworkflow - aws get lambda data (gen 2 aws connector)\n- \ud83e\udde9subworkflow - aws wait for systems manager  document execution\n- \ud83e\udde9subworkflow - openai Text and Prompting\n- \ud83e\udde9subworkflow - aws reboot ec2 instances\n- \ud83e\udde9subworkflow - aws extend ebs volume\n- \ud83e\udde9subworkflow - aws get host data of ec2 instance (gen3 aws connector)\n- \ud83e\udde9subworkflow - dynatrace ingest custom info event\n- \ud83e\udde9subworkflow - aws s3 block public access for bucket\n- \ud83e\udde9subworkflow - dynatrace close problem\n- \ud83e\udde9subworkflow - aws resize ec2 instance\n- \ud83e\udde9subworkflow - aws davis forecast for aws volume usage\n- \ud83e\udde9subworkflow - aws disable public access for security group\n- \ud83e\udde9subworkflow - aws close security group\n- \ud83e\udde9subworkflow - aws get process data of process running on ec2 instance\n- \ud83e\udde9subworkflow - dynatrace create workflow\n- \ud83e\udde9subworkflow - dynatrace set all workflows of owner to live (deployed)\n- \ud83e\udde9subworkflow - dynatrace delete workflow\n- \ud83e\udde9subworkflow - dynatrace create dashboard\n- \ud83e\udde9subworkflow - aws wait for run command execution\n- \ud83e\udde9subworkflow - dynatrace set all workflows of owner to draft\n- \ud83e\udde9subworkflow - dynatrace get event data\n- \ud83e\udde9subworkflow - dynatrace ingest custom alert\n- \ud83e\udde9subworkflow - aws run command on ec2 instance\n- \ud83e\udde9subworkflow - aws delete unused security group\n- \ud83e\udde9subworkflow - aws delete cloudformation stack\n- \ud83e\udde9subworkflow - dynatrace export one or all workflows to existing github repo\n- \ud83e\udde9subworkflow - dynatrace delete all workflows of owner\n- \ud83e\udde9subworkflow - aws scan for security groups with ports open to 0.0.0.0/0",
   "tasks": {
     "create-subworkflows": {
       "name": "create-subworkflows",
       "input": {
-        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { workflowsClient } from \"@dynatrace-sdk/client-automation\";\n\nexport default async function ({ executionId , action_execution_id,loopItemValue }) {\n  // your code goes here\n  // e.g. get the current execution\n  \n  const data = await workflowsClient.createWorkflow({\n    body: loopItemValue,\n  });\n  return data;\n}"
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\nimport { workflowsClient } from \"@dynatrace-sdk/client-automation\";\n\nexport default async function ({ executionId , action_execution_id,loopItemValue }) {\n  // your code goes here\n  // e.g. get the current execution\n\n\n  \n  try {\n    // Code that might throw an error\n    const data = await workflowsClient.createWorkflow({\n    body: loopItemValue,\n    });\n  } catch (error: any) {\n    // Code to handle the error\n    console.log(\"Importing \" + loopItemValue.title +\" failed\")\n    console.log(error.message)\n\n  } finally {\n    // Code that runs irrespective of whether an error occurred or not\n\n  }\n\n  \n  \n  return \"done\";\n}"
+      },
+      "retry": {
+        "count": 2,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
       },
       "action": "dynatrace.automations:run-javascript",
       "active": true,
