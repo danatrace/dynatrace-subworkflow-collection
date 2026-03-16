@@ -1,6 +1,6 @@
 {
   "id": "406ff583-76b0-462f-bfc0-398ec2ef3609",
-  "title": "\ud83e\udde9dynatrace create coe subworkflows",
+  "title": "🛠️dynatrace create coe subworkflows",
   "description": "Subworkflow to create a workflow.\n\nThis Subworkflow is used to create a workflow.\nCan be used to store workflows and one button\nworkflow import through a workflow, in addition\nto complex subworkflow dependencies. \n\nParameters:\n\n(Required) The entire workflow json",
   "ownerType": "USER",
   "isPrivate": true,
