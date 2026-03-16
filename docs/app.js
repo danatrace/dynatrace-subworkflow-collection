@@ -1,4 +1,7 @@
 const PAGE_SIZE = 36;
+const CREATE_ALL_WORKFLOW_URL =
+  "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json";
+const CREATE_ALL_WORKFLOW_FILENAME = "dynatrace-create-coe-subworkflows.workflow.json";
 
 const DOWNLOAD_COUNTS_KEY = "coe_download_counts";
 const UNTESTED_UNLOCKED_KEY = "coe_untested_unlocked";
@@ -52,10 +55,7 @@ const nextPageButton = document.getElementById("next-page");
 const cardTemplate = document.getElementById("card-template");
 const tabButtons = [...document.querySelectorAll(".tab")];
 const selectedCount = document.getElementById("selected-count");
-const selectAllButton = document.getElementById("select-all");
-const generateTerraformButton = document.getElementById("generate-terraform");
-const terraformModal = document.getElementById("terraform-modal");
-const terraformContent = document.getElementById("terraform-content");
+const downloadCreateAllButton = document.getElementById("download-create-all");
 
 function sanitizeTfName(path) {
   return normalize(path)
@@ -187,14 +187,8 @@ function buildTerraformScript(items) {
 
 function updateSelectionUi() {
   const count = state.selectedPaths.size;
-  const filtered = filterWorkflows();
-  const allFilteredSelected =
-    filtered.length > 0 && filtered.every((item) => state.selectedPaths.has(item.path));
 
   selectedCount.textContent = `${count} selected`;
-  selectAllButton.textContent = allFilteredSelected ? "Clear All" : "Select All";
-  selectAllButton.disabled = filtered.length === 0;
-  generateTerraformButton.disabled = count === 0;
 }
 
 function normalize(value) {
@@ -337,6 +331,26 @@ function getCategoryColor(category) {
     fg: `hsl(${hue} 70% 32%)`,
     border: `hsl(${hue} 60% 80%)`,
   };
+}
+
+async function downloadCreateAllWorkflow() {
+  try {
+    const response = await fetch(CREATE_ALL_WORKFLOW_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = blobUrl;
+    anchor.download = CREATE_ALL_WORKFLOW_FILENAME;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(CREATE_ALL_WORKFLOW_URL, "_blank", "noopener");
+  }
 }
 
 function drawCards(items) {
@@ -554,28 +568,8 @@ function setupEvents() {
     render();
   });
 
-  selectAllButton.addEventListener("click", () => {
-    const filtered = filterWorkflows();
-    const allFilteredSelected =
-      filtered.length > 0 && filtered.every((item) => state.selectedPaths.has(item.path));
-
-    if (allFilteredSelected) {
-      filtered.forEach((item) => state.selectedPaths.delete(item.path));
-    } else {
-      filtered.forEach((item) => state.selectedPaths.add(item.path));
-    }
-
-    render();
-  });
-
-  generateTerraformButton.addEventListener("click", () => {
-    const selectedItems = state.all.filter((item) => state.selectedPaths.has(item.path));
-    if (selectedItems.length === 0) {
-      return;
-    }
-
-    terraformContent.textContent = buildTerraformScript(selectedItems);
-    terraformModal.hidden = false;
+  downloadCreateAllButton.addEventListener("click", () => {
+    downloadCreateAllWorkflow();
   });
 }
 
