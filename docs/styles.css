@@ -2,7 +2,7 @@
 :root {
   /* backgrounds */
   --bg-top:    #ffffff;
-  --bg-mid:    #ffffff;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   --bg-bottom: #ffffff;
   --card:      #ffffff;
   --card-elevated: #ffffff;
