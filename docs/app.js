@@ -187,8 +187,9 @@ function buildTerraformScript(items) {
 
 function updateSelectionUi() {
   const count = state.selectedPaths.size;
-
-  selectedCount.textContent = `${count} selected`;
+  if (selectedCount) {
+    selectedCount.textContent = `${count} selected`;
+  }
 }
 
 function normalize(value) {
