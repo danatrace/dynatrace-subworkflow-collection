@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-16T03:55:42.584684+00:00",
+  "generatedAt": "2026-03-16T04:02:54.504696+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
@@ -7,23 +7,10 @@
   },
   "counts": {
     "total": 110,
-    "tested": 34,
-    "untested": 76
+    "tested": 33,
+    "untested": 77
   },
   "workflows": [
-    {
-      "title": "\ud83e\udde9dynatrace create coe subworkflows",
-      "path": "dynatrace-create-coe-subworkflows.workflow.json",
-      "section": "tested",
-      "folder": "top-level",
-      "guide": "## \ud83e\udde9 **Subworkflow to Create a Workflow**\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to **create a workflow from a JSON definition**.\n\nIt is commonly used to **store workflows as code** and enable **one\u2011button workflow imports** through automation\u2014making it easier to manage workflows with **complex subworkflow dependencies**.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udce6 Storing workflows in version control and importing them on demand  \n- \u25b6\ufe0f Enabling **one\u2011click workflow deployment** through another workflow  \n- \ud83e\uddf1 Managing **complex workflow and subworkflow dependency chains**  \n- \ud83d\udd01 Promoting workflows across environments in a standardized way  \n\nThis approach supports **workflow\u2011as\u2011code** and helps teams scale automation safely and consistently.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **workflowjson** (Required): \ud83e\uddfe The **complete JSON definition** of the workflow to be created.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow submits the provided workflow JSON definition\n- \ud83d\udee0\ufe0f A new workflow is created based on the supplied configuration\n- \u2705 If creation is successful, the subworkflow completes\n- \u274c If creation fails, the subworkflow fails\u2014allowing the **parent workflow to retry or take alternative action**\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **workflow lifecycle automation**\n- \u2705 Enables repeatable and controlled workflow creation\n- \u2705 Ideal for enablement, templates, and automation catalogs\n- \u2705 Works well with Git\u2011based workflow storage and CI/CD patterns\n\n---",
-      "guideText": "\ud83e\udde9 Subworkflow to Create a Workflow\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to create a workflow from a JSON definition.\n\nIt is commonly used to store workflows as code and enable one\u2011button workflow imports through automation\u2014making it easier to manage workflows with complex subworkflow dependencies.\n\n---\n\ud83c\udfaf Use Case\n\nTypical use cases include:\n- \ud83d\udce6 Storing workflows in version control and importing them on demand  \n- \u25b6\ufe0f Enabling one\u2011click workflow deployment through another workflow  \n- \ud83e\uddf1 Managing complex workflow and subworkflow dependency chains  \n- \ud83d\udd01 Promoting workflows across environments in a standardized way  \n\nThis approach supports workflow\u2011as\u2011code and helps teams scale automation safely and consistently.\n\n---\n\u2699\ufe0f Parameters\n- workflowjson (Required): \ud83e\uddfe The complete JSON definition of the workflow to be created.\n\n---\n\ud83e\udde0 Workflow Logic\n- \ud83d\udce4 The subworkflow submits the provided workflow JSON definition\n- \ud83d\udee0\ufe0f A new workflow is created based on the supplied configuration\n- \u2705 If creation is successful, the subworkflow completes\n- \u274c If creation fails, the subworkflow fails\u2014allowing the parent workflow to retry or take alternative action\n\n---\n\ud83e\udde9 Usage Context\n- \u2705 Designed for workflow lifecycle automation\n- \u2705 Enables repeatable and controlled workflow creation\n- \u2705 Ideal for enablement, templates, and automation catalogs\n- \u2705 Works well with Git\u2011based workflow storage and CI/CD patterns\n\n---",
-      "guideSummary": "\ud83e\udde9 Subworkflow to Create a Workflow",
-      "description": "Subworkflow to create a workflow.\n\nThis Subworkflow is used to create a workflow.\nCan be used to store workflows and one button\nworkflow import through a workflow, in addition\nto complex subworkflow dependencies. \n\nParameters:\n\n(Required) The entire workflow json",
-      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json",
-      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/dynatrace-create-coe-subworkflows.workflow.json",
-      "tags": []
-    },
     {
       "title": "\ud83e\udde9subworkflow - aws close security group",
       "path": "subworkflow-aws-close-security-group.workflow.json",
@@ -451,6 +438,19 @@
       "description": "subworkflow that sets all workflows of the owner of the \"subworkflow - set all workflows of owner to draft\" workflow to live (Deployed)\n\nWhen workflow is started it takes the owner of this workflow, searches for all workflows of that owner and deploys them to live.\n\nThis workflow does not need input parameters",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-set-all-workflows-of-owner-to-live-deployed.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-set-all-workflows-of-owner-to-live-deployed.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83d\udee0\ufe0fdynatrace create coe subworkflows",
+      "path": "dynatrace-create-coe-subworkflows.workflow.json",
+      "section": "untested",
+      "folder": "top-level",
+      "guide": "## \ud83e\udde9 **Subworkflow to Create a Workflow**\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to **create a workflow from a JSON definition**.\n\nIt is commonly used to **store workflows as code** and enable **one\u2011button workflow imports** through automation\u2014making it easier to manage workflows with **complex subworkflow dependencies**.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udce6 Storing workflows in version control and importing them on demand  \n- \u25b6\ufe0f Enabling **one\u2011click workflow deployment** through another workflow  \n- \ud83e\uddf1 Managing **complex workflow and subworkflow dependency chains**  \n- \ud83d\udd01 Promoting workflows across environments in a standardized way  \n\nThis approach supports **workflow\u2011as\u2011code** and helps teams scale automation safely and consistently.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **workflowjson** (Required): \ud83e\uddfe The **complete JSON definition** of the workflow to be created.\n\n---\n\n### \ud83e\udde0 **Workflow Logic**\n\n- \ud83d\udce4 The subworkflow submits the provided workflow JSON definition\n- \ud83d\udee0\ufe0f A new workflow is created based on the supplied configuration\n- \u2705 If creation is successful, the subworkflow completes\n- \u274c If creation fails, the subworkflow fails\u2014allowing the **parent workflow to retry or take alternative action**\n\n---\n\n### \ud83e\udde9 **Usage Context**\n\n- \u2705 Designed for **workflow lifecycle automation**\n- \u2705 Enables repeatable and controlled workflow creation\n- \u2705 Ideal for enablement, templates, and automation catalogs\n- \u2705 Works well with Git\u2011based workflow storage and CI/CD patterns\n\n---",
+      "guideText": "\ud83e\udde9 Subworkflow to Create a Workflow\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to create a workflow from a JSON definition.\n\nIt is commonly used to store workflows as code and enable one\u2011button workflow imports through automation\u2014making it easier to manage workflows with complex subworkflow dependencies.\n\n---\n\ud83c\udfaf Use Case\n\nTypical use cases include:\n- \ud83d\udce6 Storing workflows in version control and importing them on demand  \n- \u25b6\ufe0f Enabling one\u2011click workflow deployment through another workflow  \n- \ud83e\uddf1 Managing complex workflow and subworkflow dependency chains  \n- \ud83d\udd01 Promoting workflows across environments in a standardized way  \n\nThis approach supports workflow\u2011as\u2011code and helps teams scale automation safely and consistently.\n\n---\n\u2699\ufe0f Parameters\n- workflowjson (Required): \ud83e\uddfe The complete JSON definition of the workflow to be created.\n\n---\n\ud83e\udde0 Workflow Logic\n- \ud83d\udce4 The subworkflow submits the provided workflow JSON definition\n- \ud83d\udee0\ufe0f A new workflow is created based on the supplied configuration\n- \u2705 If creation is successful, the subworkflow completes\n- \u274c If creation fails, the subworkflow fails\u2014allowing the parent workflow to retry or take alternative action\n\n---\n\ud83e\udde9 Usage Context\n- \u2705 Designed for workflow lifecycle automation\n- \u2705 Enables repeatable and controlled workflow creation\n- \u2705 Ideal for enablement, templates, and automation catalogs\n- \u2705 Works well with Git\u2011based workflow storage and CI/CD patterns\n\n---",
+      "guideSummary": "\ud83e\udde9 Subworkflow to Create a Workflow",
+      "description": "Subworkflow to create a workflow.\n\nThis Subworkflow is used to create a workflow.\nCan be used to store workflows and one button\nworkflow import through a workflow, in addition\nto complex subworkflow dependencies. \n\nParameters:\n\n(Required) The entire workflow json",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/dynatrace-create-coe-subworkflows.workflow.json",
       "tags": []
     },
     {
