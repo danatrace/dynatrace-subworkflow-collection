@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-16T04:05:10.565630+00:00",
+  "generatedAt": "2026-03-16T05:54:42.930717+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 110,
-    "tested": 33,
+    "total": 111,
+    "tested": 34,
     "untested": 77
   },
   "workflows": [
@@ -22,6 +22,19 @@
       "description": "Subworkflow: Close Traffic to and from an AWS Security Group\nThis subworkflow removes all ingress and egress rules from a specified AWS security group, effectively closing all traffic to and from it.\n\nParameters\nawssecuritygroupid (Required): The ID of the AWS security group to be modified.\nawsregion (Required): The AWS region where the security group resides.\ndynatraceawsconnection (Required): The name of the Dynatrace OIDC connection used to authenticate with AWS.\n\nSubworkflow will wait for ssm document execution and will fail if ssm document fails\n\nThis subworkflow uses the out of the box AWS SSM document/runbook AWS-CloseSecurityGroup\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-CloseSecurityGroup/description?region=us-east-1\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for systems manager document execution\"",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-close-security-group.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-close-security-group.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws create ami image",
+      "path": "subworkflow-aws-create-ami-image.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83d\uddbc\ufe0f **Subworkflow to Create an AMI Image**\n\n\ud83d\udcf8 This subworkflow **creates an Amazon Machine Image (AMI) from a running EC2 instance** via the **AWS-CreateImage** SSM automation document.\n\nUseful for backups, creating standardized images, and version control of instance configurations.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **instanceId** (Required): \ud83c\udd94 The instance ID to create AMI from.  \n- **imageName** (Required): \ud83d\udcdd Name for the new AMI.  \n- **imageDescription** (Optional): \ud83d\udccb Description for the AMI.  \n- **noReboot** (Optional): \u26a1 Create AMI without rebooting (true/false). Default: false.  \n- **awsregion** (Required): \ud83c\udf0d The AWS region.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 Dynatrace AWS OIDC connection.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document**\n\n**Document Name**: `AWS-CreateImage`\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-createimage.html\n\n**What this runbook does:**\n- Creates an AMI from a running EC2 instance\n- Optionally reboots instance during creation\n- Captures the instance configuration and attached volumes\n- Produces a reusable image for launching new instances\n\n---\n\n\ud83d\udd17 Dependencies\nThis subworkflow depends on the following subworkflow:\n\n[\ud83e\udde9 subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)",
+      "guideText": "\ud83d\uddbc\ufe0f Subworkflow to Create an AMI Image\n\n\ud83d\udcf8 This subworkflow creates an Amazon Machine Image (AMI) from a running EC2 instance via the AWS-CreateImage SSM automation document.\n\nUseful for backups, creating standardized images, and version control of instance configurations.\n\n---\n\u2699\ufe0f Parameters\n- instanceId (Required): \ud83c\udd94 The instance ID to create AMI from.  \n- imageName (Required): \ud83d\udcdd Name for the new AMI.  \n- imageDescription (Optional): \ud83d\udccb Description for the AMI.  \n- noReboot (Optional): \u26a1 Create AMI without rebooting (true/false). Default: false.  \n- awsregion (Required): \ud83c\udf0d The AWS region.  \n- dynatraceawsconnection (Required): \ud83d\udd11 Dynatrace AWS OIDC connection.\n\n---\n\ud83d\udcd8 AWS SSM Document\n\nDocument Name: AWS-CreateImage\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-createimage.html\n\nWhat this runbook does:\n- Creates an AMI from a running EC2 instance\n- Optionally reboots instance during creation\n- Captures the instance configuration and attached volumes\n- Produces a reusable image for launching new instances\n\n---\n\n\ud83d\udd17 Dependencies\nThis subworkflow depends on the following subworkflow:\n\n[\ud83e\udde9 subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)",
+      "guideSummary": "\ud83d\uddbc\ufe0f Subworkflow to Create an AMI Image",
+      "description": "Subworkflow to create an AMI from an EC2 instance\n\nParameters:\n\ninstanceId: (Required) The instance ID to create AMI from\nimageName: (Required) Name for the AMI\nimageDescription: (Optional) Description for the AMI\nnoReboot: (Optional) Create AMI without rebooting instance\nawsregion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-create-ami-image.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-create-ami-image.workflow.json",
       "tags": []
     },
     {
