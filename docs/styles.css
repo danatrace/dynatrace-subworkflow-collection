@@ -73,13 +73,13 @@ h1 {
 .summary {
   margin: 0.4rem auto 0;
   color: var(--ink-soft);
-  max-width: 74ch;
+  max-width: 86ch;
 }
 
 .subworkflow-explainer {
   margin: 0.6rem auto 0;
   color: var(--ink-soft);
-  max-width: 78ch;
+  max-width: 92ch;
   line-height: 1.6;
   font-size: 0.97rem;
 }
