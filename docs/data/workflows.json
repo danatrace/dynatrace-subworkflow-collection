@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-16T05:55:15.704255+00:00",
+  "generatedAt": "2026-03-16T06:17:36.492414+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 110,
-    "tested": 34,
+    "total": 111,
+    "tested": 35,
     "untested": 76
   },
   "workflows": [
@@ -230,6 +230,19 @@
       "description": "This subworkflow scans for security groups Ingress entry defenitions with ports open to 0.0.0.0/0 (the entire internet) and raised a custom Alert!\nAs AWS Security Hub only scans every 12 - 24 hours, this subworkflow is an alternative way to catch these issues in a more frequent interval\n\nParameters:\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\nregions_to_search: (Reguired) Aws region to scan for security groups Ingress entry defenitions with ports open to 0.0.0.0/0",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ssm delete ami image",
+      "path": "subworkflow-aws-ssm-delete-ami-image.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83d\uddd1\ufe0f **Subworkflow to Delete AMI Image**\n\n\u26a0\ufe0f This subworkflow **deletes AMI images and associated snapshots** via **AWS-DeleteImage** SSM automation.\n\n**WARNING: This action removes AMI images from your account. Ensure they are no longer needed before deletion.**\n\nUseful for cleaning up old AMI versions, managing image inventory, and reducing storage costs.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **imageId** (Required): \ud83c\udd94 Primary AMI ID to delete.  \n- **imageIds** (Optional): \ud83c\udd94 Additional AMI IDs (comma-separated).  \n- **snapshotIds** (Optional): \ud83d\udcf8 Associated snapshot IDs to delete (comma-separated).  \n- **awsregion** (Required): \ud83c\udf0d The AWS region.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The Dynatrace AWS OIDC connection.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document**\n\n**Document Name**: `AWS-DeleteImage`\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-deleteimage.html\n\n**What this runbook does:**\n- Deregisters AMI images from your account\n- Deletes associated EBS snapshots\n- Removes both public and private AMIs\n- Prevents accidental reuse of old images\n- Frees up storage space and reduces costs\n- Cleans up image inventory\n\n---\n\n### \ud83d\udd04 **Workflow Logic**\n\n1. **Start Automation**: Triggers AWS-DeleteImage SSM document with image IDs and snapshot IDs\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\n3. **Check Status**: Validates the image deletion succeeded via JavaScript verification\n\n---\n\n### \ud83d\udca1 **Use Cases**\n\n- \ud83e\uddf9 **Cleanup**: Remove outdated AMI versions\n- \ud83d\udcca **Inventory Management**: Clean up unused images\n- \ud83d\udcb0 **Cost Reduction**: Remove associated EBS snapshots to reduce storage costs\n- \ud83d\udd12 **Security**: Delete images no longer needed for security compliance\n- \ud83d\udd04 **Image Rotation**: Manage AMI lifecycle and retention\n- \ud83d\udcc8 **Space Management**: Reclaim storage from old images\n\n---\n\n### \ud83d\udd17 Dependencies\n\nThis subworkflow depends on the following subworkflow:\n\n[\ud83e\udde9 subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)",
+      "guideText": "\ud83d\uddd1\ufe0f Subworkflow to Delete AMI Image\n\n\u26a0\ufe0f This subworkflow deletes AMI images and associated snapshots via AWS-DeleteImage SSM automation.\n\nWARNING: This action removes AMI images from your account. Ensure they are no longer needed before deletion.\n\nUseful for cleaning up old AMI versions, managing image inventory, and reducing storage costs.\n\n---\n\u2699\ufe0f Parameters\n- imageId (Required): \ud83c\udd94 Primary AMI ID to delete.  \n- imageIds (Optional): \ud83c\udd94 Additional AMI IDs (comma-separated).  \n- snapshotIds (Optional): \ud83d\udcf8 Associated snapshot IDs to delete (comma-separated).  \n- awsregion (Required): \ud83c\udf0d The AWS region.  \n- dynatraceawsconnection (Required): \ud83d\udd11 The Dynatrace AWS OIDC connection.\n\n---\n\ud83d\udcd8 AWS SSM Document\n\nDocument Name: AWS-DeleteImage\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-deleteimage.html\n\nWhat this runbook does:\n- Deregisters AMI images from your account\n- Deletes associated EBS snapshots\n- Removes both public and private AMIs\n- Prevents accidental reuse of old images\n- Frees up storage space and reduces costs\n- Cleans up image inventory\n\n---\n\ud83d\udd04 Workflow Logic\n\n1. Start Automation: Triggers AWS-DeleteImage SSM document with image IDs and snapshot IDs\n2. Wait for Completion: Polls the SSM automation status until complete (99 retries, 60s intervals)\n3. Check Status: Validates the image deletion succeeded via JavaScript verification\n\n---\n\ud83d\udca1 Use Cases\n- \ud83e\uddf9 Cleanup: Remove outdated AMI versions\n- \ud83d\udcca Inventory Management: Clean up unused images\n- \ud83d\udcb0 Cost Reduction: Remove associated EBS snapshots to reduce storage costs\n- \ud83d\udd12 Security: Delete images no longer needed for security compliance\n- \ud83d\udd04 Image Rotation: Manage AMI lifecycle and retention\n- \ud83d\udcc8 Space Management: Reclaim storage from old images\n\n---\n\ud83d\udd17 Dependencies\n\nThis subworkflow depends on the following subworkflow:\n\n[\ud83e\udde9 subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)",
+      "guideSummary": "\ud83d\uddd1\ufe0f Subworkflow to Delete AMI Image",
+      "description": "Subworkflow to delete AMI images and snapshots\\n\\nParameters:\\n\\nimageid: (Required) AMI ID to delete\\nimageids: (Optional) Additional AMI IDs (comma-separated)\\nsnapshotids: (Optional) Associated snapshot IDs to delete (comma-separated)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-delete-ami-image.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-delete-ami-image.workflow.json",
       "tags": []
     },
     {
