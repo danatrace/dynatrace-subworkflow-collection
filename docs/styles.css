@@ -71,9 +71,10 @@ h1 {
 }
 
 .summary {
-  margin: 0.4rem auto 0;
-  color: var(--ink-soft);
-  max-width: 102ch;
+    margin: 0.4rem auto 0;
+      color: var(--ink-soft);
+        max-width: 102ch;
+        }
 }
 
 .subworkflow-explainer {
