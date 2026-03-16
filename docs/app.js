@@ -382,15 +382,17 @@ function drawCards(items) {
     sectionPill.dataset.section = item.section;
 
     const selectCheckbox = node.querySelector(".select-workflow");
-    selectCheckbox.checked = state.selectedPaths.has(item.path);
-    selectCheckbox.addEventListener("change", (event) => {
-      if (event.target.checked) {
-        state.selectedPaths.add(item.path);
-      } else {
-        state.selectedPaths.delete(item.path);
-      }
-      updateSelectionUi();
-    });
+    if (selectCheckbox) {
+      selectCheckbox.checked = state.selectedPaths.has(item.path);
+      selectCheckbox.addEventListener("change", (event) => {
+        if (event.target.checked) {
+          state.selectedPaths.add(item.path);
+        } else {
+          state.selectedPaths.delete(item.path);
+        }
+        updateSelectionUi();
+      });
+    }
 
     // Guide button → open modal
     const guideBtn = node.querySelector(".guide-btn");
