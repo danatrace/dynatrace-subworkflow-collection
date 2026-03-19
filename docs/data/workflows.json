@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-19T06:46:05.985003+00:00",
+  "generatedAt": "2026-03-19T19:10:33.205251+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 44,
-    "tested": 37,
+    "total": 46,
+    "tested": 39,
     "untested": 7
   },
   "workflows": [
@@ -100,6 +100,32 @@
       "description": "Subworkflow to disable SSH and RDP ports opened to IP address specified, or open  to all addresses (0.0.0.0/0) if no address is specified.\n\nThe security group must have existing rules specifically on the SSH and RDP ports in order for ingress to be disabled.\n\nParameters:\n\nawssecuritygroupid: (Required) aws security group id to close traffic \nipaddresstoblock: (Optional) Additional Ipv4 or Ipv6 address to block access from (ex:1.2.3.4/32) (if not given all ip addresses will be taken into consideration)\nawsregion: (Required) region in which the security group resides\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for systems manager document execution\"\nSubworkflow will wait for ssm document execution and will fail if ssm document fails\n\nThis subworkflow uses the out of the box AWS SSM document AWS-DisablePublicAccessForSecurityGroup\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-DisablePublicAccessForSecurityGroup/description?region=us-east-1",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-disable-public-access-for-security-group.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-disable-public-access-for-security-group.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ec2 start instance and verify running",
+      "path": "subworkflow-aws-ec2-start-instance-and-verify-running.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \u25b6\ufe0f Subworkflow \u2014 Start EC2 Instance and Verify Running\n\nStarts a stopped EC2 instance and waits until it reaches the 'running' state before continuing. Used as a recovery or scale-out step.\n\n### \u2699\ufe0f Parameters\n- **instanceIds** (Required): EC2 instance ID(s)\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\u25b6\ufe0f Subworkflow \u2014 Start EC2 Instance and Verify Running\n\nStarts a stopped EC2 instance and waits until it reaches the 'running' state before continuing. Used as a recovery or scale-out step.\n\u2699\ufe0f Parameters\n- instanceIds (Required): EC2 instance ID(s)\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\u25b6\ufe0f Subworkflow \u2014 Start EC2 Instance and Verify Running",
+      "description": "Subworkflow to start a stopped EC2 instance and verify it reaches the 'running' state.\n\nParameters:\n\ninstanceIds: (Required) EC2 instance ID(s) to start\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ec2-start-instance-and-verify-running.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ec2-start-instance-and-verify-running.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ec2 stop instance and verify stopped",
+      "path": "subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83d\uded1 Subworkflow \u2014 Stop EC2 Instance and Verify\n\nStops the specified EC2 instance(s) and waits until they reach the 'stopped' state. Used during cost-saving operations, scheduled maintenance, or before resizing.\n\n### \u2699\ufe0f Parameters\n- **instanceIds** (Required): EC2 instance ID(s)\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\ud83d\uded1 Subworkflow \u2014 Stop EC2 Instance and Verify\n\nStops the specified EC2 instance(s) and waits until they reach the 'stopped' state. Used during cost-saving operations, scheduled maintenance, or before resizing.\n\u2699\ufe0f Parameters\n- instanceIds (Required): EC2 instance ID(s)\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\ud83d\uded1 Subworkflow \u2014 Stop EC2 Instance and Verify",
+      "description": "Subworkflow to stop an EC2 instance and verify it reaches the 'stopped' state before completing.\n\nParameters:\n\ninstanceIds: (Required) EC2 instance ID(s) to stop\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json",
       "tags": []
     },
     {
