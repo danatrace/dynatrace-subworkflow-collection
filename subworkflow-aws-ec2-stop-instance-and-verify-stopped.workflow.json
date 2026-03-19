@@ -1,0 +1,76 @@
+{
+  "id": "49577ffb-03d8-47a5-916c-f9970d4f38a1",
+  "title": "\ud83e\udde9subworkflow - aws ec2 stop instance and verify stopped",
+  "description": "Subworkflow to stop an EC2 instance and verify it reaches the 'stopped' state before completing.\n\nParameters:\n\ninstanceIds: (Required) EC2 instance ID(s) to stop\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{ result(\"ec2_wait_stopped\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceIds": "i-0bf88cff011236fde",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\uded1 Subworkflow \u2014 Stop EC2 Instance and Verify\n\nStops the specified EC2 instance(s) and waits until they reach the 'stopped' state. Used during cost-saving operations, scheduled maintenance, or before resizing.\n\n### \u2699\ufe0f Parameters\n- **instanceIds** (Required): EC2 instance ID(s)\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "ec2_stop": {
+      "name": "ec2_stop",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceIds\"]}}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 15,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-stop-instances",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Stop the EC2 instance(s).",
+      "predecessors": []
+    },
+    "ec2_wait_stopped": {
+      "name": "ec2_wait_stopped",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{ input()[\"instanceIds\"] }}",
+        "InstanceState": "stopped"
+      },
+      "retry": {
+        "count": 10,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-wait-state",
+      "timeout": 600,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "ec2_stop": "OK"
+        }
+      },
+      "description": "Wait until the EC2 instance(s) are fully stopped.",
+      "waitBefore": 10,
+      "predecessors": [
+        "ec2_stop"
+      ]
+    }
+  }
+}

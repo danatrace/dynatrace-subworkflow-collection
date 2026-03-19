@@ -1,0 +1,67 @@
+{
+  "id": "30a66e34-f116-4eb4-9d9f-d0098110a0dd",
+  "title": "\ud83e\udde9subworkflow - aws ec2 start instance and verify running",
+  "description": "Subworkflow to start a stopped EC2 instance and verify it reaches the 'running' state.\n\nParameters:\n\ninstanceIds: (Required) EC2 instance ID(s) to start\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{ result(\"ec2_wait_running\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceIds": "i-0bf88cff011236fde",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u25b6\ufe0f Subworkflow \u2014 Start EC2 Instance and Verify Running\n\nStarts a stopped EC2 instance and waits until it reaches the 'running' state before continuing. Used as a recovery or scale-out step.\n\n### \u2699\ufe0f Parameters\n- **instanceIds** (Required): EC2 instance ID(s)\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "ec2_start": {
+      "name": "ec2_start",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceIds\"]}}"
+      },
+      "action": "dynatrace.aws.connector:ec2-start-instances",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Starts an Amazon EBS-backed instance that you've previously stopped.",
+      "predecessors": []
+    },
+    "ec2_wait_running": {
+      "name": "ec2_wait_running",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{ input()[\"instanceIds\"] }}",
+        "InstanceState": "running"
+      },
+      "retry": {
+        "count": 10,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-wait-state",
+      "timeout": 600,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "ec2_start": "OK"
+        }
+      },
+      "description": "Wait until the EC2 instance(s) are fully running.",
+      "waitBefore": 10,
+      "predecessors": [
+        "ec2_start"
+      ]
+    }
+  }
+}
