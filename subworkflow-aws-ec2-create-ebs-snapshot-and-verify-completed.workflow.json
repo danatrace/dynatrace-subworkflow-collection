@@ -1,0 +1,47 @@
+{
+  "id": "34f84b95-96e2-4d29-a272-417853c42299",
+  "title": "\ud83e\udde9subworkflow - aws ec2 create ebs snapshot and verify completed",
+  "description": "Subworkflow to create an EBS volume snapshot and poll until the snapshot reaches 'completed' state.\n\nParameters:\n\nvolumeId: (Required) EBS volume ID to snapshot\nsnapshotDescription: (Optional) Description for the snapshot\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{ result(\"create_snapshot\") }}",
+  "type": "STANDARD",
+  "input": {
+    "volumeId": "vol-08521b61a82cefcc3",
+    "awsRegion": "us-east-1",
+    "snapshotDescription": "Automated snapshot before remediation",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udcf8 Subworkflow \u2014 Create EBS Snapshot and Verify Completed\n\nCreates a snapshot of an EBS volume before any destructive or risk-bearing operation (resize, migration, patching). Polls the snapshot state until it is 'completed'. Fails if snapshot never completes, allowing parent workflows to abort safely.\n\n### \u2699\ufe0f Parameters\n- **volumeId** (Required): EBS volume ID\n- **snapshotDescription** (Optional): Human-readable description\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "create_snapshot": {
+      "name": "create_snapshot",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "VolumeId": "{{ input()[\"volumeId\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "Description": "{{ input()[\"snapshotDescription\"] }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 15,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-create-snapshot",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Initiate EBS snapshot creation.",
+      "predecessors": []
+    }
+  }
+}
