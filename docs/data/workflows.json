@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-19T21:28:25.167080+00:00",
+  "generatedAt": "2026-03-19T21:31:55.918283+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 49,
-    "tested": 42,
+    "total": 48,
+    "tested": 41,
     "untested": 7
   },
   "workflows": [
@@ -100,19 +100,6 @@
       "description": "Subworkflow to disable SSH and RDP ports opened to IP address specified, or open  to all addresses (0.0.0.0/0) if no address is specified.\n\nThe security group must have existing rules specifically on the SSH and RDP ports in order for ingress to be disabled.\n\nParameters:\n\nawssecuritygroupid: (Required) aws security group id to close traffic \nipaddresstoblock: (Optional) Additional Ipv4 or Ipv6 address to block access from (ex:1.2.3.4/32) (if not given all ip addresses will be taken into consideration)\nawsregion: (Required) region in which the security group resides\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for systems manager document execution\"\nSubworkflow will wait for ssm document execution and will fail if ssm document fails\n\nThis subworkflow uses the out of the box AWS SSM document AWS-DisablePublicAccessForSecurityGroup\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-DisablePublicAccessForSecurityGroup/description?region=us-east-1",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-disable-public-access-for-security-group.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-disable-public-access-for-security-group.workflow.json",
-      "tags": []
-    },
-    {
-      "title": "\ud83e\udde9subworkflow - aws ec2 create ebs snapshot and verify completed",
-      "path": "subworkflow-aws-ec2-create-ebs-snapshot-and-verify-completed.workflow.json",
-      "section": "tested",
-      "folder": "top-level",
-      "guide": "## \ud83d\udcf8 Subworkflow \u2014 Create EBS Snapshot and Verify Completed\n\nCreates a snapshot of an EBS volume before any destructive or risk-bearing operation (resize, migration, patching). Polls the snapshot state until it is 'completed'. Fails if snapshot never completes, allowing parent workflows to abort safely.\n\n### \u2699\ufe0f Parameters\n- **volumeId** (Required): EBS volume ID\n- **snapshotDescription** (Optional): Human-readable description\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
-      "guideText": "\ud83d\udcf8 Subworkflow \u2014 Create EBS Snapshot and Verify Completed\n\nCreates a snapshot of an EBS volume before any destructive or risk-bearing operation (resize, migration, patching). Polls the snapshot state until it is 'completed'. Fails if snapshot never completes, allowing parent workflows to abort safely.\n\u2699\ufe0f Parameters\n- volumeId (Required): EBS volume ID\n- snapshotDescription (Optional): Human-readable description\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
-      "guideSummary": "\ud83d\udcf8 Subworkflow \u2014 Create EBS Snapshot and Verify Completed",
-      "description": "Subworkflow to create an EBS volume snapshot and poll until the snapshot reaches 'completed' state.\n\nParameters:\n\nvolumeId: (Required) EBS volume ID to snapshot\nsnapshotDescription: (Optional) Description for the snapshot\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
-      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ec2-create-ebs-snapshot-and-verify-completed.workflow.json",
-      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ec2-create-ebs-snapshot-and-verify-completed.workflow.json",
       "tags": []
     },
     {
