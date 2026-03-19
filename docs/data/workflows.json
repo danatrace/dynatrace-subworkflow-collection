@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-19T19:22:17.683838+00:00",
+  "generatedAt": "2026-03-19T19:48:59.949561+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 46,
-    "tested": 39,
+    "total": 47,
+    "tested": 40,
     "untested": 7
   },
   "workflows": [
@@ -126,6 +126,19 @@
       "description": "Subworkflow to stop an EC2 instance and verify it reaches the 'stopped' state before completing.\n\nParameters:\n\ninstanceIds: (Required) EC2 instance ID(s) to stop\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ec2 terminate instance and verify terminated",
+      "path": "subworkflow-aws-ec2-terminate-instance-and-verify-terminated.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \u274c Subworkflow \u2014 Terminate EC2 Instance and Verify\n\nTerminates the specified EC2 instance and waits until it reaches the 'terminated' state. Used for zombie instance cleanup, auto-healing, and cost reduction.\n\n\u26a0\ufe0f This is irreversible. Use with caution and always ensure the correct instance ID is passed.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID to terminate\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\u274c Subworkflow \u2014 Terminate EC2 Instance and Verify\n\nTerminates the specified EC2 instance and waits until it reaches the 'terminated' state. Used for zombie instance cleanup, auto-healing, and cost reduction.\n\n\u26a0\ufe0f This is irreversible. Use with caution and always ensure the correct instance ID is passed.\n\u2699\ufe0f Parameters\n- instanceId (Required): EC2 instance ID to terminate\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\u274c Subworkflow \u2014 Terminate EC2 Instance and Verify",
+      "description": "Subworkflow to terminate an EC2 instance and verify it reaches the 'terminated' state. Used for zombie instance cleanup and auto-healing.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID to terminate\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ec2-terminate-instance-and-verify-terminated.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ec2-terminate-instance-and-verify-terminated.workflow.json",
       "tags": []
     },
     {
