@@ -6,8 +6,8 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 ## 📊 Inventory Summary
 
-- 🧮 Total top-level subworkflows: **41**
-- ☁️ AWS: **24**
+- 🧮 Total top-level subworkflows: **42**
+- ☁️ AWS: **25**
 - 🧭 Dynatrace: **13**
 - 🤖 OpenAI: **1**
 - 🛠️ Ownership Utilities: **3**
@@ -24,6 +24,7 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 | [subworkflow-aws-ec2-start-instance-and-verify-running.workflow.json](subworkflow-aws-ec2-start-instance-and-verify-running.workflow.json) | aws ec2 start instance and verify running | Start stopped EC2 instances and confirm running state before continuation. |
 | [subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json](subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json) | aws ec2 stop instance and verify stopped | Stop EC2 instances and confirm stopped state before downstream actions. |
 | [subworkflow-aws-ec2-terminate-instance-and-verify-terminated.workflow.json](subworkflow-aws-ec2-terminate-instance-and-verify-terminated.workflow.json) | aws ec2 terminate instance and verify terminated | Terminate an EC2 instance and confirm terminated state before teardown continues. |
+| [subworkflow-aws-ec2-tag-resource.workflow.json](subworkflow-aws-ec2-tag-resource.workflow.json) | aws ec2 tag resource | Apply tags to EC2 resources for compliance, cost allocation, and asset tracking. |
 | [subworkflow-aws-delete-cloudformation-stack.workflow.json](subworkflow-aws-delete-cloudformation-stack.workflow.json) | aws delete cloudformation stack | Tear down failed temporary infrastructure after recovery. |
 | [subworkflow-aws-delete-unused-security-group.workflow.json](subworkflow-aws-delete-unused-security-group.workflow.json) | aws delete unused security group | Remove unused security groups to reduce attack surface. |
 | [subworkflow-aws-disable-public-access-for-security-group.workflow.json](subworkflow-aws-disable-public-access-for-security-group.workflow.json) | aws disable public access for security group | Disable internet-open rules on sensitive workloads. |
