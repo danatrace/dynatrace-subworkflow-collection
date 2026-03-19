@@ -1,0 +1,54 @@
+{
+  "id": "8c4208d4-f3bd-4b3c-95fb-99effb589776",
+  "title": "\ud83e\udde9subworkflow - aws ec2 tag resource",
+  "description": "Subworkflow to apply tags to an EC2 resource (instance, volume, snapshot, etc.) and verify the tags are present.\n\nParameters:\n\nresourceId: (Required) AWS resource ID to tag\ntagKey: (Required) Tag key to apply\ntagValue: (Required) Tag value to apply\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{result(\"apply_tag\")}}",
+  "type": "STANDARD",
+  "input": {
+    "tagKey": "Remediation",
+    "tagValue": "In Progress",
+    "awsRegion": "us-east-1",
+    "resourceId": "i-09571811d6a7cdd74",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83c\udff7\ufe0f Subworkflow \u2014 Tag EC2 Resource\n\nApplies a tag to any EC2 resource (instance, volume, AMI, snapshot, security group). Used for compliance marking, cost allocation, and audit trails.\n\n### \u2699\ufe0f Parameters\n- **resourceId** (Required): EC2 resource ID (e.g. i-xxx, vol-xxx, sg-xxx)\n- **tagKey** (Required): Tag key to apply\n- **tagValue** (Required): Tag value to apply\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "apply_tag": {
+      "name": "apply_tag",
+      "input": {
+        "Tags": [
+          {
+            "key": "Key",
+            "value": "{{ input()[\"tagKey\"] }}"
+          },
+          {
+            "key": "Value",
+            "value": "{{ input()[\"tagValue\"] }}"
+          }
+        ],
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Resources": "{{ input()[\"resourceId\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-create-tags",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Adds or overwrites only the specified tags for the specified Amazon EC2 resource or resources.",
+      "predecessors": []
+    }
+  }
+}
