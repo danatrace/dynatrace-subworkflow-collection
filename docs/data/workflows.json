@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-03-19T03:53:26.101689+00:00",
+  "generatedAt": "2026-03-19T05:11:53.797009+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 44,
+    "total": 45,
     "tested": 35,
-    "untested": 9
+    "untested": 10
   },
   "workflows": [
     {
@@ -477,6 +477,19 @@
       "description": "",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/dynatrace-create-coe-subworkflows.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "subworkflow - dynatrace delete user",
+      "path": "subworkflow-dynatrace-delete-user.workflow.json",
+      "section": "untested",
+      "folder": "top-level",
+      "guide": "## \ud83e\udde9 **Subworkflow to Delete a Dynatrace User**\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to **delete a Dynatrace user**.\n\nIt is commonly used to **off-board users** from a Dynatrace account and can be used in onboarding/offboarding requests,\nfor example from ServiceNow, Jira, or Zendesk.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\uded1 Off-board users from a Dynatrace account\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **email** (Required): \ud83d\udce7 The **email address** of the user to be off-boarded.\n- **dynatrace_account_id** (Required): \ud83d\udce7 The **account ID** of the account you would like to off-board the user from.\n- **credential_vault_dynatrace_client_id** (Required): \ud83d\udd12 The **Credential Vault name** of the credential vault entry that contains the Dynatrace OAuth client ID.\n- **credential_vault_dynatrace_client_secret** (Required): \ud83d\udd12 The **Credential Vault name** of the credential vault entry that contains the Dynatrace OAuth client secret.\n\n---\n\n### \ud83d\udee0\ufe0f **Prerequisites**\n\nBefore running this workflow, Dynatrace OAuth credentials must be created with the following permissions:\n\n- account-idm-read\n- account-idm-write\n\nThe client ID and client secret must be stored in **separate Dynatrace Credential Vault entries**.\n\nOnce created, the names of the credential vault entries must be provided as input parameters to the workflow.",
+      "guideText": "\ud83e\udde9 Subworkflow to Delete a Dynatrace User\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to delete a Dynatrace user.\n\nIt is commonly used to off-board users from a Dynatrace account and can be used in onboarding/offboarding requests,\nfor example from ServiceNow, Jira, or Zendesk.\n\n---\n\ud83c\udfaf Use Case\n\nTypical use cases include:\n- \ud83d\uded1 Off-board users from a Dynatrace account\n\n---\n\u2699\ufe0f Parameters\n- email (Required): \ud83d\udce7 The email address of the user to be off-boarded.\n- dynatrace_account_id (Required): \ud83d\udce7 The account ID of the account you would like to off-board the user from.\n- credential_vault_dynatrace_client_id (Required): \ud83d\udd12 The Credential Vault name of the credential vault entry that contains the Dynatrace OAuth client ID.\n- credential_vault_dynatrace_client_secret (Required): \ud83d\udd12 The Credential Vault name of the credential vault entry that contains the Dynatrace OAuth client secret.\n\n---\n\ud83d\udee0\ufe0f Prerequisites\n\nBefore running this workflow, Dynatrace OAuth credentials must be created with the following permissions:\n- account-idm-read\n- account-idm-write\n\nThe client ID and client secret must be stored in separate Dynatrace Credential Vault entries.\n\nOnce created, the names of the credential vault entries must be provided as input parameters to the workflow.",
+      "guideSummary": "\ud83e\udde9 Subworkflow to Delete a Dynatrace User",
+      "description": "",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-dynatrace-delete-user.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-dynatrace-delete-user.workflow.json",
       "tags": []
     },
     {
