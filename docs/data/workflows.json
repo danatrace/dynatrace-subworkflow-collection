@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-03-19T05:43:01.909143+00:00",
+  "generatedAt": "2026-03-19T06:46:05.985003+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 45,
+    "total": 44,
     "tested": 37,
-    "untested": 8
+    "untested": 7
   },
   "workflows": [
     {
@@ -503,19 +503,6 @@
       "description": "",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/dynatrace-create-coe-subworkflows.workflow.json",
-      "tags": []
-    },
-    {
-      "title": "subworkflow - aws ssm configure aws package",
-      "path": "untested/subworkflow-aws-ssm-configure-aws-package.workflow.json",
-      "section": "untested",
-      "folder": "untested",
-      "guide": "## \ud83d\udce6 **Subworkflow to Configure AWS Package**\n\n\u2705 This subworkflow **installs and configures AWS packages on EC2 instances** via **AWS-ConfigureAWSPackage** SSM automation.\n\nUseful for deploying agents, utilities, and AWS tools across infrastructure, managing package versions, and keeping instances up-to-date.\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **instanceId** (Required): \ud83c\udd94 EC2 instance ID for package installation.  \n- **action** (Required): \ud83d\udd04 Action type - Install, Update, or Uninstall.  \n- **name** (Required): \ud83d\udccb Document name or package identifier.  \n- **version** (Optional): \ud83d\udccc Package version (latest if not specified).  \n- **sourceInfo** (Optional): \ud83d\udd17 Source information for the package.  \n- **additionalArguments** (Optional): \u2699\ufe0f Additional configuration arguments.  \n- **awsregion** (Required): \ud83c\udf0d The AWS region.  \n- **dynatraceawsconnection** (Required): \ud83d\udd11 The Dynatrace AWS OIDC connection.\n\n---\n\n### \ud83d\udcd8 **AWS SSM Document**\n\n**Document Name**: `AWS-ConfigureAWSPackage`\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-configureawspackage.html\n\n**What this runbook does:**\n- Installs, updates, or uninstalls AWS packages\n- Supports CloudWatch agent, EC2 agent, and other AWS tools\n- Manages package versions and dependencies\n- Works with both Windows and Linux instances\n- Enables centralized agent management\n- Supports custom package sources\n\n---\n\n### \ud83d\udd04 **Workflow Logic**\n\n1. **Start Automation**: Triggers AWS-ConfigureAWSPackage SSM document with instance ID and action\n2. **Wait for Completion**: Polls the SSM automation status until complete (99 retries, 60s intervals)\n3. **Check Status**: Validates the package configuration succeeded via JavaScript verification\n\n---\n\n### \ud83d\udca1 **Use Cases**\n\n- \ud83d\udd0d **CloudWatch Agent**: Deploy monitoring across instances\n- \ud83d\udee0\ufe0f **Tools Installation**: Deploy AWS CLI, Systems Manager agent\n- \ud83d\udcca **Version Management**: Keep packages at specific versions\n- \ud83d\udd04 **Fleet Updates**: Update packages across many instances\n- \ud83d\udd27 **Configuration Management**: Apply package-specific settings\n- \ud83d\udee1\ufe0f **Security Updates**: Update security-related packages\n\n---",
-      "guideText": "\ud83d\udce6 Subworkflow to Configure AWS Package\n\n\u2705 This subworkflow installs and configures AWS packages on EC2 instances via AWS-ConfigureAWSPackage SSM automation.\n\nUseful for deploying agents, utilities, and AWS tools across infrastructure, managing package versions, and keeping instances up-to-date.\n\n---\n\u2699\ufe0f Parameters\n- instanceId (Required): \ud83c\udd94 EC2 instance ID for package installation.  \n- action (Required): \ud83d\udd04 Action type - Install, Update, or Uninstall.  \n- name (Required): \ud83d\udccb Document name or package identifier.  \n- version (Optional): \ud83d\udccc Package version (latest if not specified).  \n- sourceInfo (Optional): \ud83d\udd17 Source information for the package.  \n- additionalArguments (Optional): \u2699\ufe0f Additional configuration arguments.  \n- awsregion (Required): \ud83c\udf0d The AWS region.  \n- dynatraceawsconnection (Required): \ud83d\udd11 The Dynatrace AWS OIDC connection.\n\n---\n\ud83d\udcd8 AWS SSM Document\n\nDocument Name: AWS-ConfigureAWSPackage\n\n\ud83d\udd17 https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-aws-configureawspackage.html\n\nWhat this runbook does:\n- Installs, updates, or uninstalls AWS packages\n- Supports CloudWatch agent, EC2 agent, and other AWS tools\n- Manages package versions and dependencies\n- Works with both Windows and Linux instances\n- Enables centralized agent management\n- Supports custom package sources\n\n---\n\ud83d\udd04 Workflow Logic\n\n1. Start Automation: Triggers AWS-ConfigureAWSPackage SSM document with instance ID and action\n2. Wait for Completion: Polls the SSM automation status until complete (99 retries, 60s intervals)\n3. Check Status: Validates the package configuration succeeded via JavaScript verification\n\n---\n\ud83d\udca1 Use Cases\n- \ud83d\udd0d CloudWatch Agent: Deploy monitoring across instances\n- \ud83d\udee0\ufe0f Tools Installation: Deploy AWS CLI, Systems Manager agent\n- \ud83d\udcca Version Management: Keep packages at specific versions\n- \ud83d\udd04 Fleet Updates: Update packages across many instances\n- \ud83d\udd27 Configuration Management: Apply package-specific settings\n- \ud83d\udee1\ufe0f Security Updates: Update security-related packages\n\n---",
-      "guideSummary": "\ud83d\udce6 Subworkflow to Configure AWS Package",
-      "description": "Subworkflow to configure and install AWS packages on instances\\n\\nParameters:\\n\\ninstanceid: (Required) EC2 instance ID\\naaction: (Required) Install, Update or Uninstall\\nname: (Required) Document name for the package\\nversion: (Optional) Package version (latest by default)\\nsourceinfo: (Optional) Source information for the package\\nadditionalarguments: (Optional) Additional arguments for package configuration\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
-      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/untested/subworkflow-aws-ssm-configure-aws-package.workflow.json",
-      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/untested/subworkflow-aws-ssm-configure-aws-package.workflow.json",
       "tags": []
     },
     {
