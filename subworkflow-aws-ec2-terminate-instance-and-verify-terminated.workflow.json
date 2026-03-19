@@ -1,0 +1,76 @@
+{
+  "id": "fa2c4383-159a-427b-a5be-a150686b7263",
+  "title": "\ud83e\udde9subworkflow - aws ec2 terminate instance and verify terminated",
+  "description": "Subworkflow to terminate an EC2 instance and verify it reaches the 'terminated' state. Used for zombie instance cleanup and auto-healing.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID to terminate\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{ result(\"ec2_wait_terminated\") }}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceId": "i-08104be7602657784",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \u274c Subworkflow \u2014 Terminate EC2 Instance and Verify\n\nTerminates the specified EC2 instance and waits until it reaches the 'terminated' state. Used for zombie instance cleanup, auto-healing, and cost reduction.\n\n\u26a0\ufe0f This is irreversible. Use with caution and always ensure the correct instance ID is passed.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID to terminate\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "ec2_terminate": {
+      "name": "ec2_terminate",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceId\"]}}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-terminate-instances",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Terminate the EC2 instance.",
+      "predecessors": []
+    },
+    "ec2_wait_terminated": {
+      "name": "ec2_wait_terminated",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{ input()[\"instanceId\"] }}",
+        "InstanceState": "terminated"
+      },
+      "retry": {
+        "count": 15,
+        "delay": 20,
+        "failedLoopIterationsOnly": false
+      },
+      "action": "dynatrace.aws.connector:ec2-wait-state",
+      "timeout": 600,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "ec2_terminate": "OK"
+        }
+      },
+      "description": "Wait until the EC2 instance is fully terminated.",
+      "waitBefore": 10,
+      "predecessors": [
+        "ec2_terminate"
+      ]
+    }
+  }
+}
