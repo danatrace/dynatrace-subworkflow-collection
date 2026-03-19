@@ -6,9 +6,9 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 ## 📊 Inventory Summary
 
-- 🧮 Total top-level subworkflows: **36**
+- 🧮 Total top-level subworkflows: **38**
 - ☁️ AWS: **21**
-- 🧭 Dynatrace: **11**
+- 🧭 Dynatrace: **13**
 - 🤖 OpenAI: **1**
 - 🛠️ Ownership Utilities: **3**
 - 📦 Other: **0**
@@ -48,12 +48,14 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 | [subworkflow-dynatrace-close-problem.workflow.json](subworkflow-dynatrace-close-problem.workflow.json) | dynatrace close problem | Auto-close resolved Dynatrace problems after validation. |
 | [subworkflow-dynatrace-create-dashboard.workflow.json](subworkflow-dynatrace-create-dashboard.workflow.json) | dynatrace create dashboard | Create a focused dashboard for incident monitoring. |
 | [subworkflow-dynatrace-create-workflow.workflow.json](subworkflow-dynatrace-create-workflow.workflow.json) | dynatrace create workflow | Bootstrap a new workflow from automation templates. |
+| [subworkflow-dynatrace-delete-user.workflow.json](subworkflow-dynatrace-delete-user.workflow.json) | dynatrace delete user | Remove a user account as part of access revocation workflows. |
 | [subworkflow-dynatrace-delete-workflow.workflow.json](subworkflow-dynatrace-delete-workflow.workflow.json) | dynatrace delete workflow | Retire obsolete workflows after governance review. |
 | [subworkflow-dynatrace-export-one-or-all-workflows-to-existing-github-repo.workflow.json](subworkflow-dynatrace-export-one-or-all-workflows-to-existing-github-repo.workflow.json) | dynatrace export one or all workflows to existing github repo | Back up workflows to GitHub for version control. |
 | [subworkflow-dynatrace-get-all-problem-data.workflow.json](subworkflow-dynatrace-get-all-problem-data.workflow.json) | dynatrace get all problem data | Collect full problem context before orchestration steps. |
 | [subworkflow-dynatrace-get-event-data.workflow.json](subworkflow-dynatrace-get-event-data.workflow.json) | dynatrace get event data | Fetch event details to enrich remediation decisions. |
 | [subworkflow-dynatrace-ingest-custom-alert.workflow.json](subworkflow-dynatrace-ingest-custom-alert.workflow.json) | dynatrace ingest custom alert | Push custom alert payloads into Dynatrace pipelines. |
 | [subworkflow-dynatrace-ingest-custom-info-event.workflow.json](subworkflow-dynatrace-ingest-custom-info-event.workflow.json) | dynatrace ingest custom info event | Ingest informational automation events for audit history. |
+| [subworkflow-dynatrace-invite-user.workflow.json](subworkflow-dynatrace-invite-user.workflow.json) | dynatrace invite user | Invite a new user during onboarding automation flows. |
 
 ## 🤖 OpenAI
 
