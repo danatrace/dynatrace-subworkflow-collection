@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-19T05:36:38.121305+00:00",
+  "generatedAt": "2026-03-19T05:37:06.944086+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
@@ -7,8 +7,8 @@
   },
   "counts": {
     "total": 46,
-    "tested": 36,
-    "untested": 10
+    "tested": 37,
+    "untested": 9
   },
   "workflows": [
     {
@@ -441,6 +441,19 @@
       "tags": []
     },
     {
+      "title": "\ud83e\udde9subworkflow - dynatrace invite user",
+      "path": "subworkflow-dynatrace-invite-user.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83e\udde9 **Subworkflow to Invite a Dynatrace User**\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to **Invite a Dynatrace user**.\n\nIt is commonly used to **on-board users** to a Dynatrace account and can be used in onboarding/offboarding requests,\nfor example from ServiceNow, Jira, or Zendesk.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udfe2 On-board users to a Dynatrace account\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **email** (Required): \ud83d\udce7 The **email address** of the user to be on-boarded.\n- **dynatrace_account_id** (Required): \ud83d\udce7 The **account ID** of the account you would like to on-board the user to.\n- **credential_vault_dynatrace_client_id** (Required): \ud83d\udd12 The **Credential Vault name** of the credential vault entry that contains the Dynatrace OAuth client ID.\n- **credential_vault_dynatrace_client_secret** (Required): \ud83d\udd12 The **Credential Vault name** of the credential vault entry that contains the Dynatrace OAuth client secret.\n\n---\n\n### \ud83d\udee0\ufe0f **Prerequisites**\n\nBefore running this workflow, Dynatrace OAuth credentials must be created with the following permissions:\n\n- account-idm-read\n- account-idm-write\n\nThe client ID and client secret must be stored in **separate Dynatrace Credential Vault entries**.\n\nOnce created, the names of the credential vault entries must be provided as input parameters to the workflow.",
+      "guideText": "\ud83e\udde9 Subworkflow to Invite a Dynatrace User\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to Invite a Dynatrace user.\n\nIt is commonly used to on-board users to a Dynatrace account and can be used in onboarding/offboarding requests,\nfor example from ServiceNow, Jira, or Zendesk.\n\n---\n\ud83c\udfaf Use Case\n\nTypical use cases include:\n- \ud83d\udfe2 On-board users to a Dynatrace account\n\n---\n\u2699\ufe0f Parameters\n- email (Required): \ud83d\udce7 The email address of the user to be on-boarded.\n- dynatrace_account_id (Required): \ud83d\udce7 The account ID of the account you would like to on-board the user to.\n- credential_vault_dynatrace_client_id (Required): \ud83d\udd12 The Credential Vault name of the credential vault entry that contains the Dynatrace OAuth client ID.\n- credential_vault_dynatrace_client_secret (Required): \ud83d\udd12 The Credential Vault name of the credential vault entry that contains the Dynatrace OAuth client secret.\n\n---\n\ud83d\udee0\ufe0f Prerequisites\n\nBefore running this workflow, Dynatrace OAuth credentials must be created with the following permissions:\n- account-idm-read\n- account-idm-write\n\nThe client ID and client secret must be stored in separate Dynatrace Credential Vault entries.\n\nOnce created, the names of the credential vault entries must be provided as input parameters to the workflow.",
+      "guideSummary": "\ud83e\udde9 Subworkflow to Invite a Dynatrace User",
+      "description": "",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-dynatrace-invite-user.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-dynatrace-invite-user.workflow.json",
+      "tags": []
+    },
+    {
       "title": "\ud83e\udde9subworkflow - openai Text and Prompting",
       "path": "subworkflow-open-ai-text-and-prompting.workflow.json",
       "section": "tested",
@@ -490,19 +503,6 @@
       "description": "",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/dynatrace-create-coe-subworkflows.workflow.json",
-      "tags": []
-    },
-    {
-      "title": "subworkflow - dynatrace invite user",
-      "path": "subworkflow-dynatrace-invite-user.workflow.json",
-      "section": "untested",
-      "folder": "top-level",
-      "guide": "## \ud83e\udde9 **Subworkflow to Invite a Dynatrace User**\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to **Invite a Dynatrace user**.\n\nIt is commonly used to **on-board users** to a Dynatrace account and can be used in onboarding/offboarding requests,\nfor example from ServiceNow, Jira, or Zendesk.\n\n---\n\n### \ud83c\udfaf **Use Case**\n\nTypical use cases include:\n\n- \ud83d\udfe2 On-board users to a Dynatrace account\n\n---\n\n### \u2699\ufe0f **Parameters**\n\n- **email** (Required): \ud83d\udce7 The **email address** of the user to be on-boarded.\n- **dynatrace_account_id** (Required): \ud83d\udce7 The **account ID** of the account you would like to on-board the user to.\n- **credential_vault_dynatrace_client_id** (Required): \ud83d\udd12 The **Credential Vault name** of the credential vault entry that contains the Dynatrace OAuth client ID.\n- **credential_vault_dynatrace_client_secret** (Required): \ud83d\udd12 The **Credential Vault name** of the credential vault entry that contains the Dynatrace OAuth client secret.\n\n---\n\n### \ud83d\udee0\ufe0f **Prerequisites**\n\nBefore running this workflow, Dynatrace OAuth credentials must be created with the following permissions:\n\n- account-idm-read\n- account-idm-write\n\nThe client ID and client secret must be stored in **separate Dynatrace Credential Vault entries**.\n\nOnce created, the names of the credential vault entries must be provided as input parameters to the workflow.",
-      "guideText": "\ud83e\udde9 Subworkflow to Invite a Dynatrace User\n\n\u2699\ufe0f This subworkflow provides a simple and automated way to Invite a Dynatrace user.\n\nIt is commonly used to on-board users to a Dynatrace account and can be used in onboarding/offboarding requests,\nfor example from ServiceNow, Jira, or Zendesk.\n\n---\n\ud83c\udfaf Use Case\n\nTypical use cases include:\n- \ud83d\udfe2 On-board users to a Dynatrace account\n\n---\n\u2699\ufe0f Parameters\n- email (Required): \ud83d\udce7 The email address of the user to be on-boarded.\n- dynatrace_account_id (Required): \ud83d\udce7 The account ID of the account you would like to on-board the user to.\n- credential_vault_dynatrace_client_id (Required): \ud83d\udd12 The Credential Vault name of the credential vault entry that contains the Dynatrace OAuth client ID.\n- credential_vault_dynatrace_client_secret (Required): \ud83d\udd12 The Credential Vault name of the credential vault entry that contains the Dynatrace OAuth client secret.\n\n---\n\ud83d\udee0\ufe0f Prerequisites\n\nBefore running this workflow, Dynatrace OAuth credentials must be created with the following permissions:\n- account-idm-read\n- account-idm-write\n\nThe client ID and client secret must be stored in separate Dynatrace Credential Vault entries.\n\nOnce created, the names of the credential vault entries must be provided as input parameters to the workflow.",
-      "guideSummary": "\ud83e\udde9 Subworkflow to Invite a Dynatrace User",
-      "description": "",
-      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-dynatrace-invite-user.workflow.json",
-      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-dynatrace-invite-user.workflow.json",
       "tags": []
     },
     {
