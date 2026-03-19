@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-03-16T06:17:58.408417+00:00",
+  "generatedAt": "2026-03-19T03:46:47.091850+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 110,
+    "total": 109,
     "tested": 35,
-    "untested": 75
+    "untested": 74
   },
   "workflows": [
     {
@@ -477,19 +477,6 @@
       "description": "",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/dynatrace-create-coe-subworkflows.workflow.json",
-      "tags": []
-    },
-    {
-      "title": "subworkflow - aws ssm bedrock remediate associate agent knowledge base",
-      "path": "untested/subworkflow-aws-ssm-bedrock-remediate-associate-agent-kb.workflow.json",
-      "section": "untested",
-      "folder": "untested",
-      "guide": "Uses AWS-ExecuteAwsApi to call bedrock-agent:AssociateAgentKnowledgeBase.",
-      "guideText": "Uses AWS-ExecuteAwsApi to call bedrock-agent:AssociateAgentKnowledgeBase.",
-      "guideSummary": "Uses AWS-ExecuteAwsApi to call bedrock-agent:AssociateAgentKnowledgeBase.",
-      "description": "Associate KB to Bedrock agent",
-      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/untested/subworkflow-aws-ssm-bedrock-remediate-associate-agent-kb.workflow.json",
-      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/untested/subworkflow-aws-ssm-bedrock-remediate-associate-agent-kb.workflow.json",
       "tags": []
     },
     {
