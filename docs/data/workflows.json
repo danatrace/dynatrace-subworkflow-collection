@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-19T20:30:40.793915+00:00",
+  "generatedAt": "2026-03-19T20:48:45.881788+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 47,
-    "tested": 40,
+    "total": 48,
+    "tested": 41,
     "untested": 7
   },
   "workflows": [
@@ -126,6 +126,19 @@
       "description": "Subworkflow to stop an EC2 instance and verify it reaches the 'stopped' state before completing.\n\nParameters:\n\ninstanceIds: (Required) EC2 instance ID(s) to stop\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ec2 tag resource",
+      "path": "subworkflow-aws-ec2-tag-resource.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83c\udff7\ufe0f Subworkflow \u2014 Tag EC2 Resource\n\nApplies a tag to any EC2 resource (instance, volume, AMI, snapshot, security group). Used for compliance marking, cost allocation, and audit trails.\n\n### \u2699\ufe0f Parameters\n- **resourceId** (Required): EC2 resource ID (e.g. i-xxx, vol-xxx, sg-xxx)\n- **tagKey** (Required): Tag key to apply\n- **tagValue** (Required): Tag value to apply\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\ud83c\udff7\ufe0f Subworkflow \u2014 Tag EC2 Resource\n\nApplies a tag to any EC2 resource (instance, volume, AMI, snapshot, security group). Used for compliance marking, cost allocation, and audit trails.\n\u2699\ufe0f Parameters\n- resourceId (Required): EC2 resource ID (e.g. i-xxx, vol-xxx, sg-xxx)\n- tagKey (Required): Tag key to apply\n- tagValue (Required): Tag value to apply\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\ud83c\udff7\ufe0f Subworkflow \u2014 Tag EC2 Resource",
+      "description": "Subworkflow to apply tags to an EC2 resource (instance, volume, snapshot, etc.) and verify the tags are present.\n\nParameters:\n\nresourceId: (Required) AWS resource ID to tag\ntagKey: (Required) Tag key to apply\ntagValue: (Required) Tag value to apply\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ec2-tag-resource.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ec2-tag-resource.workflow.json",
       "tags": []
     },
     {
