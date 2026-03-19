@@ -6,9 +6,9 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 ## 📊 Inventory Summary
 
-- 🧮 Total top-level subworkflows: **33**
-- ☁️ AWS: **19**
-- 🧭 Dynatrace: **10**
+- 🧮 Total top-level subworkflows: **36**
+- ☁️ AWS: **21**
+- 🧭 Dynatrace: **11**
 - 🤖 OpenAI: **1**
 - 🛠️ Ownership Utilities: **3**
 - 📦 Other: **0**
@@ -18,6 +18,7 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 | File | Use Case | Example Use Case |
 |---|---|---|
 | [subworkflow-aws-close-security-group.workflow.json](subworkflow-aws-close-security-group.workflow.json) | aws close security group | Close a risky security group during incident containment. |
+| [subworkflow-aws-create-ami-image.workflow.json](subworkflow-aws-create-ami-image.workflow.json) | aws create ami image | Create an AMI backup before risky maintenance or patching. |
 | [subworkflow-aws-create-cloudformation-stack.workflow.json](subworkflow-aws-create-cloudformation-stack.workflow.json) | aws create cloudformation stack | Provision emergency infrastructure from a predefined stack. |
 | [subworkflow-aws-davis-forecast-for-aws-volume-usage.workflow.json](subworkflow-aws-davis-forecast-for-aws-volume-usage.workflow.json) | aws davis forecast for aws volume usage | Forecast storage growth and trigger proactive capacity actions. |
 | [subworkflow-aws-delete-cloudformation-stack.workflow.json](subworkflow-aws-delete-cloudformation-stack.workflow.json) | aws delete cloudformation stack | Tear down failed temporary infrastructure after recovery. |
@@ -33,6 +34,7 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 | [subworkflow-aws-run-command-on-ec2-instance.workflow.json](subworkflow-aws-run-command-on-ec2-instance.workflow.json) | aws run command on ec2 instance | Execute diagnostics or remediation scripts on target hosts. |
 | [subworkflow-aws-s3-block-public-access-for-bucket.workflow.json](subworkflow-aws-s3-block-public-access-for-bucket.workflow.json) | aws s3 block public access for bucket | Block public S3 access after an exposure alert. |
 | [subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json](subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json) | aws scan for security groups with ports open to 0 0 0 0 0 | Scan for publicly exposed security groups and flag risk. |
+| [subworkflow-aws-ssm-delete-ami-image.workflow.json](subworkflow-aws-ssm-delete-ami-image.workflow.json) | aws ssm delete ami image | Remove outdated AMIs and snapshots to reduce storage cost. |
 | [subworkflow-aws-update-cloudformation-stack.workflow.json](subworkflow-aws-update-cloudformation-stack.workflow.json) | aws update cloudformation stack | Apply safe stack updates during a controlled change window. |
 | [subworkflow-aws-wait-for-run-command-execution.workflow.json](subworkflow-aws-wait-for-run-command-execution.workflow.json) | aws wait for run command execution | Wait for SSM Run Command completion before next automation step. |
 | [subworkflow-aws-wait-for-systems-manager-document-execution.workflow.json](subworkflow-aws-wait-for-systems-manager-document-execution.workflow.json) | aws wait for systems manager document execution | Wait for SSM Automation document completion and verify status. |
@@ -41,6 +43,7 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 | File | Use Case | Example Use Case |
 |---|---|---|
+| [dynatrace-create-coe-subworkflows.workflow.json](dynatrace-create-coe-subworkflows.workflow.json) | dynatrace create coe subworkflows | Bootstrap a core set of CoE subworkflows for automation onboarding. |
 | [subworkflow-dynatrace-check-if-problem-is-solved-or-closed.workflow.json](subworkflow-dynatrace-check-if-problem-is-solved-or-closed.workflow.json) | dynatrace check if problem is solved or closed | Gate downstream actions until the problem is solved. |
 | [subworkflow-dynatrace-close-problem.workflow.json](subworkflow-dynatrace-close-problem.workflow.json) | dynatrace close problem | Auto-close resolved Dynatrace problems after validation. |
 | [subworkflow-dynatrace-create-dashboard.workflow.json](subworkflow-dynatrace-create-dashboard.workflow.json) | dynatrace create dashboard | Create a focused dashboard for incident monitoring. |
