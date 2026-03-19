@@ -6,8 +6,8 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 ## 📊 Inventory Summary
 
-- 🧮 Total top-level subworkflows: **42**
-- ☁️ AWS: **25**
+- 🧮 Total top-level subworkflows: **43**
+- ☁️ AWS: **26**
 - 🧭 Dynatrace: **13**
 - 🤖 OpenAI: **1**
 - 🛠️ Ownership Utilities: **3**
@@ -20,6 +20,7 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 | [subworkflow-aws-close-security-group.workflow.json](subworkflow-aws-close-security-group.workflow.json) | aws close security group | Close a risky security group during incident containment. |
 | [subworkflow-aws-create-ami-image.workflow.json](subworkflow-aws-create-ami-image.workflow.json) | aws create ami image | Create an AMI backup before risky maintenance or patching. |
 | [subworkflow-aws-create-cloudformation-stack.workflow.json](subworkflow-aws-create-cloudformation-stack.workflow.json) | aws create cloudformation stack | Provision emergency infrastructure from a predefined stack. |
+| [subworkflow-aws-ec2-create-ebs-snapshot-and-verify-completed.workflow.json](subworkflow-aws-ec2-create-ebs-snapshot-and-verify-completed.workflow.json) | aws ec2 create ebs snapshot and verify completed | Create a point-in-time EBS volume snapshot and verify completion before risky operations. |
 | [subworkflow-aws-davis-forecast-for-aws-volume-usage.workflow.json](subworkflow-aws-davis-forecast-for-aws-volume-usage.workflow.json) | aws davis forecast for aws volume usage | Forecast storage growth and trigger proactive capacity actions. |
 | [subworkflow-aws-ec2-start-instance-and-verify-running.workflow.json](subworkflow-aws-ec2-start-instance-and-verify-running.workflow.json) | aws ec2 start instance and verify running | Start stopped EC2 instances and confirm running state before continuation. |
 | [subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json](subworkflow-aws-ec2-stop-instance-and-verify-stopped.workflow.json) | aws ec2 stop instance and verify stopped | Stop EC2 instances and confirm stopped state before downstream actions. |
