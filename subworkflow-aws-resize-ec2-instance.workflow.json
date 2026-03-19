@@ -1,92 +1,171 @@
 {
-  "id": "e1ef703b-88ac-496a-a4a0-38805fe6e91c",
-  "title": "🧩subworkflow - aws resize ec2 instance",
-  "description": "Subworkflow to resize an ec2 instance (Changes the type of instance)\n\nThis subworkflow creates an easy way to trigger\nthe resizing of an aws ec2 instance with\n\nParameters:\n\nresize_to_instance_type: (Required) instance type to resize ec2 instance (for example t3.small, t3.medium etc.)\ninstanceid: (Required) instance id of the ec2 instance to resize \nawsregion: (Required) region in which the ec2 instance to resize resides\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\n\nThis subworkflow uses the out of the box SSM Document \"AWS-ResizeInstance\" \nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-ResizeInstance/description?region=us-east-1\n\nSubworkflow will wait for ssm document execution and will fail if ssm document fails\n\nThe subworkflow sends the command to resize a ec2 stack to the\naws SSM document \"AWS-ResizeInstance\", then waits until\nthe SSM document has finished and then checks if the execution was \nsuccessful. If not, it will fail the subworkflow to provide a restart on error\nfunctionality to the Parent workflow\n\nThis subworkflow Needs subworkflow \"subworkflow - aws wait for systems manager document execution\"",
+  "id": "4286e7d3-18f9-4fce-8920-722bef0883b7",
+  "title": "\ud83e\udde9subworkflow - aws ec2 resize instance type",
+  "description": "Subworkflow to resize an EC2 instance by stopping it, changing the instance type, then starting it and verifying it returns to running state.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID to resize\nnewInstanceType: (Required) Target instance type (e.g. t3.large)\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
   "ownerType": "USER",
-  "isPrivate": false,
-  "schemaVersion": 3,
+  "isPrivate": true,
+  "schemaVersion": 4,
   "trigger": {},
-  "result": "{{ result(\"wait-for-ssm-execution-completed\") }}",
+  "result": "{{ result(\"ec2_wait_running\") }}",
   "type": "STANDARD",
   "input": {
-    "awsregion": "us-east-1",
-    "instanceid": "i-0e831c54dc3f2f0c7",
-    "dynatraceawsconnection": "awsplayground",
-    "resize_to_instance_type": "t3.small"
+    "awsRegion": "us-east-1",
+    "instanceId": "i-09571811d6a7cdd74",
+    "newInstanceType": "t2.large",
+    "dynatraceawsconnection": "554872066791"
   },
   "hourlyExecutionLimit": 1000,
-  "guide": "## 🔧 **Subworkflow to Resize an AWS EC2 Instance (Change Instance Type)**\n\n📐 This subworkflow provides a simple and controlled way to **resize an AWS EC2 instance by changing its instance type** (for example, scaling from `t3.small` to `t3.medium`).\n\nIt is commonly used for **cost optimization, performance tuning, or remediation workflows** where instance capacity needs to be adjusted dynamically.\n\n---\n\n### ⚙️ **Parameters**\n\n- **resize_to_instance_type** (Required): 🏷️ The target EC2 instance type  \n  *(e.g. `t3.small`, `t3.medium`, `m5.large`)*\n\n- **instanceid** (Required): 🆔 The ID of the EC2 instance to resize.\n\n- **awsregion** (Required): 🌍 The AWS region where the EC2 instance resides.\n\n- **dynatraceawsconnection** (Required): 🔑 The name of the Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### 📘 **AWS SSM Document Used**\n\nThis subworkflow uses the out-of-the-box AWS Systems Manager document:\n\n🔗 https://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-ResizeInstance/description?region=us-east-1\n\n---\n\n### ⏳ **Execution Behavior**\n\n⏱️ The subworkflow waits for the AWS Systems Manager (SSM) document execution to complete.  \n❌ If the SSM document execution fails, this subworkflow will also fail.\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 📤 The subworkflow sends a resize command to the AWS SSM document  \n  **`AWS-ResizeInstance`**\n- ⏳ It waits for the SSM document execution to finish\n- ✅ The execution result is validated to confirm a successful resize\n- ❌ If the resize fails, the subworkflow fails to enable **restart-on-error** handling in the parent workflow\n\n---\n\n### 🔗 **Workflow Requirement**\n\nThis subworkflow Needs subworkflow  \n[subworkflow - aws wait for systems manager document execution](/ui/apps/dynatrace.automations/workflows/20661ec0-29d5-471f-9973-29679d5fe908)\n\n---",
+  "guide": "## \ud83d\udcd0 Subworkflow \u2014 Resize EC2 Instance Type\n\nStops the instance, modifies its type, then starts it again and waits for it to be fully running. Used for right-sizing during high CPU/memory saturation events.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **newInstanceType** (Required): New instance type (e.g. `t3.large`, `m5.xlarge`)\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
   "tasks": {
-    "check-status": {
-      "name": "check-status",
+    "ec2_stop": {
+      "name": "ec2_stop",
       "input": {
-        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-ssm-execution-completed/result`);\n  const configBody = await configGet.json();\n  const status = configBody.AutomationExecutionStatus.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"SSM Document Execution has Failed!\");\n        throw new Error(\"SSM Document Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceId\"]}}"
       },
-      "action": "dynatrace.automations:run-javascript",
+      "retry": {
+        "count": 3,
+        "delay": 15,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-stop-instances",
+      "active": true,
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Stop the instance before resizing.",
+      "predecessors": []
+    },
+    "ec2_start": {
+      "name": "ec2_start",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceId\"]}}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 15,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-start-instances",
+      "timeout": 60,
+      "position": {
+        "x": 0,
+        "y": 4
+      },
+      "conditions": {
+        "states": {
+          "ec2_modify_type": "OK"
+        }
+      },
+      "description": "Start the resized instance.",
+      "predecessors": [
+        "ec2_modify_type"
+      ]
+    },
+    "ec2_modify_type": {
+      "name": "ec2_modify_type",
+      "input": {
+        "Value": "{{ input()[\"newInstanceType\"] }}",
+        "DryRun": false,
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Attribute": "instanceType",
+        "InstanceId": "{{ input()[\"instanceId\"] }}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-modify-instance-attribute",
+      "timeout": 3600,
       "position": {
         "x": 0,
         "y": 3
       },
       "conditions": {
         "states": {
-          "wait-for-ssm-execution-completed": "OK"
+          "ec2_wait_stopped": "OK"
         }
       },
-      "description": "Run custom JavaScript code.",
+      "description": "Modifies the specified attribute of the specified instance.",
       "predecessors": [
-        "wait-for-ssm-execution-completed"
+        "ec2_wait_stopped"
       ]
     },
-    "wait-for-ssm-execution-completed": {
-      "name": "wait-for-ssm-execution-completed",
+    "ec2_wait_running": {
+      "name": "ec2_wait_running",
       "input": {
-        "workflowId": "20661ec0-29d5-471f-9973-29679d5fe908",
-        "workflowInput": "{\n\"AutomationExecutionId\":\"{{result(\"systems_manager_start_automation_execution_1\").AutomationExecutionId }}\",\n\"awsregion\": \"{{ input()[\"awsregion\"] }}\",\n\"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n\n}"
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{ input()[\"instanceId\"] }}",
+        "InstanceState": "running"
       },
       "retry": {
-        "count": 99,
-        "delay": 60,
+        "count": 10,
+        "delay": 30,
         "failedLoopIterationsOnly": true
       },
-      "action": "dynatrace.automations:run-workflow",
-      "timeout": 9999,
+      "action": "dynatrace.aws.connector:ec2-wait-state",
+      "timeout": 600,
+      "position": {
+        "x": 0,
+        "y": 5
+      },
+      "conditions": {
+        "states": {
+          "ec2_start": "OK"
+        }
+      },
+      "description": "Wait until the resized instance is running.",
+      "waitBefore": 15,
+      "predecessors": [
+        "ec2_start"
+      ]
+    },
+    "ec2_wait_stopped": {
+      "name": "ec2_wait_stopped",
+      "input": {
+        "region": "{{ input()[\"awsRegion\"] }}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{ input()[\"instanceId\"] }}",
+        "InstanceState": "stopped"
+      },
+      "retry": {
+        "count": 10,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ec2-wait-state",
+      "active": true,
+      "timeout": 600,
       "position": {
         "x": 0,
         "y": 2
       },
       "conditions": {
         "states": {
-          "systems_manager_start_automation_execution_1": "OK"
+          "ec2_stop": "OK"
         }
       },
-      "description": "Modularize your workflows, run any existing workflow.",
+      "description": "Wait until the instance is fully stopped.",
+      "waitBefore": 10,
       "predecessors": [
-        "systems_manager_start_automation_execution_1"
+        "ec2_stop"
       ]
-    },
-    "systems_manager_start_automation_execution_1": {
-      "name": "systems_manager_start_automation_execution_1",
-      "input": {
-        "region": "{{ input()[\"awsregion\"] }}",
-        "schema": "builtin:hyperscaler-authentication.connections.aws",
-        "Parameters": "{ \n  \"InstanceId\": [\"{{ input()[\"instanceid\"] }}\"],\n  \"InstanceType\": [\"{{input()[\"resize_to_instance_type\"] }}\"]\n}",
-        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
-        "DocumentName": "AWS-ResizeInstance"
-      },
-      "retry": {
-        "count": 5,
-        "delay": 60,
-        "failedLoopIterationsOnly": true
-      },
-      "action": "dynatrace.aws.connector:ssm-start-automation-execution",
-      "active": true,
-      "timeout": 604800,
-      "position": {
-        "x": 0,
-        "y": 1
-      },
-      "description": "Initiates execution of an Automation runbook",
-      "predecessors": []
     }
   }
 }
