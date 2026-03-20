@@ -1,0 +1,75 @@
+{
+  "id": "253c72c9-38c1-436c-a27e-f015074b8e0f",
+  "title": "\ud83e\udde9subworkflow - aws ssm clear disk space on linux ec2",
+  "description": "Subworkflow to free disk space on a Linux EC2 instance by clearing old logs and temp files via SSM Run Command.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nlogRetentionDays: (Optional) Number of days to retain logs (default: 7)\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{result(\"wait-for-run-command-finish\")}}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceId": "i-0bf88cff011236fde",
+    "logRetentionDays": "7",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83e\uddf9 Subworkflow \u2014 Clear Disk Space on Linux EC2\n\nRemoves log files and temp files older than the specified number of days to free disk space. Triggered on high disk utilisation alerts.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **logRetentionDays** (Optional): Days of logs to retain (default: 7)\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "send_command": {
+      "name": "send_command",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\"commands\": [\"DAYS={{ input()[\"logRetentionDays\"] }}\", \"echo \\\"Clearing files older than $DAYS days...\\\"\", \"find /var/log -type f -name '*.log' -mtime +$DAYS -delete 2>/dev/null || true\", \"find /tmp -type f -mtime +$DAYS -delete 2>/dev/null || true\", \"journalctl --vacuum-time=${DAYS}d 2>/dev/null || true\", \"df -h / && echo 'Disk cleanup complete'\"]}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceId\"]}}",
+        "DocumentName": "AWS-RunShellScript"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 15,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-send-command",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Send SSM Run Command: AWS-RunShellScript.",
+      "predecessors": []
+    },
+    "wait-for-run-command-finish": {
+      "name": "wait-for-run-command-finish",
+      "input": {
+        "workflowId": "97218693-adf0-4c82-a295-e43d848b0b4d",
+        "workflowInput": "{\n  \"CommandId\":\"{{result(\"send_command\")[\"Command\"].CommandId }}\",\n  \"awsregion\":\"{{input()[\"awsRegion\"] }}\",\n  \"awsinstanceid\":\"{{input()[\"instanceId\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "send_command": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "send_command"
+      ]
+    }
+  }
+}
