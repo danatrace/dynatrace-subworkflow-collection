@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-19T21:31:55.918283+00:00",
+  "generatedAt": "2026-03-20T03:31:19.942598+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 48,
-    "tested": 41,
+    "total": 49,
+    "tested": 42,
     "untested": 7
   },
   "workflows": [
@@ -282,6 +282,19 @@
       "description": "This subworkflow scans for security groups Ingress entry defenitions with ports open to 0.0.0.0/0 (the entire internet) and raised a custom Alert!\nAs AWS Security Hub only scans every 12 - 24 hours, this subworkflow is an alternative way to catch these issues in a more frequent interval\n\nParameters:\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection\nregions_to_search: (Reguired) Aws region to scan for security groups Ingress entry defenitions with ports open to 0.0.0.0/0",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ssm clear disk space on linux ec2",
+      "path": "subworkflow-aws-ssm-clear-disk-space-on-linux-ec2.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83e\uddf9 Subworkflow \u2014 Clear Disk Space on Linux EC2\n\nRemoves log files and temp files older than the specified number of days to free disk space. Triggered on high disk utilisation alerts.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **logRetentionDays** (Optional): Days of logs to retain (default: 7)\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\ud83e\uddf9 Subworkflow \u2014 Clear Disk Space on Linux EC2\n\nRemoves log files and temp files older than the specified number of days to free disk space. Triggered on high disk utilisation alerts.\n\u2699\ufe0f Parameters\n- instanceId (Required): EC2 instance ID\n- logRetentionDays (Optional): Days of logs to retain (default: 7)\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\ud83e\uddf9 Subworkflow \u2014 Clear Disk Space on Linux EC2",
+      "description": "Subworkflow to free disk space on a Linux EC2 instance by clearing old logs and temp files via SSM Run Command.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nlogRetentionDays: (Optional) Number of days to retain logs (default: 7)\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-clear-disk-space-on-linux-ec2.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-clear-disk-space-on-linux-ec2.workflow.json",
       "tags": []
     },
     {
