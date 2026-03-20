@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-20T04:49:59.828642+00:00",
+  "generatedAt": "2026-03-20T05:05:42.822547+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 51,
-    "tested": 44,
+    "total": 52,
+    "tested": 45,
     "untested": 7
   },
   "workflows": [
@@ -334,6 +334,19 @@
       "description": "Subworkflow to restart a named Windows service on an EC2 instance via SSM Run Command and verify completion.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nserviceName: (Required) Windows service name to restart (e.g. wuauserv, W3SVC)\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-restart-windows-service-on-ec2.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-restart-windows-service-on-ec2.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ssm run powershell script on windows ec2 and wait",
+      "path": "subworkflow-aws-ssm-run-powershell-script-on-windows-ec2-and-wait.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83d\udcbb Subworkflow \u2014 Run PowerShell on Windows EC2 via SSM\n\nExecutes an arbitrary PowerShell script on a Windows EC2 instance via AWS-RunPowerShellScript SSM Run Command and polls until the command reaches a terminal status.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **powershellScript** (Required): PowerShell script to run\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\ud83d\udcbb Subworkflow \u2014 Run PowerShell on Windows EC2 via SSM\n\nExecutes an arbitrary PowerShell script on a Windows EC2 instance via AWS-RunPowerShellScript SSM Run Command and polls until the command reaches a terminal status.\n\u2699\ufe0f Parameters\n- instanceId (Required): EC2 instance ID\n- powershellScript (Required): PowerShell script to run\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\ud83d\udcbb Subworkflow \u2014 Run PowerShell on Windows EC2 via SSM",
+      "description": "Subworkflow to execute a PowerShell script on a Windows EC2 instance via SSM Run Command and wait for completion.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\npowershellScript: (Required) PowerShell script content to execute\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-run-powershell-script-on-windows-ec2-and-wait.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-run-powershell-script-on-windows-ec2-and-wait.workflow.json",
       "tags": []
     },
     {
