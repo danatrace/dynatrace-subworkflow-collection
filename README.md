@@ -6,8 +6,8 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 ## 📊 Inventory Summary
 
-- 🧮 Total top-level subworkflows: **45**
-- ☁️ AWS: **28**
+- 🧮 Total top-level subworkflows: **46**
+- ☁️ AWS: **29**
 - 🧭 Dynatrace: **13**
 - 🤖 OpenAI: **1**
 - 🛠️ Ownership Utilities: **3**
@@ -41,6 +41,7 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 | [subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json](subworkflow-aws-scan-for-security-groups-with-ports-open-to-0-0-0-0-0.workflow.json) | aws scan for security groups with ports open to 0 0 0 0 0 | Scan for publicly exposed security groups and flag risk. |
 | [subworkflow-aws-ssm-clear-disk-space-on-linux-ec2.workflow.json](subworkflow-aws-ssm-clear-disk-space-on-linux-ec2.workflow.json) | aws ssm clear disk space on linux ec2 | Clear old logs and temp files to free disk space during saturation incidents. |
 | [subworkflow-aws-ssm-restart-linux-systemd-service-on-ec2.workflow.json](subworkflow-aws-ssm-restart-linux-systemd-service-on-ec2.workflow.json) | aws ssm restart linux systemd service on ec2 | Restart a systemd service on EC2 and verify it reaches active state for recovery. |
+| [subworkflow-aws-ssm-restart-windows-service-on-ec2.workflow.json](subworkflow-aws-ssm-restart-windows-service-on-ec2.workflow.json) | aws ssm restart windows service on ec2 | Restart a Windows service on EC2 and verify it returns to Running state for recovery. |
 | [subworkflow-aws-ssm-delete-ami-image.workflow.json](subworkflow-aws-ssm-delete-ami-image.workflow.json) | aws ssm delete ami image | Remove outdated AMIs and snapshots to reduce storage cost. |
 | [subworkflow-aws-update-cloudformation-stack.workflow.json](subworkflow-aws-update-cloudformation-stack.workflow.json) | aws update cloudformation stack | Apply safe stack updates during a controlled change window. |
 | [subworkflow-aws-wait-for-run-command-execution.workflow.json](subworkflow-aws-wait-for-run-command-execution.workflow.json) | aws wait for run command execution | Wait for SSM Run Command completion before next automation step. |
