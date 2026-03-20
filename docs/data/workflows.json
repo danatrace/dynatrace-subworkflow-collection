@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-20T03:34:45.034175+00:00",
+  "generatedAt": "2026-03-20T04:17:45.706394+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 49,
-    "tested": 42,
+    "total": 50,
+    "tested": 43,
     "untested": 7
   },
   "workflows": [
@@ -308,6 +308,19 @@
       "description": "Subworkflow to delete AMI images and snapshots\\n\\nParameters:\\n\\nimageid: (Required) AMI ID to delete\\nimageids: (Optional) Additional AMI IDs (comma-separated)\\nsnapshotids: (Optional) Associated snapshot IDs to delete (comma-separated)\\nawsregion: (Required) AWS region\\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-delete-ami-image.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-delete-ami-image.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ssm restart linux systemd service on ec2",
+      "path": "subworkflow-aws-ssm-restart-linux-systemd-service-on-ec2.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83d\udd04 Subworkflow \u2014 Restart Linux Systemd Service via SSM\n\nRestarts a named systemd service on a Linux EC2 instance and verifies it reaches 'active' state. Commonly used to recover nginx, httpd, tomcat, or any crashed application service.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **serviceName** (Required): systemd service name\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\ud83d\udd04 Subworkflow \u2014 Restart Linux Systemd Service via SSM\n\nRestarts a named systemd service on a Linux EC2 instance and verifies it reaches 'active' state. Commonly used to recover nginx, httpd, tomcat, or any crashed application service.\n\u2699\ufe0f Parameters\n- instanceId (Required): EC2 instance ID\n- serviceName (Required): systemd service name\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\ud83d\udd04 Subworkflow \u2014 Restart Linux Systemd Service via SSM",
+      "description": "Subworkflow to restart a systemd service on a Linux EC2 instance via SSM Run Command and verify it is active.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nserviceName: (Required) systemd service name (e.g. nginx, httpd, tomcat)\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-restart-linux-systemd-service-on-ec2.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-restart-linux-systemd-service-on-ec2.workflow.json",
       "tags": []
     },
     {
