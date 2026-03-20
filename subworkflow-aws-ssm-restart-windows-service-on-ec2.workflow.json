@@ -1,0 +1,75 @@
+{
+  "id": "cb1629ca-cc46-4ac1-a23d-2c631adaf816",
+  "title": "\ud83e\udde9subworkflow - aws ssm restart windows service on ec2",
+  "description": "Subworkflow to restart a named Windows service on an EC2 instance via SSM Run Command and verify completion.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nserviceName: (Required) Windows service name to restart (e.g. wuauserv, W3SVC)\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{result(\"wait-for-send-command\")}}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceId": "i-01efff12bf0d4f5f2",
+    "serviceName": "Server",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udd04 Subworkflow \u2014 Restart Windows Service via SSM\n\nRestarts a named Windows service on an EC2 instance and verifies it is running after restart. Used for IIS, WAS, application services, and monitoring agents.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **serviceName** (Required): Windows service name\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "send_command": {
+      "name": "send_command",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\"commands\": [\"Restart-Service -Name '{{ input()[\"serviceName\"] }}' -Force; $svc = Get-Service -Name '{{ input()[\"serviceName\"] }}'; if ($svc.Status -ne 'Running') { throw \\\"Service {{ input()[\"serviceName\"] }} failed to start. Status: $($svc.Status)\\\" } else { Write-Output \\\"Service {{ input()[\"serviceName\"] }} restarted successfully. Status: $($svc.Status)\\\" }\"]}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceId\"]}}",
+        "DocumentName": "AWS-RunPowerShellScript"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 15,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-send-command",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Send SSM Run Command: AWS-RunPowerShellScript.",
+      "predecessors": []
+    },
+    "wait-for-send-command": {
+      "name": "wait-for-send-command",
+      "input": {
+        "workflowId": "97218693-adf0-4c82-a295-e43d848b0b4d",
+        "workflowInput": "{\n  \"CommandId\": \"{{ result(\"send_command\")[\"Command\"][\"CommandId\"] }}\",\n  \"awsregion\": \"{{input()[\"awsRegion\"]}}\",\n  \"awsinstanceid\": \"{{input()[\"instanceId\"]}}\",\n  \"dynatraceawsconnection\": \"{{input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "send_command": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "send_command"
+      ]
+    }
+  }
+}
