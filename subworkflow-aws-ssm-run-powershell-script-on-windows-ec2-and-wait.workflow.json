@@ -1,0 +1,75 @@
+{
+  "id": "59837f68-81ce-4964-80d8-81bd70b9b6e6",
+  "title": "\ud83e\udde9subworkflow - aws ssm run powershell script on windows ec2 and wait",
+  "description": "Subworkflow to execute a PowerShell script on a Windows EC2 instance via SSM Run Command and wait for completion.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\npowershellScript: (Required) PowerShell script content to execute\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{result(\"wait-for-run-cmd-finish\")}}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceId": "i-01efff12bf0d4f5f2",
+    "powershellScript": "Write-Output 'Running remediation' Get-Service | Where-Object {$_.Status -eq 'Stopped'}",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udcbb Subworkflow \u2014 Run PowerShell on Windows EC2 via SSM\n\nExecutes an arbitrary PowerShell script on a Windows EC2 instance via AWS-RunPowerShellScript SSM Run Command and polls until the command reaches a terminal status.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **powershellScript** (Required): PowerShell script to run\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "send_ps_command": {
+      "name": "send_ps_command",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\"commands\": [\"{{ input()[\"powershellScript\"] }}\"]}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceId\"]}}",
+        "DocumentName": "AWS-RunPowerShellScript"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-send-command",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Send PowerShell script to Windows EC2 via SSM Run Command.",
+      "predecessors": []
+    },
+    "wait-for-run-cmd-finish": {
+      "name": "wait-for-run-cmd-finish",
+      "input": {
+        "workflowId": "97218693-adf0-4c82-a295-e43d848b0b4d",
+        "workflowInput": "{\n  \"CommandId\": \"{{result(\"send_ps_command\")[\"Command\"].CommandId }}\",\n  \"awsregion\": \"{{input()[\"awsRegion\"] }}\",\n  \"awsinstanceid\": \"{{input()[\"instanceId\"] }}\",\n  \"dynatraceawsconnection\": \"{{input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "send_ps_command": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "send_ps_command"
+      ]
+    }
+  }
+}
