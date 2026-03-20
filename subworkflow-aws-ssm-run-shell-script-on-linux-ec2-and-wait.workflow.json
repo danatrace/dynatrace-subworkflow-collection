@@ -1,0 +1,75 @@
+{
+  "id": "b91dbdf8-60f5-4867-9a06-d491daa65a44",
+  "title": "\ud83e\udde9subworkflow - aws ssm run shell script on linux ec2 and wait",
+  "description": "Subworkflow to run a custom shell script on a Linux EC2 instance via SSM Run Command and wait for completion.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nshellScript: (Required) The shell script content to execute\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{result(\"wait-for-send-command-finish\")}}",
+  "type": "STANDARD",
+  "input": {
+    "awsRegion": "us-east-1",
+    "instanceId": "i-0bf88cff011236fde",
+    "shellScript": "#!/bin/bash\\necho 'Running remediation script'\\ndf -h\\nfree -m",
+    "dynatraceawsconnection": "554872066791"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": "## \ud83d\udda5\ufe0f Subworkflow \u2014 Run Shell Script on Linux EC2 via SSM\n\nSends an arbitrary shell script to a Linux EC2 instance via AWS-RunShellScript SSM Run Command and polls until the command completes. Useful for ad-hoc remediation scripts like clearing disk space, restarting services, or flushing caches.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **shellScript** (Required): Bash script to execute\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+  "tasks": {
+    "send_shell_command": {
+      "name": "send_shell_command",
+      "input": {
+        "region": "{{input()[\"awsRegion\"]}}",
+        "schema": "builtin:hyperscaler-authentication.connections.aws",
+        "Parameters": "{\"commands\": [\"{{ input()[\"shellScript\"] }}\"]}",
+        "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+        "InstanceIds": "{{input()[\"instanceId\"]}}",
+        "DocumentName": "AWS-RunShellScript"
+      },
+      "retry": {
+        "count": 3,
+        "delay": 10,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.aws.connector:ssm-send-command",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "conditions": {
+        "states": {}
+      },
+      "description": "Send shell script to EC2 instance via SSM Run Command.",
+      "predecessors": []
+    },
+    "wait-for-send-command-finish": {
+      "name": "wait-for-send-command-finish",
+      "input": {
+        "workflowId": "97218693-adf0-4c82-a295-e43d848b0b4d",
+        "workflowInput": "{\n  \"CommandId\": \"{{result(\"send_shell_command\")[\"Command\"].CommandId }}\",\n  \"awsregion\": \"{{input()[\"awsRegion\"] }}\",\n  \"awsinstanceid\": \"{{input()[\"instanceId\"] }}\",\n  \"dynatraceawsconnection\": \"{{input()[\"dynatraceawsconnection\"] }}\"\n}"
+      },
+      "retry": {
+        "count": 99,
+        "delay": 30,
+        "failedLoopIterationsOnly": true
+      },
+      "action": "dynatrace.automations:run-workflow",
+      "timeout": 3600,
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "send_shell_command": "OK"
+        }
+      },
+      "description": "Modularize your workflows, run any existing workflow.",
+      "predecessors": [
+        "send_shell_command"
+      ]
+    }
+  }
+}
