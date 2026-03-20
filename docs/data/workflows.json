@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-03-20T05:06:52.318521+00:00",
+  "generatedAt": "2026-03-20T05:12:48.531306+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 52,
-    "tested": 45,
+    "total": 53,
+    "tested": 46,
     "untested": 7
   },
   "workflows": [
@@ -347,6 +347,19 @@
       "description": "Subworkflow to execute a PowerShell script on a Windows EC2 instance via SSM Run Command and wait for completion.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\npowershellScript: (Required) PowerShell script content to execute\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-run-powershell-script-on-windows-ec2-and-wait.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-run-powershell-script-on-windows-ec2-and-wait.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "\ud83e\udde9subworkflow - aws ssm run shell script on linux ec2 and wait",
+      "path": "subworkflow-aws-ssm-run-shell-script-on-linux-ec2-and-wait.workflow.json",
+      "section": "tested",
+      "folder": "top-level",
+      "guide": "## \ud83d\udda5\ufe0f Subworkflow \u2014 Run Shell Script on Linux EC2 via SSM\n\nSends an arbitrary shell script to a Linux EC2 instance via AWS-RunShellScript SSM Run Command and polls until the command completes. Useful for ad-hoc remediation scripts like clearing disk space, restarting services, or flushing caches.\n\n### \u2699\ufe0f Parameters\n- **instanceId** (Required): EC2 instance ID\n- **shellScript** (Required): Bash script to execute\n- **awsRegion** (Required): AWS region\n- **dynatraceawsconnection** (Required): Dynatrace AWS OIDC connection name",
+      "guideText": "\ud83d\udda5\ufe0f Subworkflow \u2014 Run Shell Script on Linux EC2 via SSM\n\nSends an arbitrary shell script to a Linux EC2 instance via AWS-RunShellScript SSM Run Command and polls until the command completes. Useful for ad-hoc remediation scripts like clearing disk space, restarting services, or flushing caches.\n\u2699\ufe0f Parameters\n- instanceId (Required): EC2 instance ID\n- shellScript (Required): Bash script to execute\n- awsRegion (Required): AWS region\n- dynatraceawsconnection (Required): Dynatrace AWS OIDC connection name",
+      "guideSummary": "\ud83d\udda5\ufe0f Subworkflow \u2014 Run Shell Script on Linux EC2 via SSM",
+      "description": "Subworkflow to run a custom shell script on a Linux EC2 instance via SSM Run Command and wait for completion.\n\nParameters:\n\ninstanceId: (Required) EC2 instance ID\nshellScript: (Required) The shell script content to execute\nawsRegion: (Required) AWS region\ndynatraceawsconnection: (Required) Dynatrace AWS OIDC connection name",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-aws-ssm-run-shell-script-on-linux-ec2-and-wait.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-aws-ssm-run-shell-script-on-linux-ec2-and-wait.workflow.json",
       "tags": []
     },
     {
