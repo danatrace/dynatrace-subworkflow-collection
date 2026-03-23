@@ -6,8 +6,10 @@ on:
     branches:
       - main
     paths:
+      - "*.json"
       - "**/*.workflow.json"
       - "scripts/generate_catalog_data.py"
+      - "scripts/update_puzzle_title_workflows.py"
       - ".github/workflows/update-catalog.yml"
 
 permissions:
@@ -31,16 +33,19 @@ jobs:
       - name: Generate catalog data
         run: python3 scripts/generate_catalog_data.py
 
-      - name: Commit and push if catalog changed
+      - name: Generate puzzle title workflow array
+        run: python3 scripts/update_puzzle_title_workflows.py
+
+      - name: Commit and push if generated files changed
         run: |
-          if git diff --quiet -- docs/data/workflows.json; then
-            echo "No catalog changes detected."
+          if git diff --quiet -- docs/data/workflows.json puzzle-title-workflows.ts; then
+            echo "No generated file changes detected."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add docs/data/workflows.json
-          git commit -m "chore(catalog): refresh workflow marketplace data"
+          git add docs/data/workflows.json puzzle-title-workflows.ts
+          git commit -m "chore(generated): refresh catalog and puzzle workflow array"
           git push

@@ -26,6 +26,24 @@ Rules applied by the updater:
 - `dynatrace-create-coe-subworkflows.workflow.json` is excluded
 - only workflows whose title contains `🧩` are included
 
+## 🧩 Keep Puzzle Workflow Array Updated
+
+The file [puzzle-title-workflows.ts](puzzle-title-workflows.ts) contains a generated TypeScript array with the full JSON content of all top-level root `*.json` files whose `title` contains `🧩`.
+
+Run this command after adding/updating root JSON workflow files:
+
+```bash
+python3 scripts/update_puzzle_title_workflows.py
+```
+
+Rules applied by the updater:
+
+- only top-level root `*.json` files are scanned
+- nested files such as `untested/...` are excluded automatically
+- only JSON documents whose `title` contains `🧩` are included
+
+The repository also runs this generator automatically in GitHub Actions on pushes that change matching JSON files or the generator script.
+
 ## 📊 Inventory Summary
 
 - 🧮 Total top-level subworkflows: **48**
