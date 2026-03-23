@@ -4,6 +4,28 @@ This README catalogs tested Dynatrace subworkflow JSON files in the repository.
 
 > ⚠️ **Disclaimer:** Usage is at your own risk. All workflow and subworkflow templates should be tested thoroughly according to workflow automation standards before applying them to production environments.
 
+## 🔄 Keep COE Subworkflow List Updated
+
+The file [dynatrace-create-coe-subworkflows.workflow.json](dynatrace-create-coe-subworkflows.workflow.json) contains:
+
+- the embedded `const subworkflows = [...]` array used to create subworkflows
+- the guide section that lists all subworkflows that will be created
+
+Both are automatically rebuilt from top-level root files matching `subworkflow*.json` when the title contains `🧩`.
+
+Run this command after adding/updating root subworkflows:
+
+```bash
+python3 scripts/update_coe_subworkflows.py
+```
+
+Rules applied by the updater:
+
+- only top-level root subworkflow files are scanned
+- files in `untested` are excluded
+- `dynatrace-create-coe-subworkflows.workflow.json` is excluded
+- only workflows whose title contains `🧩` are included
+
 ## 📊 Inventory Summary
 
 - 🧮 Total top-level subworkflows: **48**
