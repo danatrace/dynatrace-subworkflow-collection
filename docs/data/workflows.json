@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-03-25T19:07:02.851401+00:00",
+  "generatedAt": "2026-03-25T21:05:05.439911+00:00",
   "repository": {
     "owner": "danatrace",
     "name": "dynatrace-subworkflow-collection",
     "branch": "main"
   },
   "counts": {
-    "total": 54,
+    "total": 56,
     "tested": 47,
-    "untested": 7
+    "untested": 9
   },
   "workflows": [
     {
@@ -633,6 +633,32 @@
       "description": "",
       "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/dynatrace-create-coe-subworkflows.workflow.json",
       "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/dynatrace-create-coe-subworkflows.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "subworkflow - jira loop until issue exists",
+      "path": "subworkflow-jira-loop-until-issue-exists.workflow.json",
+      "section": "untested",
+      "folder": "top-level",
+      "guide": "",
+      "guideText": "",
+      "guideSummary": "",
+      "description": "",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-jira-loop-until-issue-exists.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-jira-loop-until-issue-exists.workflow.json",
+      "tags": []
+    },
+    {
+      "title": "subworkflow - servicenow loop until record exists",
+      "path": "subworkflow-servicenow-loop-until-record-exists.workflow.json",
+      "section": "untested",
+      "folder": "top-level",
+      "guide": "",
+      "guideText": "",
+      "guideSummary": "",
+      "description": "",
+      "downloadUrl": "https://raw.githubusercontent.com/danatrace/dynatrace-subworkflow-collection/main/subworkflow-servicenow-loop-until-record-exists.workflow.json",
+      "sourceUrl": "https://github.com/danatrace/dynatrace-subworkflow-collection/blob/main/subworkflow-servicenow-loop-until-record-exists.workflow.json",
       "tags": []
     },
     {
