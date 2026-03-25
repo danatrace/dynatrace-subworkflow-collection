@@ -1,0 +1,55 @@
+{
+  "id": "8d80351c-5a21-4416-a942-18815728d0e4",
+  "title": "subworkflow - jira loop until issue exists",
+  "description": "",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{result(\"search-for-existing-issue\")}}",
+  "type": "STANDARD",
+  "input": {
+    "search_query": "project = \"CP\"  AND cf[10047] ~ \"2777770411542439137_1774450560000V2\" AND cf[10049]~\"danielbraaf\"",
+    "dynatrace_jira_connection": "coe playground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": null,
+  "tasks": {
+    "check-result": {
+      "name": "check-result",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/search-for-existing-issue/result`);\n  const configBody = await configGet.json();\n  console.log(configBody.length)\n  \n  if (configBody.length == 0) {\n\n        throw new Error(\"No record found yet, failing on purpose for restart!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "search-for-existing-issue": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "search-for-existing-issue"
+      ]
+    },
+    "search-for-existing-issue": {
+      "name": "search-for-existing-issue",
+      "input": {
+        "jql": "{{input()[\"search_query\"]}}",
+        "expand": [],
+        "fields": [],
+        "connectionId": "{% set jiraconnection = input()[\"dynatrace_jira_connection\"] %}\n{{ connection('app:dynatrace.jira:connection', jiraconnection) }}"
+      },
+      "action": "dynatrace.jira:jira-jql-search",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Execute JQL queries to fetch issues from Jira",
+      "predecessors": []
+    }
+  }
+}

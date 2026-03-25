@@ -1,0 +1,59 @@
+{
+  "id": "cf45203e-8329-445d-9a8c-e126b2b0a5ec",
+  "title": "subworkflow - servicenow loop until record exists",
+  "description": "",
+  "ownerType": "USER",
+  "isPrivate": false,
+  "schemaVersion": 4,
+  "trigger": {},
+  "result": "{{result(\"search-for-existing-record\")}}",
+  "type": "STANDARD",
+  "input": {
+    "servicenow_table": "incident",
+    "servicenow_correlation_id": "DT_-2777770411542439137_1774450560000V2",
+    "dynatrace_service_now_connection": "Snow Coe Playground"
+  },
+  "hourlyExecutionLimit": 1000,
+  "guide": null,
+  "tasks": {
+    "check-result": {
+      "name": "check-result",
+      "input": {
+        "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/search-for-existing-record/result`);\n  const configBody = await configGet.json();\n  console.log(configBody.length)\n  \n  if (configBody.length == 0) {\n\n        throw new Error(\"No record found yet, failing on purpose for restart!\");\n  } \n\n  return configBody;\n}"
+      },
+      "action": "dynatrace.automations:run-javascript",
+      "position": {
+        "x": 0,
+        "y": 2
+      },
+      "conditions": {
+        "states": {
+          "search-for-existing-record": "OK"
+        }
+      },
+      "description": "Run custom JavaScript code.",
+      "predecessors": [
+        "search-for-existing-record"
+      ]
+    },
+    "search-for-existing-record": {
+      "name": "search-for-existing-record",
+      "input": {
+        "table": "{{input()[\"servicenow_table\"]}}",
+        "connectionId": "{% set snowconnection = input()[\"dynatrace_service_now_connection\"] %}\n{{ connection('app:dynatrace.servicenow:connection', snowconnection ) }}",
+        "sysparmLimit": "100",
+        "sysparmQuery": "correlation_id={{input()[\"servicenow_correlation_id\"]}}",
+        "sysparmFields": "",
+        "sysparmOffset": "0",
+        "sysparmQueryCategory": ""
+      },
+      "action": "dynatrace.servicenow:snow-search",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "description": "Search in ServiceNow",
+      "predecessors": []
+    }
+  }
+}
