@@ -5493,6 +5493,61 @@ export const puzzleTitleWorkflows = [
     }
   },
   {
+    "id": "8d80351c-5a21-4416-a942-18815728d0e4",
+    "title": "🧩subworkflow - jira loop until issue exists",
+    "description": "Subworkflow to repeatedly search Jira until an issue exists and can be returned to the parent workflow.\n\nThis is useful when another system creates the Jira issue asynchronously and the current automation needs to wait until the issue becomes searchable via JQL.\n\nThe workflow intentionally fails the validation step when no issue is found yet so that a parent workflow or task retry configuration can loop and try again later.\n\nParameters:\n\nsearch_query: (Required) JQL query used to search for the Jira issue\ndynatrace_jira_connection: (Required) Name of the Dynatrace Jira connection to use",
+    "ownerType": "USER",
+    "isPrivate": false,
+    "schemaVersion": 4,
+    "trigger": {},
+    "result": "{{result(\"search-for-existing-issue\")}}",
+    "type": "STANDARD",
+    "input": {
+      "search_query": "project = \"CP\"  AND cf[10047] ~ \"2777770411542439137_1774450560000V2\" AND cf[10049]~\"danielbraaf\"",
+      "dynatrace_jira_connection": "coe playground"
+    },
+    "hourlyExecutionLimit": 1000,
+    "guide": "## 🔁 **Subworkflow to Loop Until a Jira Issue Exists**\n\n🔎 This subworkflow repeatedly searches Jira using a provided **JQL query** until a matching issue exists and can be returned to the calling workflow.\n\nIt is useful in automations where a Jira issue is created asynchronously and follow-up steps should only continue once the issue is actually available through search.\n\n---\n\n### 🎯 **Use Case**\n\nA common use case is waiting for an issue that was triggered by a previous automation step, integration, or external process.\n\nIf the issue is not found yet, the workflow deliberately fails the validation step so that **retry logic in the parent workflow or task configuration** can restart the check after a delay.\n\n---\n\n### ⚙️ **Parameters**\n\n- **search_query** (Required): 🧾 The JQL query used to search for the target Jira issue.\n- **dynatrace_jira_connection** (Required): 🔑 The name of the Dynatrace Jira connection used for authentication.\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 🔍 Executes the provided JQL query against Jira\n- 📭 Checks whether any matching issues were returned\n- ❌ If no issue exists yet, the JavaScript validation task fails on purpose\n- 🔁 This allows parent-level retry logic to re-run the workflow until the issue becomes available\n- ✅ Once an issue is found, the search result is returned to downstream steps\n\n---\n\n### 📌 **Important Note**\n\nThis subworkflow itself performs the lookup and the intentional failure. To achieve the actual wait-loop behavior, use it together with a **retry-enabled parent workflow or task** that re-invokes it until it succeeds.\n\n---",
+    "tasks": {
+      "check-result": {
+        "name": "check-result",
+        "input": {
+          "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/search-for-existing-issue/result`);\n  const configBody = await configGet.json();\n  console.log(configBody.length)\n  \n  if (configBody.length == 0) {\n\n        throw new Error(\"No record found yet, failing on purpose for restart!\");\n  } \n\n  return configBody;\n}"
+        },
+        "action": "dynatrace.automations:run-javascript",
+        "position": {
+          "x": 0,
+          "y": 2
+        },
+        "conditions": {
+          "states": {
+            "search-for-existing-issue": "OK"
+          }
+        },
+        "description": "Run custom JavaScript code.",
+        "predecessors": [
+          "search-for-existing-issue"
+        ]
+      },
+      "search-for-existing-issue": {
+        "name": "search-for-existing-issue",
+        "input": {
+          "jql": "{{input()[\"search_query\"]}}",
+          "expand": [],
+          "fields": [],
+          "connectionId": "{% set jiraconnection = input()[\"dynatrace_jira_connection\"] %}\n{{ connection('app:dynatrace.jira:connection', jiraconnection) }}"
+        },
+        "action": "dynatrace.jira:jira-jql-search",
+        "position": {
+          "x": 0,
+          "y": 1
+        },
+        "description": "Execute JQL queries to fetch issues from Jira",
+        "predecessors": []
+      }
+    }
+  },
+  {
     "id": "c15fcbc9-9f7d-4d7d-a273-ed62073d19b6",
     "title": "🧩subworkflow - openai Text and Prompting",
     "description": "This is a Subworkflow to Text and prompt open ai\n\nUse Case, write a Business Letter to a group of\nusers that where affected by problems detected\nthrough Dynatrace\n\nTo get this subworkflow running you will have to create a credential vault entry with the open-ai token\nand set it in the ask-open-ai task under authentication!\n\n\n\nParameters:\ninput: (Required) Prompt to send to open ai\nmodel: (Required) Ai model to be used for example (gpt-4.1)",
@@ -5532,6 +5587,65 @@ export const puzzleTitleWorkflows = [
           "y": 1
         },
         "description": "Issue an HTTP request to any API.",
+        "predecessors": []
+      }
+    }
+  },
+  {
+    "id": "cf45203e-8329-445d-9a8c-e126b2b0a5ec",
+    "title": "🧩subworkflow - servicenow loop until record exists",
+    "description": "Subworkflow to repeatedly search ServiceNow until a record exists and can be returned to the parent workflow.\n\nThis is useful when another system creates the ServiceNow record asynchronously and the current automation needs to wait until the record becomes available via correlation ID lookup.\n\nThe workflow intentionally fails the validation step when no record is found yet so that a parent workflow or task retry configuration can loop and try again later.\n\nParameters:\n\nservicenow_table: (Required) ServiceNow table to search in, for example incident\nservicenow_correlation_id: (Required) Correlation ID used to find the matching ServiceNow record\ndynatrace_service_now_connection: (Required) Name of the Dynatrace ServiceNow connection to use",
+    "ownerType": "USER",
+    "isPrivate": false,
+    "schemaVersion": 4,
+    "trigger": {},
+    "result": "{{result(\"search-for-existing-record\")}}",
+    "type": "STANDARD",
+    "input": {
+      "servicenow_table": "incident",
+      "servicenow_correlation_id": "DT_-2777770411542439137_1774450560000V2",
+      "dynatrace_service_now_connection": "Snow Coe Playground"
+    },
+    "hourlyExecutionLimit": 1000,
+    "guide": "## 🔁 **Subworkflow to Loop Until a ServiceNow Record Exists**\n\n🔎 This subworkflow repeatedly searches ServiceNow until a record with the expected **correlation ID** exists and can be returned to the calling workflow.\n\nIt is useful in automations where a ServiceNow record is created asynchronously and downstream steps should continue only after the record is actually available.\n\n---\n\n### 🎯 **Use Case**\n\nA common use case is waiting for an incident or other record that is created by a previous automation step, external integration, or third-party process.\n\nIf the record is not found yet, the workflow deliberately fails the validation step so that **retry logic in the parent workflow or task configuration** can restart the check after a delay.\n\n---\n\n### ⚙️ **Parameters**\n\n- **servicenow_table** (Required): 🗂️ The ServiceNow table to search, for example `incident`.\n- **servicenow_correlation_id** (Required): 🆔 The correlation ID used to identify the expected ServiceNow record.\n- **dynatrace_service_now_connection** (Required): 🔑 The name of the Dynatrace ServiceNow connection used for authentication.\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 🔍 Searches the configured ServiceNow table for a matching correlation ID\n- 📭 Checks whether any matching records were returned\n- ❌ If no record exists yet, the JavaScript validation task fails on purpose\n- 🔁 This allows parent-level retry logic to re-run the workflow until the record becomes available\n- ✅ Once a record is found, the search result is returned to downstream steps\n\n---\n\n### 📌 **Important Note**\n\nThis subworkflow performs the lookup and the intentional failure. To achieve the actual wait-loop behavior, use it together with a **retry-enabled parent workflow or task** that re-invokes it until it succeeds.\n\n---",
+    "tasks": {
+      "check-result": {
+        "name": "check-result",
+        "input": {
+          "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/search-for-existing-record/result`);\n  const configBody = await configGet.json();\n  console.log(configBody.length)\n  \n  if (configBody.length == 0) {\n\n        throw new Error(\"No record found yet, failing on purpose for restart!\");\n  } \n\n  return configBody;\n}"
+        },
+        "action": "dynatrace.automations:run-javascript",
+        "position": {
+          "x": 0,
+          "y": 2
+        },
+        "conditions": {
+          "states": {
+            "search-for-existing-record": "OK"
+          }
+        },
+        "description": "Run custom JavaScript code.",
+        "predecessors": [
+          "search-for-existing-record"
+        ]
+      },
+      "search-for-existing-record": {
+        "name": "search-for-existing-record",
+        "input": {
+          "table": "{{input()[\"servicenow_table\"]}}",
+          "connectionId": "{% set snowconnection = input()[\"dynatrace_service_now_connection\"] %}\n{{ connection('app:dynatrace.servicenow:connection', snowconnection ) }}",
+          "sysparmLimit": "100",
+          "sysparmQuery": "correlation_id={{input()[\"servicenow_correlation_id\"]}}",
+          "sysparmFields": "",
+          "sysparmOffset": "0",
+          "sysparmQueryCategory": ""
+        },
+        "action": "dynatrace.servicenow:snow-search",
+        "position": {
+          "x": 0,
+          "y": 1
+        },
+        "description": "Search in ServiceNow",
         "predecessors": []
       }
     }

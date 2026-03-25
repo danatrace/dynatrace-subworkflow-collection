@@ -51,7 +51,7 @@ The repository also runs this generator automatically in GitHub Actions on pushe
 - 🧭 Dynatrace: **13**
 - 🤖 OpenAI: **1**
 - 🛠️ Ownership Utilities: **3**
-- 📦 Other: **0**
+- 📦 Other: **2**
 
 ## ☁️ AWS
 
@@ -112,6 +112,13 @@ The repository also runs this generator automatically in GitHub Actions on pushe
 | File | Use Case | Example Use Case |
 |---|---|---|
 | [subworkflow-open-ai-text-and-prompting.workflow.json](subworkflow-open-ai-text-and-prompting.workflow.json) | open ai text and prompting | Generate response text for AI-assisted operations workflows. |
+
+## 📦 Other
+
+| File | Use Case | Example Use Case |
+|---|---|---|
+| [subworkflow-jira-loop-until-issue-exists.workflow.json](subworkflow-jira-loop-until-issue-exists.workflow.json) | jira loop until issue exists | Wait until an asynchronously created Jira issue becomes searchable before downstream automation continues. |
+| [subworkflow-servicenow-loop-until-record-exists.workflow.json](subworkflow-servicenow-loop-until-record-exists.workflow.json) | servicenow loop until record exists | Wait until an asynchronously created ServiceNow record exists before continuing ticket-driven automation. |
 
 ## 🛠️ Ownership Utilities
 
