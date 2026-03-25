@@ -1266,6 +1266,104 @@ export const puzzleTitleWorkflows = [
     }
   },
   {
+    "id": "0b8257ba-5226-4c88-9d05-705c7890c562",
+    "title": "🧩subworkflow - aws kill process on ec2 instance (linux)",
+    "description": "Subworkflow to kill a process running on an linux ec2 instance\n\nThis subworkflow creates an easy way to trigger\nthe kill of a process that runs on a linux ec2 instance\nwithout needing to know how aws ssm works.\n\nThis subworkflow uses the out of the box AWS-RunShellScript\nSSM document to run scripts on ec2 instances.\nWaits until the command execution has finished and\nchecks if the execution was succesful and fails\nif it wasnt so the parent workflow is able to\nrestart the subworkflow on error.\n\nParameters \n\nawsregion = region in which the ec2 instance to run the kill command on resides\ninstanceid = instance id on which the kill command will run\nprocess_name = name of the process that should be killed\ndynatraceawsconnection = Dynatrace AWS OIDC connection name\n\nNeeds subworkflow \"subworkflow - aws wait for send command execution\"\n\nThis subworkflow uses the out of the box AWS SSM document AWS-RunShellScript\nhttps://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-RunShellScript/description?region=us-east-1",
+    "ownerType": "USER",
+    "isPrivate": false,
+    "schemaVersion": 4,
+    "trigger": {},
+    "result": null,
+    "type": "STANDARD",
+    "input": {
+      "awsregion": "us-east-1",
+      "instanceid": "i-0a1bab006554b236c",
+      "process_name": "stress-ng",
+      "dynatraceawsconnection": "awsplayground"
+    },
+    "hourlyExecutionLimit": 1000,
+    "guide": "## 🔪 **Subworkflow to Kill a Process on a Linux AWS EC2 Instance**\n\n🖥️ This subworkflow provides an **easy and abstracted way** to **terminate a running process on a Linux EC2 instance**—without requiring any knowledge of how AWS Systems Manager (SSM) works.\n\nIt executes the process kill command via AWS SSM, **waits for the command execution to complete**, and **validates whether the execution was successful**.  \n❌ If the execution fails, the subworkflow fails as well, allowing the **parent workflow to restart on error**.\n\n---\n\n### ✅ **Requirements**\n\n⚠️ For this subworkflow to run successfully:\n- The EC2 instance **must be a Linux instance**\n- The EC2 instance **must be managed by AWS Systems Manager (SSM)**\n\n📖 AWS documentation on configuring SSM-managed instances:  \nhttps://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-ec2.html\n\n---\n\n### ⚙️ **Parameters**\n\n- **awsregion** (Required): 🌍 The AWS region where the EC2 instance resides.  \n- **instanceid** (Required): 🆔 The EC2 instance ID on which the process will be terminated.  \n- **process_name** (Required): 🧾 The name of the process that should be killed.  \n- **dynatraceawsconnection** (Required): 🔑 The Dynatrace AWS OIDC connection used to authenticate with AWS.\n\n---\n\n### 📘 **AWS SSM Document Used**\n\nThis subworkflow uses the out-of-the-box AWS Systems Manager document:\n\n🔗 https://us-east-1.console.aws.amazon.com/systems-manager/documents/AWS-RunShellScript/description?region=us-east-1\n\n---\n\n### 🧠 **Workflow Logic**\n\n- 📤 The subworkflow sends a shell command to the AWS SSM document **`AWS-RunShellScript`**\n- 🔪 The specified process is terminated on the Linux EC2 instance\n- ⏳ The subworkflow waits for the command execution to complete\n- ✅ If successful, the subworkflow completes\n- ❌ If execution fails, the subworkflow fails to enable **restart-on-error** handling in the parent workflow\n\n---\n\nThis subworkflow Needs subworkflow  \n[🧩subworkflow - aws wait for run command execution](/ui/apps/dynatrace.automations/workflows/97218693-adf0-4c82-a295-e43d848b0b4d?trigger=&view=live)\n\n---",
+    "tasks": {
+      "check-status": {
+        "name": "check-status",
+        "input": {
+          "script": "// optional import of sdk modules\nimport { execution } from '@dynatrace-sdk/automation-utils';\n\nexport default async function ({ execution_id }) {\n  const configGet = await fetch(`/platform/automation/v1/executions/${execution_id}/tasks/wait-for-result/result`);\n  const configBody = await configGet.json();\n  const status = configBody[0].Status.toUpperCase()\n  console.log(status)\n  \n  if (status !=\"SUCCESS\") {\n        console.log(\"Send Command Execution has Failed!\");\n        throw new Error(\"Send Command Execution has Failed!\");\n  } \n\n  return configBody;\n}"
+        },
+        "retry": {
+          "count": 5,
+          "delay": 30,
+          "failedLoopIterationsOnly": true
+        },
+        "action": "dynatrace.automations:run-javascript",
+        "position": {
+          "x": 0,
+          "y": 3
+        },
+        "conditions": {
+          "states": {
+            "wait-for-result": "OK"
+          }
+        },
+        "description": "Run custom JavaScript code.",
+        "predecessors": [
+          "wait-for-result"
+        ]
+      },
+      "wait-for-result": {
+        "name": "wait-for-result",
+        "input": {
+          "workflowId": "97218693-adf0-4c82-a295-e43d848b0b4d",
+          "workflowInput": "{\n  \"CommandId\":\"{{result(\"systems_manager_send_command_1\")[\"Command\"].CommandId }}\",\n  \"awsregion\":\"{{input()[\"awsregion\"] }}\",\n  \"awsinstanceid\":\"{{input()[\"instanceid\"] }}\",\n  \"dynatraceawsconnection\": \"{{ input()[\"dynatraceawsconnection\"] }}\"\n}"
+        },
+        "retry": {
+          "count": 99,
+          "delay": 30,
+          "failedLoopIterationsOnly": true
+        },
+        "action": "dynatrace.automations:run-workflow",
+        "timeout": 604800,
+        "position": {
+          "x": 0,
+          "y": 2
+        },
+        "conditions": {
+          "states": {
+            "systems_manager_send_command_1": "OK"
+          }
+        },
+        "description": "Modularize your workflows, run any existing workflow.",
+        "predecessors": [
+          "systems_manager_send_command_1"
+        ]
+      },
+      "systems_manager_send_command_1": {
+        "name": "systems_manager_send_command_1",
+        "input": {
+          "region": "{{ input()[\"awsregion\"] }}",
+          "schema": "builtin:hyperscaler-authentication.connections.aws",
+          "Parameters": "{\n  \"commands\": [\"sudo pkill {{input()[\"process_name\"]}} || true\"]\n}",
+          "connection": "{% set awsconnection = input()[\"dynatraceawsconnection\"] %}\n{{ connection('builtin:hyperscaler-authentication.connections.aws', awsconnection) }}",
+          "InstanceIds": "{{ input()[\"instanceid\"] }}",
+          "DocumentName": "AWS-RunShellScript"
+        },
+        "retry": {
+          "count": 5,
+          "delay": 60,
+          "failedLoopIterationsOnly": true
+        },
+        "action": "dynatrace.aws.connector:ssm-send-command",
+        "active": true,
+        "timeout": 604800,
+        "position": {
+          "x": 0,
+          "y": 1
+        },
+        "description": "Runs commands on one or more managed nodes",
+        "predecessors": []
+      }
+    }
+  },
+  {
     "id": "b9de7879-6723-43a0-92ca-5bae8294da4b",
     "title": "🧩subworkflow - aws reboot ec2 instances",
     "description": "Subworkflow to reboot an EC2 Instance\n\nThis subworkflow provides an easy way to trigger\nthe reboot of an EC2 Instance and wait unitl the instance is back up\n\nParameters:\n\ninstanceIds: (Required) instance id to reboot\nawsRegion: (Required) region in which you want to reboot the ec2 instance\ndynatraceawsconnection: (Required) the connection name of the Dynatrace OIDC Connection",
