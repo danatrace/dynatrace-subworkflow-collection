@@ -59,9 +59,7 @@ def update_embedded_script(script: str, subworkflows: list[dict]) -> str:
     """Replace only the embedded const subworkflows array in the task script."""
     def normalize_newlines(value):
         if isinstance(value, str):
-            normalized = value.replace("\r\n", "\n").replace("\r", "\n")
-            escaped = json.dumps(normalized)[1:-1]
-            return escaped.replace("\\n", r"\n")
+            return value.replace("\r\n", "\n").replace("\r", "\n").replace("\n", r"\n")
         if isinstance(value, list):
             return [normalize_newlines(item) for item in value]
         if isinstance(value, dict):
