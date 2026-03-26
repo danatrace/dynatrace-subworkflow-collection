@@ -64,7 +64,7 @@ def update_embedded_script(script: str, subworkflows: list[dict]) -> str:
     ) + "\n;"
 
     pattern = re.compile(r"const subworkflows = \[(?:.|\n)*?\n\]\n;", re.MULTILINE)
-    updated, count = pattern.subn(new_array, script, count=1)
+    updated, count = pattern.subn(lambda _match: new_array, script, count=1)
     if count != 1:
         raise ValueError("Could not locate embedded subworkflows array in create-subworkflow-array script")
     return updated
