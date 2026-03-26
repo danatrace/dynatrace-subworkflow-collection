@@ -57,8 +57,19 @@ def build_guide(titles: list[str]) -> str:
 
 def update_embedded_script(script: str, subworkflows: list[dict]) -> str:
     """Replace only the embedded const subworkflows array in the task script."""
+    def normalize_newlines(value):
+        if isinstance(value, str):
+            return value.replace("\r\n", "\n").replace("\r", "\n").replace("\n", r"\n")
+        if isinstance(value, list):
+            return [normalize_newlines(item) for item in value]
+        if isinstance(value, dict):
+            return {key: normalize_newlines(item) for key, item in value.items()}
+        return value
+
+    sanitized_subworkflows = normalize_newlines(subworkflows)
+
     new_array = "const subworkflows = " + json.dumps(
-        subworkflows,
+        sanitized_subworkflows,
         ensure_ascii=False,
         indent=2,
     ) + "\n;"
